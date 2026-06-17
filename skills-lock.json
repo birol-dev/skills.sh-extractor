@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "SVG Logo Designer": {
+      "source": "rknall/claude-skills",
+      "sourceType": "github",
+      "skillPath": "svg-logo-designer/SKILL.md",
+      "computedHash": "a4733318997e024c77f9bc585581d924d8444d45295e21ef0d77bd569fcbafd9"
+    }
+  }
+}

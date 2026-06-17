@@ -1,0 +1,20 @@
+{
+  "name": "skill-extractor",
+  "version": "1.0.0",
+  "description": "Skill Extractor and Compiler for skills.sh",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.2.0"
+  },
+  "author": "Antigravity",
+  "license": "MIT"
+}

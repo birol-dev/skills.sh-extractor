@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Extractor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Titlebar for custom drag support -->
+  <div class="titlebar">
+    <span>skills.sh Extractor</span>
+  </div>
+
+  <div class="main-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <div class="logo-dot"></div>
+        <span class="logo-text">skills.sh<span class="logo-sub">extractor</span></span>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" id="nav-extract" data-target="page-extract">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Extract Skill
+        </button>
+        <button class="nav-item" id="nav-gallery" data-target="page-gallery">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Skill Gallery
+        </button>
+        <button class="nav-item" id="nav-settings" data-target="page-settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div>Version 1.0.0</div>
+        <div>Built for Vercel Agent Skills</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-area">
+      
+      <!-- Extract Skill Page -->
+      <section id="page-extract" class="page active">
+        <div class="page-header">
+          <h1 class="page-title">Extract Agent Skill</h1>
+          <p class="page-description">Download or load a skill package to compile its metadata, scripts, and references into a single playbook. Supports raw NPX commands or repository links.</p>
+        </div>
+
+        <div class="card">
+          <div class="tabs-container">
+            <button class="tab-btn active" id="tab-github" data-target="pane-github">GitHub / NPX Command</button>
+            <button class="tab-btn" id="tab-local" data-target="pane-local">Local Folder</button>
+          </div>
+
+          <!-- Github Tab Pane -->
+          <div id="pane-github" class="tab-pane active">
+            <div class="form-group">
+              <label class="form-label" for="github-repo">Repository Link / Command</label>
+              <div class="input-row">
+                <input type="text" id="github-repo" class="form-input" placeholder="e.g. npx skills add owner/repo --skill copywriting  OR  vercel/ai" />
+                <button class="btn btn-primary" id="btn-extract-github">Extract</button>
+              </div>
+              <p class="page-description" style="margin-top: 4px;">Paste raw command templates like <code>npx skills add owner/repo --skill name</code> or simple GitHub shorthands.</p>
+            </div>
+          </div>
+
+          <!-- Local Folder Tab Pane -->
+          <div id="pane-local" class="tab-pane">
+            <div class="form-group">
+              <label class="form-label" for="local-path">Folder Path</label>
+              <div class="input-row">
+                <input type="text" id="local-path" class="form-input" placeholder="Select a folder containing a SKILL.md file..." readonly />
+                <button class="btn btn-secondary" id="btn-browse-local">Browse...</button>
+                <button class="btn btn-primary" id="btn-extract-local" disabled>Extract</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 300px;">
+          <h3 class="form-label">Extraction Progress & Console Logs</h3>
+          <div class="console-panel" id="console-output">
+            <div class="console-line info">Console idle. Ready for extraction...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skill Gallery Page -->
+      <section id="page-gallery" class="page">
+        <div class="page-header">
+          <h1 class="page-title">Skill Gallery</h1>
+          <p class="page-description">Browse and search previously extracted playbooks. Click and drag the handle icon to drop the Markdown file directly into your workspace or agent window.</p>
+        </div>
+
+        <div class="gallery-controls">
+          <input type="text" id="gallery-search" class="form-input search-input" placeholder="Search skills by name, description..." />
+          <button class="btn btn-outline" id="btn-refresh-gallery">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+            Refresh
+          </button>
+        </div>
+
+        <div class="gallery-grid" id="gallery-container">
+          <!-- Populated dynamically via app.js -->
+        </div>
+
+        <!-- Empty state placeholder -->
+        <div class="empty-state" id="gallery-empty" style="display: none;">
+          <div class="empty-icon">📁</div>
+          <div class="empty-title">No skills extracted yet</div>
+          <div class="empty-desc">Extract a skill from GitHub or your local machine to populate your gallery. Only compiled Markdown files are kept!</div>
+          <button class="btn btn-primary" id="btn-go-extract">Extract Your First Skill</button>
+        </div>
+      </section>
+
+      <!-- Settings Page -->
+      <section id="page-settings" class="page">
+        <div class="page-header">
+          <h1 class="page-title">Settings</h1>
+          <p class="page-description">Configure persistent options for the Skill Extractor tool, including custom folder paths and default tags.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="form-label" style="font-size: 16px; margin-bottom: 4px;">Storage Configuration</h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="setting-save-path">Output Directory Location</label>
+            <div class="input-row">
+              <input type="text" id="setting-save-path" class="form-input" placeholder="Select output folder..." readonly />
+              <button class="btn btn-secondary" id="btn-browse-save">Browse...</button>
+              <button class="btn btn-outline" id="btn-reset-save">Reset to Default</button>
+            </div>
+            <p class="page-description" style="margin-top: 4px;">All extracted playbooks will be saved to this folder. The gallery loads compiled skills from here.</p>
+          </div>
+
+          <div class="form-group" style="margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">
+              <input type="checkbox" id="setting-auto-open" style="accent-color: var(--primary); width: 16px; height: 16px; border-radius: 4px;" />
+              Automatically open directory folder on successful extraction
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="form-label" style="font-size: 16px; margin-bottom: 4px;">Metadata Defaults</h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="setting-tags">Prefill Extra Tags</label>
+            <input type="text" id="setting-tags" class="form-input" placeholder="e.g. verified, local-copy (comma separated)" />
+            <p class="page-description" style="margin-top: 4px;">Comma-separated list of tags to append to the frontmatter of every compiled skill.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="btn btn-primary" id="btn-save-settings">Save Configurations</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Preview Modal Backdrop -->
+  <div class="modal-backdrop" id="preview-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-area">
+          <h2 class="modal-title" id="modal-skill-title">Skill Name</h2>
+          <p class="modal-subtitle" id="modal-skill-file">path/to/extracted.skill.md</p>
+        </div>
+        <button class="modal-close" id="modal-btn-close">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <aside class="modal-sidebar">
+          <div class="modal-sidebar-item active" data-pane="preview-directives">Directives (SKILL.md)</div>
+          <div class="modal-sidebar-item" data-pane="preview-metadata">Metadata Frontmatter</div>
+          <div class="modal-sidebar-item" id="modal-tab-scripts" data-pane="preview-scripts">Helper Scripts (0)</div>
+          <div class="modal-sidebar-item" id="modal-tab-refs" data-pane="preview-references">References (0)</div>
+          <div class="modal-sidebar-item" data-pane="preview-raw">Raw Markdown Source</div>
+        </aside>
+
+        <section class="modal-viewer">
+          <!-- Directives Pane -->
+          <div class="preview-pane active" id="preview-directives">
+            <div class="preview-directives-body" id="preview-directives-body">
+              <!-- Directives content goes here -->
+            </div>
+          </div>
+
+          <!-- Metadata Pane -->
+          <div class="preview-pane" id="preview-metadata">
+            <div class="preview-meta-grid" id="preview-meta-grid">
+              <!-- Dynamically populated metadata table -->
+            </div>
+          </div>
+
+          <!-- Scripts Pane -->
+          <div class="preview-pane" id="preview-scripts">
+            <div class="script-item-selector" id="script-selector">
+              <!-- Script selector tabs -->
+            </div>
+            <pre class="preview-code-block" id="preview-script-code">Select a script file from above to view...</pre>
+          </div>
+
+          <!-- References Pane -->
+          <div class="preview-pane" id="preview-references">
+            <div class="script-item-selector" id="ref-selector">
+              <!-- Reference document tabs -->
+            </div>
+            <div class="preview-directives-body" id="preview-ref-body">Select a reference document from above to view...</div>
+          </div>
+
+          <!-- Raw Markdown Source Pane -->
+          <div class="preview-pane" id="preview-raw">
+            <pre class="preview-code-block" id="preview-raw-code">Source code</pre>
+          </div>
+        </section>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="modal-btn-folder">Show in Folder</button>
+        <button class="btn btn-secondary" id="modal-btn-copy">Copy Markdown</button>
+        <button class="btn btn-primary" id="modal-btn-close-footer">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="renderer/app.js"></script>
+</body>
+</html>
