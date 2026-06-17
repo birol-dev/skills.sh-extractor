@@ -257,17 +257,26 @@ ipcMain.handle('show-in-folder', async (event, filePath) => {
 
 // Initiate Drag and Drop
 ipcMain.on('start-drag', (event, filePath) => {
-  if (!fs.existsSync(filePath)) return;
+  console.log('[Main] start-drag received for:', filePath);
+  if (!fs.existsSync(filePath)) {
+    console.error('[Main] start-drag failed: file does not exist at path', filePath);
+    return;
+  }
   
   const absolutePath = path.resolve(filePath);
+  console.log('[Main] resolved absolute path for drag:', absolutePath);
   
   try {
+    // Use a valid 32x32 transparent PNG icon for the drag image
+    const dragIcon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC0SURBVFhH7dExDQAgEAJBD6pG6l8zGg+yB/y4m7u3d3fP7q4e7e6+29t79/79/fN+d/c1dD11DR1Dr6Hj6D10HH2HrqP30HH0HrqO3kPH0XvoOnofvYeuo/fQe/Q+e4C/5wJ/zwX+ngv8PRf4ey7w91zg77nA33OBv+cCf88F/p4L/D0X+Hsu8PdckE9N0/S9H/sB2k8eXy67vT0AAAAASUVORK5CYII=');
+    
     event.sender.startDrag({
       file: absolutePath,
-      icon: nativeImage.createEmpty()
+      icon: dragIcon
     });
+    console.log('[Main] event.sender.startDrag initiated successfully');
   } catch (err) {
-    console.error('Failed to start drag', err);
+    console.error('[Main] Failed to start drag:', err);
   }
 });
 
