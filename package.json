@@ -13,7 +13,34 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "electron": "^28.2.0"
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.skills-sh.extractor",
+    "productName": "SkillExtractor",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "styles.css",
+      "renderer/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   },
   "author": "Birol-dev",
   "license": "MIT"
