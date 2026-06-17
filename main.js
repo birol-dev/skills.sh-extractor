@@ -395,7 +395,14 @@ ipcMain.handle('extract-skill', async (event, { type, source, subdir }) => {
           skillSearchStartDir = resolvedSub;
           updateStatus(`Targeted subdirectory resolved: ${path.relative(sourceDir, resolvedSub)}`, 68);
         } else {
-          throw new Error(`Specified skill directory "${subdir}" could not be resolved inside the package.`);
+          // Check if SKILL.md exists in the root folder
+          const rootSkillExists = fs.readdirSync(sourceDir).some(f => f.toLowerCase() === 'skill.md');
+          if (rootSkillExists) {
+            updateStatus(`Subdirectory "${subdir}" not found, but SKILL.md exists at root. Falling back to root compilation...`, 68);
+            skillSearchStartDir = sourceDir;
+          } else {
+            throw new Error(`Specified skill directory "${subdir}" could not be resolved inside the package.`);
+          }
         }
       }
     }
