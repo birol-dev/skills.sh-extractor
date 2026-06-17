@@ -58,6 +58,23 @@ function saveSettings(newSettings) {
 // Call settings load on boot
 loadSettings();
 
+let dragIcon;
+
+function initDragIcon() {
+  try {
+    // Standard 1x1 transparent PNG icon buffer
+    const base64Data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    dragIcon = nativeImage.createFromBuffer(Buffer.from(base64Data, 'base64'));
+    if (dragIcon.isEmpty()) {
+      console.error('[Main] Loaded drag icon is empty');
+    } else {
+      console.log('[Main] Drag icon successfully loaded from memory buffer. Size:', dragIcon.getSize());
+    }
+  } catch (err) {
+    console.error('[Main] Failed to create drag icon:', err);
+  }
+}
+
 function getSkillsDir() {
   return settings.saveLocation;
 }
@@ -85,8 +102,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  initDragIcon();
   createWindow();
-
+ 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -267,9 +285,6 @@ ipcMain.on('start-drag', (event, filePath) => {
   console.log('[Main] resolved absolute path for drag:', absolutePath);
   
   try {
-    // Use a valid 32x32 transparent PNG icon for the drag image
-    const dragIcon = nativeImage.createFromDataURL('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC0SURBVFhH7dExDQAgEAJBD6pG6l8zGg+yB/y4m7u3d3fP7q4e7e6+29t79/79/fN+d/c1dD11DR1Dr6Hj6D10HH2HrqP30HH0HrqO3kPH0XvoOnofvYeuo/fQe/Q+e4C/5wJ/zwX+ngv8PRf4ey7w91zg77nA33OBv+cCf88F/p4L/D0X+Hsu8PdckE9N0/S9H/sB2k8eXy67vT0AAAAASUVORK5CYII=');
-    
     event.sender.startDrag({
       file: absolutePath,
       icon: dragIcon

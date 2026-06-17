@@ -312,13 +312,6 @@ function renderGalleryGrid(skills) {
     const card = document.createElement('div');
     card.className = 'skill-card';
     const sizeKB = (skill.sizeBytes / 1024).toFixed(1);
-    
-    // HTML5 Drag Setup
-    card.setAttribute('draggable', 'true');
-    card.addEventListener('dragstart', (e) => {
-      e.preventDefault();
-      window.api.startDrag(skill.filePath);
-    });
 
     const name = skill.metadata.name || skill.fileName.replace('.skill.md', '');
     const desc = skill.metadata.description || 'No description provided';
