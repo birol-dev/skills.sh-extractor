@@ -20,7 +20,18 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="logo-container">
-        <div class="logo-dot"></div>
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#10b981" />
+              <stop offset="100%" stop-color="#059669" />
+            </linearGradient>
+          </defs>
+          <path d="M16 2 L28 9 L28 23 L16 30 L4 23 L4 9 Z" fill="url(#logoGrad)" fill-opacity="0.15" stroke="url(#logoGrad)" stroke-width="1.5"/>
+          <path d="M16 8 L24 12.5 L24 19.5 L16 24 L8 19.5 L8 12.5 Z" fill="none" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M16 8 L16 17" fill="none" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M12 14 L16 18 L20 14" fill="none" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         <span class="logo-text">skills.sh<span class="logo-sub">extractor</span></span>
       </div>
 
@@ -115,7 +126,9 @@
 
         <!-- Empty state placeholder -->
         <div class="empty-state" id="gallery-empty" style="display: none;">
-          <div class="empty-icon">📁</div>
+          <div class="empty-icon" style="margin-bottom: 8px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--muted-foreground);"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </div>
           <div class="empty-title">No skills extracted yet</div>
           <div class="empty-desc">Extract a skill from GitHub or your local machine to populate your gallery. Only compiled Markdown files are kept!</div>
           <button class="btn btn-primary" id="btn-go-extract">Extract Your First Skill</button>

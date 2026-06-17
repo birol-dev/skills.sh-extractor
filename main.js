@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -95,21 +95,6 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
-
-// Create a simple drag icon if it doesn't exist
-const dragIconPath = path.join(__dirname, 'assets', 'drag-icon.png');
-function ensureDragIcon() {
-  const assetsDir = path.dirname(dragIconPath);
-  if (!fs.existsSync(assetsDir)) {
-    fs.mkdirSync(assetsDir, { recursive: true });
-  }
-  if (!fs.existsSync(dragIconPath)) {
-    // Write a tiny transparent 1x1 png or a simple placeholder PNG
-    const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5gYREg4QyN5jRwAAAD1JREFUWMPt1qERACAQxMA/Z/+VoRCM6CDuqu5mqupt5i5q3n18eXp6enp6enp6enp6enp6enp6enp6enp6esIDjTADG2vKovQAAAAASUVORK5CYII=';
-    fs.writeFileSync(dragIconPath, Buffer.from(pngBase64, 'base64'));
-  }
-}
-ensureDragIcon();
 
 // Helper to sanitize filename
 function sanitizeFilename(name) {
@@ -276,10 +261,14 @@ ipcMain.on('start-drag', (event, filePath) => {
   
   const absolutePath = path.resolve(filePath);
   
-  event.sender.startDrag({
-    file: absolutePath,
-    icon: dragIconPath
-  });
+  try {
+    event.sender.startDrag({
+      file: absolutePath,
+      icon: nativeImage.createEmpty()
+    });
+  } catch (err) {
+    console.error('Failed to start drag', err);
+  }
 });
 
 // Settings IPC Handlers

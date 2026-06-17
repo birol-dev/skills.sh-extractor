@@ -3,3 +3,4 @@ dist/
 *.log
 temp_extract/
 assets/drag-icon.png
+.agents
