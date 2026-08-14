@@ -1,46 +1,21 @@
 {
   "name": "skill-extractor",
-  "version": "1.0.1",
-  "description": "Skill Extractor and Compiler for skills.sh",
-  "main": "main.js",
+  "version": "2.0.0",
+  "description": "Pure Client-Side WebAssembly Skill Extractor & Playbook Compiler for skills.sh and AI Coding Agents",
+  "type": "module",
   "scripts": {
-    "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "adm-zip": "^0.5.10",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "jszip": "^3.10.1",
+    "marked": "^15.0.7",
+    "prismjs": "^1.29.0"
   },
   "devDependencies": {
-    "electron": "^42.4.1",
-    "electron-builder": "^26.15.3"
-  },
-  "build": {
-    "appId": "com.skills-sh.extractor",
-    "productName": "SkillExtractor",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "main.js",
-      "preload.js",
-      "index.html",
-      "styles.css",
-      "renderer/**/*",
-      "package.json",
-      "node_modules/**/*"
-    ],
-    "win": {
-      "target": "nsis"
-    },
-    "mac": {
-      "target": "dmg",
-      "category": "public.app-category.developer-tools"
-    },
-    "linux": {
-      "target": "AppImage"
-    }
+    "vite": "^6.2.0"
   },
   "author": "Birol-dev",
   "license": "MIT"

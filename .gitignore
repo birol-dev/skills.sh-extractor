@@ -4,3 +4,5 @@ dist/
 temp_extract/
 assets/drag-icon.png
 .agents
+.claude
+agent/skills
