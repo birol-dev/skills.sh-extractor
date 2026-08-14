@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -14,7 +15,8 @@ export default defineConfig({
     assetsInlineLimit: 100000000, // Inline WASM and assets
     rollupOptions: {
       input: {
-        main: './index.html'
+        main: resolve(__dirname, 'index.html'),
+        landing: resolve(__dirname, 'landing/index.html')
       }
     }
   }

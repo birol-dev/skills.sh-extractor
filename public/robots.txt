@@ -1,0 +1,37 @@
+# robots.txt for skills.sh Extractor & Playbook Compiler
+# Explicitly allowing AI search engines, crawlers, and agents to crawl and cite content
+
+User-agent: *
+Allow: /
+
+# OpenAI ChatGPT & Search
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Anthropic Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Google Gemini & AI Overviews
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+# Microsoft Copilot / Bing
+User-agent: Bingbot
+Allow: /
+
+# Machine-Readable AI Context & Sitemaps
+Sitemap: https://birol-dev.github.io/skills-extractor/sitemap.xml
