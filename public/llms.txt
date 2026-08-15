@@ -1,4 +1,4 @@
-# skills.sh Extractor & Playbook Compiler
+# Skill Extractor & Playbook Compiler
 
 > Pure Client-Side WebAssembly (WASM) Single Page Application for compiling, consolidating, and exporting AI Agent Skills into single-file playbooks for Claude Code, Cursor, Windsurf, Antigravity, and GitHub Copilot.
 

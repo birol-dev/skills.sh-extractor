@@ -111,11 +111,19 @@ const modalRefsCount = document.getElementById('modal-refs-count');
 
 const toastContainer = document.getElementById('toast-container');
 
-// Toast Notification
+// Toast Notification (Crisp Vector Icons, Zero Emojis)
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast-msg ${type}`;
-  toast.innerText = message;
+
+  let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+  if (type === 'success') {
+    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  } else if (type === 'error') {
+    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+  }
+
+  toast.innerHTML = `<span class="toast-icon">${iconSvg}</span><span class="toast-text">${escapeHtml(message)}</span>`;
   toastContainer.appendChild(toast);
 
   setTimeout(() => {
@@ -427,10 +435,24 @@ function renderGalleryCards() {
       <p class="card-desc">${escapeHtml(skill.description)}</p>
 
       <div class="card-meta-row">
-        <span class="meta-chip">⚡ ~${tokenEst} tokens</span>
-        <span class="meta-chip">📦 ${sizeKb} KB</span>
-        ${scriptsCount > 0 ? `<span class="meta-chip">🛠️ ${scriptsCount} scripts</span>` : ''}
-        ${refsCount > 0 ? `<span class="meta-chip">📚 ${refsCount} refs</span>` : ''}
+        <span class="meta-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          ~${tokenEst} tokens
+        </span>
+        <span class="meta-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          ${sizeKb} KB
+        </span>
+        ${scriptsCount > 0 ? `
+        <span class="meta-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+          ${scriptsCount} scripts
+        </span>` : ''}
+        ${refsCount > 0 ? `
+        <span class="meta-chip">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          ${refsCount} refs
+        </span>` : ''}
         <span class="meta-chip" style="margin-left: auto;">${dateStr}</span>
       </div>
 
@@ -541,7 +563,7 @@ function openPreviewModal(skill) {
 
   modalSkillTitle.innerText = skill.name;
   const tokenEst = (skill.tokenEstimate || wasmEngine.estimateTokens(skill.compiledMarkdown || '')).toLocaleString();
-  modalSkillSubtitle.innerText = `${skill.slug}.skill.md &bull; ~${tokenEst} LLM tokens &bull; ${((skill.sizeBytes || 0) / 1024).toFixed(1)} KB`;
+  modalSkillSubtitle.innerText = `${skill.slug}.skill.md • ~${tokenEst} LLM tokens • ${((skill.sizeBytes || 0) / 1024).toFixed(1)} KB`;
 
   const parsed = parseSkillMarkdown(skill.compiledMarkdown);
 
@@ -836,4 +858,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Run initial lightweight benchmark on load
   const initialBench = wasmEngine.runBenchmark(1000);
   statWasmSpeedup.innerText = initialBench.speedup;
+
+  // Handle URL query parameter from landing page redirect (e.g. ?url=...)
+  const urlParams = new URLSearchParams(window.location.search);
+  const inputQuery = urlParams.get('url') || urlParams.get('link') || urlParams.get('query') || urlParams.get('cmd') || urlParams.get('skill');
+  if (inputQuery) {
+    const cleanQuery = decodeURIComponent(inputQuery).trim();
+    if (cleanQuery) {
+      switchView('extract');
+      const tabBtn = document.getElementById('tab-btn-github');
+      if (tabBtn) tabBtn.click();
+      if (inputGithubCmd) {
+        inputGithubCmd.value = cleanQuery;
+        appendLog(`Received skill link from landing page: ${cleanQuery}`, 'info');
+        setTimeout(() => {
+          if (btnExtractGithub && !btnExtractGithub.disabled) {
+            btnExtractGithub.click();
+          }
+        }, 150);
+      }
+      // Clean query parameter from browser address bar without reloading
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }
 });

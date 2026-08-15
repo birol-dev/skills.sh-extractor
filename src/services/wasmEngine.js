@@ -26,7 +26,7 @@ class WasmEngine {
       this.exports = module.instance.exports;
       this.memory = this.exports.memory;
       this.isReady = true;
-      console.log('⚡ WebAssembly Engine initialized successfully (', len, 'bytes)');
+      console.log('[WASM] Engine initialized successfully (', len, 'bytes)');
       return true;
     } catch (err) {
       console.warn('WebAssembly initialization failed, falling back to JS implementation:', err);

@@ -205,11 +205,8 @@ body {
   letter-spacing: -0.02em;
   display: flex;
   align-items: center;
-  gap: 4px;
 }
 .brand-name { color: var(--text-white); }
-.brand-separator { color: var(--text-muted); }
-.brand-tagline { color: var(--text-secondary); font-weight: 400; }
 
 .nav-links {
   display: flex;
@@ -225,6 +222,21 @@ body {
   transition: color var(--transition-fast);
 }
 .nav-link:hover {
+  color: var(--text-white);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-github-btn {
+  gap: 6px;
+  padding: 7px 12px;
+  color: var(--text-secondary);
+}
+.nav-github-btn:hover {
   color: var(--text-white);
 }
 
@@ -1467,8 +1479,40 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   animation: toastSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast.success {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+.toast.success .toast-icon {
+  color: #4ade80;
+}
+.toast.error {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.toast.error .toast-icon {
+  color: #f87171;
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.widget-ready-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
 }
 
 @keyframes toastSlideUp {

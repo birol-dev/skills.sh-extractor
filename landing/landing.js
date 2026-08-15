@@ -420,20 +420,30 @@ function initHeroWidget() {
     });
   });
 
-  // Extract button click
-  extractBtn.addEventListener('click', () => {
-    const query = input.value.toLowerCase();
-    let matchedKey = 'copywriting';
-
-    for (const key of Object.keys(SKILL_DATABASE)) {
-      if (query.includes(key) || query.includes(SKILL_DATABASE[key].name.toLowerCase())) {
-        matchedKey = key;
-        break;
-      }
+  // Redirection to WASM Engine with Query Parameter
+  function redirectToEngine(val) {
+    const trimmed = (val || '').trim();
+    if (!trimmed) {
+      showToast('Please enter a GitHub repository or skills command', 'info');
+      return;
     }
+    const targetUrl = new URL('../index.html', window.location.href);
+    targetUrl.searchParams.set('url', trimmed);
+    window.location.href = targetUrl.toString();
+  }
 
-    renderSkill(matchedKey, true);
-    showToast('✨ Skill compiled in browser with WebAssembly');
+  // Extract button click -> redirects to engine with query parameter
+  extractBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    redirectToEngine(input.value);
+  });
+
+  // Enter key on input -> redirects to engine
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      redirectToEngine(input.value);
+    }
   });
 
   // Copy prompt button click
@@ -441,9 +451,9 @@ function initHeroWidget() {
     copyPromptBtn.addEventListener('click', () => {
       const promptText = SKILL_DATABASE[activeSkillKey]?.prompt || outputCode.textContent;
       navigator.clipboard.writeText(promptText).then(() => {
-        showToast('📋 Copied prompt! Ready to paste into Claude or ChatGPT.');
+        showToast('Copied prompt! Ready to paste into Claude or ChatGPT.', 'success');
       }).catch(() => {
-        showToast('⚠️ Copy failed, please select and copy manually.');
+        showToast('Copy failed, please select and copy manually.', 'error');
       });
     });
   }
@@ -451,13 +461,14 @@ function initHeroWidget() {
 
 /* ==========================================================================
    4. Skills Showcase Catalog & Filter
-   ========================================================================= */
+   ========================================================================== */
 function initSkillsCatalog() {
   const tabs = document.querySelectorAll('.catalog-tab');
   const cards = document.querySelectorAll('.skill-card');
   const modal = document.getElementById('skillPreviewModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const modalDismissBtn = document.getElementById('modalDismissBtn');
+  const modalOpenInAppBtn = document.getElementById('modalOpenInAppBtn');
   const modalCopyBtn = document.getElementById('modalCopyBtn');
   const modalTitle = document.getElementById('modalTitle');
   const modalCategoryBadge = document.getElementById('modalCategoryBadge');
@@ -525,7 +536,7 @@ function initSkillsCatalog() {
       const data = SKILL_DATABASE[skillId];
       if (data) {
         navigator.clipboard.writeText(data.prompt).then(() => {
-          showToast(`📋 Copied "${data.name}" prompt`);
+          showToast(`Copied "${data.name}" prompt`, 'success');
         });
       }
     });
@@ -539,11 +550,21 @@ function initSkillsCatalog() {
     });
   }
 
+  if (modalOpenInAppBtn) {
+    modalOpenInAppBtn.addEventListener('click', () => {
+      if (currentModalSkill?.command) {
+        const targetUrl = new URL('../index.html', window.location.href);
+        targetUrl.searchParams.set('url', currentModalSkill.command);
+        window.location.href = targetUrl.toString();
+      }
+    });
+  }
+
   if (modalCopyBtn) {
     modalCopyBtn.addEventListener('click', () => {
       if (currentModalSkill) {
         navigator.clipboard.writeText(currentModalSkill.prompt).then(() => {
-          showToast(`📋 Copied "${currentModalSkill.name}"`);
+          showToast(`Copied "${currentModalSkill.name}" prompt`, 'success');
           closeModal();
         });
       }
@@ -577,15 +598,23 @@ function initFaqAccordion() {
 }
 
 /* ==========================================================================
-   6. Toast Notifications
+   6. Toast Notifications (Crisp Vector Icons, No Emojis)
    ========================================================================== */
-function showToast(message, duration = 3000) {
+function showToast(message, type = 'info', duration = 3000) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
   const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `<span>${message}</span>`;
+  toast.className = `toast ${type}`;
+
+  let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+  if (type === 'success') {
+    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  } else if (type === 'error') {
+    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+  }
+
+  toast.innerHTML = `<span class="toast-icon">${iconSvg}</span><span class="toast-text">${message}</span>`;
 
   container.appendChild(toast);
 
