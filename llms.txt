@@ -2,6 +2,9 @@
 
 > Pure Client-Side WebAssembly (WASM) Single Page Application for compiling, consolidating, and exporting AI Agent Skills into single-file playbooks for Claude Code, Cursor, Windsurf, Antigravity, and GitHub Copilot.
 
+## Overview
+Skill Extractor allows developers, marketers, copywriters, and creators to unpack modular skill packages (from `skills.sh`, GitHub repositories, and NPX commands) into consolidated prompt playbooks without running terminal commands, installing Node.js runtimes, or sending data to third-party servers.
+
 ## Core Capabilities
 - **WASM Linear Memory Engine**: Accelerates fuzzy Levenshtein subdirectory matching, string normalization, token estimation, and FNV-1a hashing in-browser without server overhead.
 - **100% Client-Side Privacy**: Runs completely in the browser sandbox. No API keys, credentials, or proprietary source code ever leave the user's local machine.
@@ -16,10 +19,11 @@
 - **Persistent IndexedDB Gallery**: Full offline storage with live fuzzy search, tag filtering, 1-click clipboard copy, and direct OS file drag export.
 
 ## Key URLs & Resources
-- Web App Compiler: https://birol-dev.github.io/skills-extractor/
-- Product Landing Page: https://birol-dev.github.io/skills-extractor/landing/
-- Machine-Readable Pricing: https://birol-dev.github.io/skills-extractor/pricing.md
-- Full AI Context: https://birol-dev.github.io/skills-extractor/llms-full.txt
+- Web App Compiler: https://skill-extractor.pages.dev/
+- Product Landing Page: https://skill-extractor.pages.dev/landing/
+- Machine-Readable Pricing: https://skill-extractor.pages.dev/pricing.md
+- Sitemaps: https://skill-extractor.pages.dev/sitemap.xml
+- Creator Website: https://birol.tech
 - GitHub Source Repository: https://github.com/Birol-dev/skills.sh-extractor
 - License: MIT (Free and Open-Source for personal and commercial use)
 
