@@ -231,11 +231,13 @@ body {
   gap: 10px;
 }
 
+.nav-author-btn,
 .nav-github-btn {
   gap: 6px;
   padding: 7px 12px;
   color: var(--text-secondary);
 }
+.nav-author-btn:hover,
 .nav-github-btn:hover {
   color: var(--text-white);
 }
@@ -1314,6 +1316,17 @@ body {
 
 .footer-mono {
   font-family: var(--font-mono);
+}
+
+.footer-author-link {
+  color: var(--text-white);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+.footer-author-link:hover {
+  color: #a1a1aa;
 }
 
 /* --------------------------------------------------------------------------

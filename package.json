@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "vite build && wrangler pages deploy dist --project-name=skill-extractor --commit-dirty=true"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
@@ -15,7 +16,8 @@
     "prismjs": "^1.29.0"
   },
   "devDependencies": {
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "wrangler": "^4.123.0"
   },
   "author": "Birol-dev",
   "license": "MIT"
