@@ -191,7 +191,11 @@ function setupInputTabs() {
 
 // Setup Extraction Logic
 function setupExtraction() {
-  // 1. GitHub / NPX extract
+  // 1. Setup Auto-Suggest and Quick-Pick Presets
+  setupAutosuggest();
+  setupQuickChips();
+
+  // 2. GitHub / NPX extract
   btnExtractGithub.addEventListener('click', async () => {
     const input = inputGithubCmd.value.trim();
     if (!input) {
@@ -518,17 +522,154 @@ function downloadFile(filename, content) {
   URL.revokeObjectURL(url);
 }
 
-// Curated Skills Hub
+// Auto-Suggest Setup (Real-Time WASM & Fuzzy Match)
+function setupAutosuggest() {
+  const dropdown = document.getElementById('autosuggest-dropdown');
+  if (!dropdown || !inputGithubCmd) return;
+
+  function renderSuggestions(query = '') {
+    const q = query.trim().toLowerCase();
+    let matches = [];
+
+    if (!q) {
+      // Show top curated recommendations when input is empty/focused
+      matches = CURATED_SKILLS.slice(0, 7);
+    } else {
+      matches = CURATED_SKILLS.filter(s => {
+        const nameMatch = s.name.toLowerCase().includes(q);
+        const slugMatch = s.slug.toLowerCase().includes(q);
+        const catMatch = s.category.toLowerCase().includes(q);
+        const tagMatch = (s.tags || []).some(t => t.toLowerCase().includes(q));
+        const descMatch = s.description.toLowerCase().includes(q);
+        return nameMatch || slugMatch || catMatch || tagMatch || descMatch;
+      }).slice(0, 8);
+    }
+
+    if (matches.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    dropdown.innerHTML = '';
+    matches.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'autosuggest-item';
+      div.innerHTML = `
+        <div class="autosuggest-info">
+          <div class="autosuggest-name">${escapeHtml(item.name)}</div>
+          <div class="autosuggest-sub">${escapeHtml(item.description)}</div>
+        </div>
+        <span class="autosuggest-badge">${escapeHtml(item.badge)}</span>
+      `;
+
+      div.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        inputGithubCmd.value = item.command;
+        dropdown.style.display = 'none';
+        showToast(`Selected "${item.name}"`, 'info');
+      });
+
+      dropdown.appendChild(div);
+    });
+
+    dropdown.style.display = 'flex';
+  }
+
+  inputGithubCmd.addEventListener('input', () => {
+    renderSuggestions(inputGithubCmd.value);
+  });
+
+  inputGithubCmd.addEventListener('focus', () => {
+    if (!inputGithubCmd.value.startsWith('http') && !inputGithubCmd.value.startsWith('git')) {
+      renderSuggestions(inputGithubCmd.value);
+    }
+  });
+
+  inputGithubCmd.addEventListener('blur', () => {
+    setTimeout(() => {
+      dropdown.style.display = 'none';
+    }, 200);
+  });
+}
+
+// Quick Preset Chips Setup
+function setupQuickChips() {
+  const chips = document.querySelectorAll('.quick-chip');
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const cmd = chip.dataset.skillCmd;
+      if (cmd && inputGithubCmd) {
+        inputGithubCmd.value = cmd;
+        showToast(`Loaded preset: ${chip.textContent.trim()}`, 'info');
+      }
+    });
+  });
+}
+
+// Curated Skills Hub with Live Search & Category Filter
+let activeCuratedCat = 'all';
+let curatedSearchQuery = '';
+
 function renderCuratedHub() {
+  if (!curatedCardsGrid) return;
   curatedCardsGrid.innerHTML = '';
 
-  CURATED_SKILLS.forEach(item => {
+  const catButtons = document.querySelectorAll('#curated-category-bar .tag-filter');
+  catButtons.forEach(btn => {
+    btn.onclick = () => {
+      catButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCuratedCat = btn.dataset.curatedCat || 'all';
+      filterAndRenderCurated();
+    };
+  });
+
+  const searchInput = document.getElementById('curated-search-input');
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.dataset.bound = 'true';
+    searchInput.addEventListener('input', (e) => {
+      curatedSearchQuery = e.target.value.trim().toLowerCase();
+      filterAndRenderCurated();
+    });
+  }
+
+  filterAndRenderCurated();
+}
+
+function filterAndRenderCurated() {
+  if (!curatedCardsGrid) return;
+  curatedCardsGrid.innerHTML = '';
+
+  const filtered = CURATED_SKILLS.filter(item => {
+    const matchesCat = (activeCuratedCat === 'all' || item.category === activeCuratedCat);
+    if (!matchesCat) return false;
+
+    if (!curatedSearchQuery) return true;
+    const nameMatch = item.name.toLowerCase().includes(curatedSearchQuery);
+    const slugMatch = item.slug.toLowerCase().includes(curatedSearchQuery);
+    const descMatch = item.description.toLowerCase().includes(curatedSearchQuery);
+    const tagMatch = (item.tags || []).some(t => t.toLowerCase().includes(curatedSearchQuery));
+    return nameMatch || slugMatch || descMatch || tagMatch;
+  });
+
+  if (filtered.length === 0) {
+    curatedCardsGrid.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--muted-foreground);">
+        <p>No curated skills matching your search criteria.</p>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(item => {
     const card = document.createElement('div');
     card.className = 'curated-card';
     card.innerHTML = `
       <div class="curated-header">
         <div class="curated-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         </div>
         <span class="card-badge">${escapeHtml(item.badge)}</span>
       </div>
@@ -859,18 +1000,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const initialBench = wasmEngine.runBenchmark(1000);
   statWasmSpeedup.innerText = initialBench.speedup;
 
-  // Handle URL query parameter from landing page redirect (e.g. ?url=...)
+  // Handle URL query parameter from landing page redirect (e.g. ?extract=... or ?skill=...)
   const urlParams = new URLSearchParams(window.location.search);
-  const inputQuery = urlParams.get('url') || urlParams.get('link') || urlParams.get('query') || urlParams.get('cmd') || urlParams.get('skill');
+  const inputQuery = urlParams.get('extract') || urlParams.get('url') || urlParams.get('link') || urlParams.get('query') || urlParams.get('cmd') || urlParams.get('skill');
   if (inputQuery) {
-    const cleanQuery = decodeURIComponent(inputQuery).trim();
+    let cleanQuery = decodeURIComponent(inputQuery).trim();
+    // Check if inputQuery is a slug of a curated skill
+    const foundSkill = CURATED_SKILLS.find(s => s.slug === cleanQuery || s.id === cleanQuery || s.name.toLowerCase() === cleanQuery.toLowerCase());
+    if (foundSkill) {
+      cleanQuery = foundSkill.command;
+    }
+
     if (cleanQuery) {
       switchView('extract');
       const tabBtn = document.getElementById('tab-btn-github');
       if (tabBtn) tabBtn.click();
       if (inputGithubCmd) {
         inputGithubCmd.value = cleanQuery;
-        appendLog(`Received skill link from landing page: ${cleanQuery}`, 'info');
+        appendLog(`Received skill request: ${cleanQuery}`, 'info');
         setTimeout(() => {
           if (btnExtractGithub && !btnExtractGithub.disabled) {
             btnExtractGithub.click();

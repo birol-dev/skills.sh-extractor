@@ -2,10 +2,14 @@
  * skills.sh Extractor — Landing Page Application Script
  * Features:
  *  - Interactive Monotone WebGL Shader with mouse reactivity
- *  - Clean Live Hero Mini-Extractor Widget with 1-click prompt compiler
- *  - Categorized Skills Library with preview modal & copy triggers
- *  - FAQ Accordions & Performance optimization
+ *  - Live Hero Mini-Extractor Widget with 1-click prompt compiler
+ *  - Dynamic 55+ Curated Skills Library with instant preview & copy
+ *  - Category filtering across all disciplines
+ *  - FAQ Accordions & Toast Notifications
  */
+
+import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
+import { SKILL_PROMPTS } from '../src/services/curatedPrompts.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initShader();
@@ -238,136 +242,7 @@ function initCanvas2DFallback(canvas) {
 }
 
 /* ==========================================================================
-   2. Skill Presets & Compilation Dictionary
-   ========================================================================== */
-const SKILL_DATABASE = {
-  'copywriting': {
-    name: 'High-Converting Landing Page Copywriter',
-    category: 'Copywriting & Messaging',
-    badge: 'COPYWRITING',
-    tokens: 1840,
-    command: "npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'",
-    description: 'A direct-response copywriting playbook designed to structure high-converting website copy, hero headlines, value propositions, and objection mitigation.',
-    prompt: `# High-Converting Landing Page Copywriter Playbook
-
-You are an elite direct-response conversion copywriter.
-
-## Directives:
-1. **Above the Fold Hero Section:**
-   - **Headline (H1):** The single most valuable transformation in clear, direct English.
-   - **Sub-headline (H2):** Explain *how* the product delivers the promise, for whom, and what friction it eliminates.
-   - **Primary CTA:** High-intent action copy with risk reversal.
-
-2. **Feature-to-Benefit Matrix:**
-   - Always map: [Feature] -> [Immediate Benefit] -> [Emotional Outcome].
-
-3. **Objection Pre-emption:**
-   - Address top 3 buyer hesitations immediately next to conversion points.`
-  },
-  'marketing': {
-    name: 'Growth Experiment & A/B Testing Planner',
-    category: 'Marketing & Growth',
-    badge: 'MARKETING',
-    tokens: 2100,
-    command: "npx skills add https://github.com/rknall/claude-skills --skill 'ab-testing'",
-    description: 'Systematic growth experimentation framework for planning, scoring, and executing high-velocity A/B tests with statistical confidence.',
-    prompt: `# Growth Experiment & A/B Testing Playbook
-
-You are a Growth Lead specializing in conversion optimization and quantitative experiment design.
-
-## Directives:
-1. **Hypothesis Standard:**
-   - "Because we observed [Friction], we believe that [Change] will result in [Lift] because [Rationale]."
-
-2. **ICE Prioritization (1–10):**
-   - **Impact:** Expected lift on North Star metric.
-   - **Confidence:** Evidentiary backing from analytics/recordings.
-   - **Ease:** Engineering and design implementation velocity.`
-  },
-  'svg-logo': {
-    name: 'SVG Logo & Brand Identity Architect',
-    category: 'Design & Visuals',
-    badge: 'DESIGN',
-    tokens: 2450,
-    command: "npx skills add https://github.com/rknall/claude-skills --skill 'svg-logo-designer'",
-    description: 'Generates production-grade, mathematically balanced SVG vector marks, geometric logos, and icon systems with embedded accessibility tags.',
-    prompt: `# SVG Logo & Brand Identity Architect
-
-You are a senior vector brand designer and SVG engineer.
-
-## Directives:
-1. **SVG Code Specifications:**
-   - Output clean, valid XML SVG markup with \`xmlns="http://www.w3.org/2000/svg"\` and \`viewBox="0 0 500 500"\`.
-   - Never use raster images or external dependencies.
-   - Use semantic SVG elements: \`<path>\`, \`<circle>\`, \`<rect>\`, \`<defs>\`, and \`<linearGradient>\`.
-
-2. **Visual Geometry:**
-   - Align to consistent 8px/16px grid divisions with high contrast in dark and light modes.`
-  },
-  'cold-email': {
-    name: 'B2B Cold Outreach & Follow-Up Engine',
-    category: 'Sales & Outbound',
-    badge: 'SALES',
-    tokens: 1620,
-    command: "npx skills add https://github.com/rknall/claude-skills --skill 'cold-email'",
-    description: 'High-reply outbound email sequencing engine that crafts personalized icebreakers, concise value props, and frictionless conversational CTAs.',
-    prompt: `# B2B Cold Outreach & Follow-Up Playbook
-
-You are a specialized outbound sales strategist writing B2B cold emails with high reply rates.
-
-## Directives:
-1. **Constraints:**
-   - Under 90 words total per email.
-   - Mobile-first formatting (max 2 sentences per paragraph).
-
-2. **Sequence Architecture:**
-   - **Touch 1:** Observation/Trigger event + Relevant Insight + Soft Interest Ask.
-   - **Touch 2 (+3 days):** 1-sentence case study / proof metric.
-   - **Touch 3 (+6 days):** 9-word re-engagement prompt.`
-  },
-  'seo-audit': {
-    name: 'AI Answer Engine Optimization (GEO)',
-    category: 'SEO & Citations',
-    badge: 'SEO & GEO',
-    tokens: 1980,
-    command: "npx skills add https://github.com/rknall/claude-skills --skill 'ai-seo'",
-    description: 'Comprehensive playbook for ranking in Perplexity, ChatGPT Search, and Google AI Overviews with structured JSON-LD and llms.txt.',
-    prompt: `# AI Search & Generative Engine Optimization (GEO) Playbook
-
-You are an AI Search Specialist optimizing websites for LLM answer engines (Perplexity, ChatGPT Search, Claude, Google AI Overviews).
-
-## Directives:
-1. **Direct Answer Architecture:**
-   - Provide explicit, factual summary answers in the first 40 words of each section.
-   - Structure data with markdown tables, definition lists, and numbered steps.
-
-2. **Schema & Knowledge Graph:**
-   - Implement JSON-LD with \`@type: "TechArticle"\`, \`SoftwareApplication\`, and \`FAQPage\`.
-   - Standard \`llms.txt\` and \`llms-full.txt\` for agentic crawlers.`
-  },
-  'typescript': {
-    name: 'TypeScript Strict Refactorer & Zod Validator',
-    category: 'Engineering & Code',
-    badge: 'ENGINEERING',
-    tokens: 2300,
-    command: "npx skills add https://github.com/vercel/ai --skill typescript-strict",
-    description: 'Refactors untyped JavaScript or loose TypeScript into strictly typed, zero-`any` code with runtime Zod schema parsing and generics.',
-    prompt: `# Strict TypeScript & Runtime Validation Playbook
-
-You are a Principal TypeScript Architect enforcing strict type safety and domain-driven design.
-
-## Directives:
-1. **Type Strictness:**
-   - \`noImplicitAny: true\`, \`strictNullChecks: true\`.
-   - Never use \`any\` — use \`unknown\` with type guards or discriminated unions.
-
-2. **Runtime Validation:**
-   - Validate all external API inputs and query parameters with \`z.infer<typeof Schema>\`.`
-  }
-};
-
-/* ==========================================================================
-   3. Live Hero Mini-Extractor Widget
+   2. Live Hero Mini-Extractor Widget
    ========================================================================== */
 function initHeroWidget() {
   const input = document.getElementById('widgetSkillInput');
@@ -382,11 +257,12 @@ function initHeroWidget() {
 
   if (!input || !extractBtn) return;
 
-  let activeSkillKey = 'copywriting';
+  let activeSlug = 'copywriting';
 
-  function renderSkill(skillKey, animate = true) {
-    const data = SKILL_DATABASE[skillKey] || SKILL_DATABASE['copywriting'];
-    activeSkillKey = skillKey;
+  function renderHeroSkill(slug, animate = true) {
+    const item = CURATED_SKILLS.find(s => s.slug === slug) || CURATED_SKILLS[0];
+    const prompt = SKILL_PROMPTS[slug] || `# ${item.name}\n\n${item.description}`;
+    activeSlug = slug;
 
     if (animate) {
       extractBtn.classList.add('loading');
@@ -394,51 +270,52 @@ function initHeroWidget() {
     }
 
     setTimeout(() => {
-      input.value = data.command;
-      outputBadge.textContent = data.badge;
-      outputSkillName.textContent = data.name;
-      outputTokens.textContent = `~${data.tokens.toLocaleString()} tokens`;
-      outputCode.textContent = data.prompt;
+      input.value = item.command;
+      outputBadge.textContent = item.badge.toUpperCase();
+      outputSkillName.textContent = item.name;
+      const tok = item.tokenEstimate || Math.round(prompt.length / 4);
+      outputTokens.textContent = `~${tok.toLocaleString()} tokens`;
+      outputCode.textContent = prompt;
 
       extractBtn.classList.remove('loading');
       outputPanel.style.opacity = '1';
 
       presetTabs.forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.skill === skillKey);
+        tab.classList.toggle('active', tab.dataset.skill === slug);
       });
     }, animate ? 200 : 0);
   }
 
   // Initial render
-  renderSkill('copywriting', false);
+  renderHeroSkill('copywriting', false);
 
   // Preset tabs click
   presetTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      const skill = tab.dataset.skill;
-      renderSkill(skill, true);
+      const skillSlug = tab.dataset.skill;
+      renderHeroSkill(skillSlug, true);
     });
   });
 
-  // Redirection to WASM Engine with Query Parameter
+  // Redirection to Compiler App with Query Parameter
   function redirectToEngine(val) {
     const trimmed = (val || '').trim();
     if (!trimmed) {
       showToast('Please enter a GitHub repository or skills command', 'info');
       return;
     }
-    const targetUrl = new URL('../index.html', window.location.href);
-    targetUrl.searchParams.set('url', trimmed);
+    const targetUrl = new URL('/app/', window.location.origin);
+    targetUrl.searchParams.set('extract', trimmed);
     window.location.href = targetUrl.toString();
   }
 
-  // Extract button click -> redirects to engine with query parameter
+  // Extract button click -> redirects to compiler app
   extractBtn.addEventListener('click', (e) => {
     e.preventDefault();
     redirectToEngine(input.value);
   });
 
-  // Enter key on input -> redirects to engine
+  // Enter key on input -> redirects to compiler app
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -449,9 +326,9 @@ function initHeroWidget() {
   // Copy prompt button click
   if (copyPromptBtn) {
     copyPromptBtn.addEventListener('click', () => {
-      const promptText = SKILL_DATABASE[activeSkillKey]?.prompt || outputCode.textContent;
+      const promptText = SKILL_PROMPTS[activeSlug] || outputCode.textContent;
       navigator.clipboard.writeText(promptText).then(() => {
-        showToast('Copied prompt! Ready to paste into Claude or ChatGPT.', 'success');
+        showToast('Copied prompt! Ready to paste into Claude, ChatGPT, or Cursor.', 'success');
       }).catch(() => {
         showToast('Copy failed, please select and copy manually.', 'error');
       });
@@ -460,11 +337,11 @@ function initHeroWidget() {
 }
 
 /* ==========================================================================
-   4. Skills Showcase Catalog & Filter
+   3. Skills Showcase Catalog & Filter (55+ Curated Skills)
    ========================================================================== */
 function initSkillsCatalog() {
   const tabs = document.querySelectorAll('.catalog-tab');
-  const cards = document.querySelectorAll('.skill-card');
+  const grid = document.getElementById('skillsGrid');
   const modal = document.getElementById('skillPreviewModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const modalDismissBtn = document.getElementById('modalDismissBtn');
@@ -478,34 +355,106 @@ function initSkillsCatalog() {
 
   let currentModalSkill = null;
 
+  function getCategoryKey(cat) {
+    if (!cat) return 'other';
+    const c = cat.toLowerCase();
+    if (c.includes('copywriting')) return 'copywriting';
+    if (c.includes('marketing') || c.includes('growth')) return 'marketing';
+    if (c.includes('design') || c.includes('visual')) return 'design';
+    if (c.includes('sales') || c.includes('outbound')) return 'sales';
+    if (c.includes('seo') || c.includes('search')) return 'seo';
+    if (c.includes('monetization') || c.includes('offer') || c.includes('pricing')) return 'monetization';
+    if (c.includes('strategy') || c.includes('operations') || c.includes('revops') || c.includes('research')) return 'strategy';
+    if (c.includes('engineering') || c.includes('code') || c.includes('dev')) return 'dev';
+    return 'other';
+  }
+
+  function renderGrid(filterCat = 'all') {
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const filtered = CURATED_SKILLS.filter(s => {
+      if (filterCat === 'all') return true;
+      return getCategoryKey(s.category) === filterCat;
+    });
+
+    filtered.forEach(s => {
+      const prompt = SKILL_PROMPTS[s.slug] || `# ${s.name}\n\n${s.description}`;
+      const tok = s.tokenEstimate || Math.round(prompt.length / 4);
+      const catKey = getCategoryKey(s.category);
+
+      const card = document.createElement('div');
+      card.className = 'skill-card';
+      card.dataset.category = catKey;
+      card.dataset.skillId = s.slug;
+
+      card.innerHTML = `
+        <div class="card-ambient-overlay"></div>
+        <div class="skill-card-header">
+          <div class="skill-icon-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </div>
+          <div class="skill-meta-right">
+            <span class="skill-category-name">${escapeHtml(s.badge.toUpperCase())}</span>
+            <span class="skill-token-count">~${tok.toLocaleString()} tok</span>
+          </div>
+        </div>
+        <h3 class="skill-card-title">${escapeHtml(s.name)}</h3>
+        <p class="skill-card-desc">${escapeHtml(s.description)}</p>
+        <div class="skill-card-actions">
+          <button type="button" class="btn btn-card-preview skill-btn-preview" data-preview-id="${s.slug}">View Prompt</button>
+          <button type="button" class="btn btn-primary btn-card-copy skill-btn-copy" data-copy-id="${s.slug}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.skill-btn-preview').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openModal(s.slug);
+      });
+
+      card.querySelector('.skill-btn-copy').addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(prompt).then(() => {
+          showToast(`Copied "${s.name}" prompt!`, 'success');
+        });
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  // Initial Grid Render
+  renderGrid('all');
+
   // Filter Tabs
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-
-      const category = tab.dataset.category;
-      cards.forEach(card => {
-        if (category === 'all' || card.dataset.category === category) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
+      const cat = tab.dataset.category || 'all';
+      renderGrid(cat);
     });
   });
 
   // Modal Open Handler
-  function openModal(skillId) {
-    const data = SKILL_DATABASE[skillId];
-    if (!data || !modal) return;
+  function openModal(slug) {
+    const s = CURATED_SKILLS.find(item => item.slug === slug);
+    if (!s || !modal) return;
 
-    currentModalSkill = data;
-    modalTitle.textContent = data.name;
-    modalCategoryBadge.textContent = data.category;
-    modalDescription.textContent = data.description;
-    modalTokens.textContent = `~${data.tokens.toLocaleString()} tokens`;
-    modalPromptCode.textContent = data.prompt;
+    const prompt = SKILL_PROMPTS[slug] || `# ${s.name}\n\n${s.description}`;
+    const tok = s.tokenEstimate || Math.round(prompt.length / 4);
+
+    currentModalSkill = { ...s, prompt, tok };
+    modalTitle.textContent = s.name;
+    modalCategoryBadge.textContent = s.badge.toUpperCase();
+    modalDescription.textContent = s.description;
+    modalTokens.textContent = `~${tok.toLocaleString()} tokens`;
+    modalPromptCode.textContent = prompt;
 
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
@@ -519,29 +468,6 @@ function initSkillsCatalog() {
     document.body.style.overflow = '';
   }
 
-  // Preview Buttons on Cards
-  document.querySelectorAll('.skill-btn-preview').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const skillId = btn.dataset.previewId;
-      openModal(skillId);
-    });
-  });
-
-  // Direct Copy Buttons on Cards
-  document.querySelectorAll('.skill-btn-copy').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const skillId = btn.dataset.copyId;
-      const data = SKILL_DATABASE[skillId];
-      if (data) {
-        navigator.clipboard.writeText(data.prompt).then(() => {
-          showToast(`Copied "${data.name}" prompt`, 'success');
-        });
-      }
-    });
-  });
-
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
   if (modalDismissBtn) modalDismissBtn.addEventListener('click', closeModal);
   if (modal) {
@@ -553,8 +479,8 @@ function initSkillsCatalog() {
   if (modalOpenInAppBtn) {
     modalOpenInAppBtn.addEventListener('click', () => {
       if (currentModalSkill?.command) {
-        const targetUrl = new URL('../index.html', window.location.href);
-        targetUrl.searchParams.set('url', currentModalSkill.command);
+        const targetUrl = new URL('/app/', window.location.origin);
+        targetUrl.searchParams.set('extract', currentModalSkill.command);
         window.location.href = targetUrl.toString();
       }
     });
@@ -564,7 +490,7 @@ function initSkillsCatalog() {
     modalCopyBtn.addEventListener('click', () => {
       if (currentModalSkill) {
         navigator.clipboard.writeText(currentModalSkill.prompt).then(() => {
-          showToast(`Copied "${currentModalSkill.name}" prompt`, 'success');
+          showToast(`Copied "${currentModalSkill.name}" prompt!`, 'success');
           closeModal();
         });
       }
@@ -578,8 +504,17 @@ function initSkillsCatalog() {
   });
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /* ==========================================================================
-   5. FAQ Accordion
+   4. FAQ Accordion
    ========================================================================== */
 function initFaqAccordion() {
   const items = document.querySelectorAll('.faq-item');
@@ -598,7 +533,7 @@ function initFaqAccordion() {
 }
 
 /* ==========================================================================
-   6. Toast Notifications (Crisp Vector Icons, No Emojis)
+   5. Toast Notifications
    ========================================================================== */
 function showToast(message, type = 'info', duration = 3000) {
   const container = document.getElementById('toastContainer');
@@ -615,7 +550,6 @@ function showToast(message, type = 'info', duration = 3000) {
   }
 
   toast.innerHTML = `<span class="toast-icon">${iconSvg}</span><span class="toast-text">${message}</span>`;
-
   container.appendChild(toast);
 
   setTimeout(() => {

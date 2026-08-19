@@ -448,6 +448,124 @@ select.input-styled {
   cursor: pointer;
 }
 
+/* Auto-Suggest Dropdown */
+.autosuggest-dropdown {
+  position: absolute;
+  top: 68px;
+  left: 0;
+  right: 140px;
+  background-color: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.autosuggest-item {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.autosuggest-item:last-child {
+  border-bottom: none;
+}
+
+.autosuggest-item:hover,
+.autosuggest-item.selected {
+  background-color: var(--secondary);
+}
+
+.autosuggest-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.autosuggest-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.autosuggest-sub {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.autosuggest-badge {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted-subtle);
+  white-space: nowrap;
+}
+
+/* Quick Preset Chips */
+.quick-preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.quick-preset-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.quick-chips-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.quick-chip {
+  background: var(--secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--muted-foreground);
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.quick-chip:hover {
+  background: var(--accent);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.quick-chip.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
 /* Rectangular Shadcn Buttons */
 .btn {
   display: inline-flex;

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary Meta Tags -->
+  <title>Skill Extractor Engine — WebAssembly AI Agent Playbook Compiler</title>
+  <meta name="title" content="Skill Extractor Engine — WebAssembly AI Agent Playbook Compiler">
+  <meta name="description" content="Pure Client-Side WebAssembly Compiler and Manager for AI Agent Skills. Unpack skills.sh, GitHub repos, and NPX commands into single-file playbooks for Claude Code, Cursor, Windsurf, Antigravity, and Copilot.">
+  <meta name="keywords" content="Skill Extractor, skills.sh, AI Agent Skills, WebAssembly compiler, Claude Code playbook, Cursor rules, Antigravity IDE, Windsurf rules, AI prompt manager">
+  <meta name="author" content="Birol (birol.tech)">
+  <meta name="creator" content="Birol">
+  <meta name="publisher" content="Birol Tech">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="theme-color" content="#09090b">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://skillextract.birol.tech/app/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillextract.birol.tech/app/">
+  <meta property="og:site_name" content="Skill Extractor Engine">
+  <meta property="og:title" content="Skill Extractor Engine — WebAssembly AI Agent Playbook Compiler">
+  <meta property="og:description" content="Pure Client-Side WebAssembly Compiler and Manager for AI Agent Skills. Unpack skills.sh, GitHub repos, and NPX commands into single-file playbooks.">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://skillextract.birol.tech/app/">
+  <meta name="twitter:title" content="Skill Extractor Engine — WebAssembly AI Agent Playbook Compiler">
+  <meta name="twitter:description" content="Pure Client-Side WebAssembly Compiler for AI Agent Skills (Claude Code, Cursor, Windsurf, Antigravity).">
+  <meta name="twitter:creator" content="@birol">
+
+  <!-- Fonts & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Prism Code Highlighting Theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <link rel="stylesheet" href="/src/styles/main.css">
+
+  <!-- Structured Data JSON-LD Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Skill Extractor Engine",
+    "url": "https://skillextract.birol.tech/app/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "All (Browser WebAssembly)",
+    "description": "Pure client-side WebAssembly compiler and manager for AI agent skills and prompt playbooks.",
+    "author": {
+      "@type": "Person",
+      "name": "Birol",
+      "url": "https://birol.tech"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <div class="ambient-glow"></div>
+
+  <div class="app-shell">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon-wrapper">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+        </div>
+        <div class="brand-title">
+          Skill Extractor
+          <span class="brand-sub">WASM Engine</span>
+        </div>
+      </div>
+
+      <div class="wasm-badge" id="sidebar-wasm-badge" title="WebAssembly linear memory acceleration active">
+        <div class="wasm-dot"></div>
+        <span>WASM Accelerated</span>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Compiler & Management</div>
+        <button class="nav-btn active" id="nav-extract" data-target="view-extract">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Extract Skill
+        </button>
+        <button class="nav-btn" id="nav-gallery" data-target="view-gallery">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Skill Gallery
+          <span class="nav-badge" id="badge-skill-count">0</span>
+        </button>
+        <button class="nav-btn" id="nav-curated" data-target="view-curated">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Curated Skills (<span id="curated-nav-count">55</span>)
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">System & Tools</div>
+        <button class="nav-btn" id="nav-wasm" data-target="view-wasm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          WASM Diagnostics
+        </button>
+        <button class="nav-btn" id="nav-settings" data-target="view-settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Settings & Data
+        </button>
+        <a href="/" class="nav-btn" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          Landing Page & Showcase
+        </a>
+        <a href="https://github.com/Birol-dev/skills.sh-extractor" class="nav-btn" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          GitHub Repository
+        </a>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="stat-pill">
+          <span>Storage:</span>
+          <strong id="sidebar-storage-stat">IndexedDB Active</strong>
+        </div>
+        <div style="font-size: 10.5px; line-height: 1.4; color: var(--text-dim);">Pure WebAssembly SPA &bull; Zero Backend</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-wrapper">
+      
+      <!-- ================= 1. EXTRACT VIEW ================= -->
+      <section class="view-pane active" id="view-extract">
+        <div class="view-header">
+          <div class="header-text">
+            <h1>Extract & Compile Agent Skill</h1>
+            <p>Paste an NPX command, GitHub repository URL, pick from 55+ curated prompt systems, drop a ZIP package, or select a local folder.</p>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <div class="tab-switcher">
+            <button class="tab-switch-btn active" id="tab-btn-github" data-pane="pane-input-github">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              GitHub / NPX Command & Quick Pick
+            </button>
+            <button class="tab-switch-btn" id="tab-btn-folder" data-pane="pane-input-folder">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              Local Folder
+            </button>
+            <button class="tab-switch-btn" id="tab-btn-zip" data-pane="pane-input-zip">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              ZIP Package Dropzone
+            </button>
+          </div>
+
+          <!-- GitHub Input Pane -->
+          <div class="input-tab-pane active" id="pane-input-github">
+            <div class="form-field" style="position: relative;">
+              <label class="form-label" for="input-github-cmd">
+                <span>Repository URL, NPX Command, or Skill Name</span>
+                <span class="form-helper">WASM Real-Time Auto-Suggest Enabled</span>
+              </label>
+              
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  id="input-github-cmd" 
+                  class="input-styled" 
+                  placeholder="Type a skill name (e.g. Copywriting, SEO, Cold Email) or paste URL..." 
+                  value="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'"
+                  autocomplete="off"
+                />
+                <button class="btn btn-primary" id="btn-extract-github">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Extract Skill</span>
+                </button>
+              </div>
+
+              <!-- Quick Search / Auto-Suggest Dropdown (Populated via JS) -->
+              <div class="autosuggest-dropdown" id="autosuggest-dropdown" style="display: none;"></div>
+
+              <!-- Quick Popular Preset Filter Chips -->
+              <div class="quick-preset-bar">
+                <span class="quick-preset-label">Quick Pick:</span>
+                <div class="quick-chips-wrapper" id="quick-chips-wrapper">
+                  <button type="button" class="quick-chip active" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'">Copywriting</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ab-testing'">A/B Testing</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'svg-logo-designer'">SVG Logo</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cold-email'">Cold Email</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ai-seo'">AI SEO</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'pricing'">Pricing & Packaging</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cro'">CRO</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/vercel/ai --skill typescript-strict">TypeScript</button>
+                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'launch'">Product Launch</button>
+                </div>
+              </div>
+
+              <p class="form-helper" style="margin-top: 10px;">Supports direct GitHub URLs, shorthand (<code>owner/repo</code>), branch subpaths, or CLI command templates.</p>
+            </div>
+          </div>
+
+          <!-- Local Folder Pane -->
+          <div class="input-tab-pane" id="pane-input-folder">
+            <div class="form-field">
+              <label class="form-label">
+                <span>Select Local Directory</span>
+                <span class="form-helper">Scans SKILL.md, scripts/, references/</span>
+              </label>
+              <div class="input-group">
+                <input type="text" id="input-folder-display" class="input-styled" placeholder="No folder chosen..." readonly />
+                <input type="file" id="input-folder-file" webkitdirectory directory multiple style="display: none;" />
+                <button class="btn btn-secondary" id="btn-select-folder">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                  Browse Folder...
+                </button>
+                <button class="btn btn-primary" id="btn-extract-folder" disabled>Extract</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ZIP Dropzone Pane -->
+          <div class="input-tab-pane" id="pane-input-zip">
+            <div class="dropzone" id="zip-dropzone">
+              <input type="file" id="input-zip-file" accept=".zip" style="display: none;" />
+              <div class="dropzone-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              </div>
+              <div class="dropzone-title">Drop your skill .zip package here or click to browse</div>
+              <div class="dropzone-sub">WebAssembly will decompress and compile directives client-side with 0 network transfer.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Logs Panel -->
+        <div class="terminal-panel">
+          <div class="terminal-header">
+            <div class="terminal-title">
+              <div class="terminal-dots">
+                <span class="terminal-dot dot-red"></span>
+                <span class="terminal-dot dot-yellow"></span>
+                <span class="terminal-dot dot-green"></span>
+              </div>
+              <span>client-compiler-stream</span>
+            </div>
+            <button class="btn btn-outline" id="btn-clear-term" style="padding: 4px 10px; font-size: 11px;">Clear Logs</button>
+          </div>
+          <div class="terminal-body" id="term-logs">
+            <div class="term-line">
+              <span class="term-time">[00:00:00]</span>
+              <span class="term-msg info">WebAssembly compiler runtime initialized. 55+ Curated skills loaded. Ready for extraction.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 2. GALLERY VIEW ================= -->
+      <section class="view-pane" id="view-gallery">
+        <div class="view-header">
+          <div class="header-text">
+            <h1>Skill Playbook Gallery</h1>
+            <p>Manage, inspect, and export your compiled playbooks. Drag cards or export directly in your target IDE agent format.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" id="btn-export-all-zip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export All ZIP
+            </button>
+            <button class="btn btn-primary" id="btn-gallery-new-extract">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              Extract New
+            </button>
+          </div>
+        </div>
+
+        <div class="gallery-toolbar">
+          <div class="search-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="gallery-search-input" class="input-styled search-input" placeholder="Search saved skills by name, description, tags..." />
+          </div>
+          <div class="tag-filter-bar" id="gallery-tag-bar">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="gallery-grid" id="gallery-cards-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <div class="empty-gallery" id="gallery-empty-state" style="display: none;">
+          <div class="empty-gallery-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </div>
+          <h3>No Skills Extracted Yet</h3>
+          <p>Extract a skill from GitHub, browse our 55+ curated skills, or drop a ZIP archive to populate your gallery.</p>
+          <button class="btn btn-primary" id="btn-empty-extract">Extract Your First Skill</button>
+        </div>
+      </section>
+
+      <!-- ================= 3. CURATED HUB VIEW ================= -->
+      <section class="view-pane" id="view-curated">
+        <div class="view-header">
+          <div class="header-text">
+            <h1>Curated Agent Skills Hub</h1>
+            <p>55+ Pre-compiled, instant-extract skill playbooks across Copywriting, Growth Marketing, Design, SEO, Sales, Engineering, and Monetization.</p>
+          </div>
+        </div>
+
+        <div class="gallery-toolbar" style="margin-bottom: 20px;">
+          <div class="search-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="curated-search-input" class="input-styled search-input" placeholder="Search 55+ curated skills by keyword, discipline, or tags..." />
+          </div>
+          <div class="tag-filter-bar" id="curated-category-bar">
+            <button class="tag-filter active" data-curated-cat="all">All Disciplines</button>
+            <button class="tag-filter" data-curated-cat="Copywriting">Copywriting</button>
+            <button class="tag-filter" data-curated-cat="Marketing & Growth">Marketing & Growth</button>
+            <button class="tag-filter" data-curated-cat="Design & Visuals">Design</button>
+            <button class="tag-filter" data-curated-cat="Sales & Outbound">Sales</button>
+            <button class="tag-filter" data-curated-cat="AI Search & SEO">SEO & GEO</button>
+            <button class="tag-filter" data-curated-cat="Monetization & Offers">Monetization</button>
+            <button class="tag-filter" data-curated-cat="Engineering & Code">Engineering</button>
+            <button class="tag-filter" data-curated-cat="Strategy & Operations">Strategy</button>
+          </div>
+        </div>
+
+        <div class="curated-grid" id="curated-cards-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
+      <!-- ================= 4. WASM BENCHMARK VIEW ================= -->
+      <section class="view-pane" id="view-wasm">
+        <div class="view-header">
+          <div class="header-text">
+            <h1>WebAssembly Acceleration Diagnostics</h1>
+            <p>Real-time performance diagnostics and benchmarks comparing pure JavaScript versus WebAssembly execution.</p>
+          </div>
+          <button class="btn btn-primary" id="btn-run-benchmark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Run Benchmark (10k ops)
+          </button>
+        </div>
+
+        <div class="wasm-stat-grid">
+          <div class="stat-card">
+            <span class="stat-card-title">WASM Engine Status</span>
+            <span class="stat-card-value" id="stat-wasm-status" style="color: var(--emerald);">Active</span>
+            <span class="stat-card-sub" id="stat-wasm-size">Embedded Bytecode</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-title">Execution Speedup</span>
+            <span class="stat-card-value" id="stat-wasm-speedup">--</span>
+            <span class="stat-card-sub">Levenshtein & Fuzzy Match</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-title">Linear Memory</span>
+            <span class="stat-card-value" id="stat-wasm-mem">64 KB</span>
+            <span class="stat-card-sub">Dynamic Heap Buffer</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-title">Curated Skills</span>
+            <span class="stat-card-value" style="color: var(--indigo);">55</span>
+            <span class="stat-card-sub">Pre-Loaded Playbooks</span>
+          </div>
+        </div>
+
+        <div class="benchmark-runner">
+          <h3 style="font-size: 15px; font-weight: 700;">Levenshtein String Distance Benchmark</h3>
+          <div class="bench-bar-container">
+            <div class="bench-row">
+              <div class="bench-row-label">
+                <span>WebAssembly (Linear Memory Engine)</span>
+                <span id="bench-val-wasm">Ready to benchmark</span>
+              </div>
+              <div class="bench-progress-track">
+                <div class="bench-progress-fill fill-wasm" id="bench-bar-wasm" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="bench-row">
+              <div class="bench-row-label">
+                <span>Pure JavaScript Engine</span>
+                <span id="bench-val-js">Ready to benchmark</span>
+              </div>
+              <div class="bench-progress-track">
+                <div class="bench-progress-fill fill-js" id="bench-bar-js" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Token Estimator Playground -->
+        <div class="card-box">
+          <h3 style="font-size: 15px; font-weight: 700;">WebAssembly Token Estimator Playground</h3>
+          <div class="form-field">
+            <label class="form-label" for="wasm-test-input">Enter sample system directives or code</label>
+            <textarea id="wasm-test-input" class="input-styled" style="height: 100px; resize: vertical;" placeholder="Type or paste prompt text here to calculate tokens in WASM..."></textarea>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <div class="stat-pill">
+              <span>Estimated LLM Tokens:</span>
+              <strong id="wasm-test-tokens" style="color: var(--emerald); margin-left: 8px;">0</strong>
+            </div>
+            <div class="stat-pill">
+              <span>FNV-1a 32-bit Hash:</span>
+              <strong id="wasm-test-hash" style="color: var(--indigo); font-family: var(--font-mono); margin-left: 8px;">00000000</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 5. SETTINGS VIEW ================= -->
+      <section class="view-pane" id="view-settings">
+        <div class="view-header">
+          <div class="header-text">
+            <h1>Settings & Storage Configurations</h1>
+            <p>Customize metadata tag defaults, default agent export formats, optional GitHub access tokens, and backup your data.</p>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h3 style="font-size: 15px; font-weight: 700;">Metadata & Export Defaults</h3>
+          <div class="form-field">
+            <label class="form-label" for="setting-tags">Prefill Extra Tags</label>
+            <input type="text" id="setting-tags" class="input-styled" placeholder="verified, agent-skill, local-copy" />
+            <span class="form-helper">Comma-separated tags to automatically append to compiled frontmatter.</span>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="setting-export-format">Default Playbook Export Format</label>
+            <select id="setting-export-format" class="input-styled">
+              <option value="skill.md">Standard Skill (.skill.md)</option>
+              <option value="claude.md">Claude Code (CLAUDE.md)</option>
+              <option value="cursorrules">Cursor Rules (.cursorrules)</option>
+              <option value="windsurfrules">Windsurf Rules (.windsurfrules)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h3 style="font-size: 15px; font-weight: 700;">GitHub API Rate Limit Bypass (Optional)</h3>
+          <div class="form-field">
+            <label class="form-label" for="setting-gh-token">Personal Access Token (PAT)</label>
+            <input type="password" id="setting-gh-token" class="input-styled" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+            <span class="form-helper">Used strictly in your browser for public repository trees (raises rate limit from 60 to 5,000 requests/hour). Stored only in local IndexedDB.</span>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <h3 style="font-size: 15px; font-weight: 700;">Database & Backups</h3>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-secondary" id="btn-export-backup">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export JSON Backup
+            </button>
+            <input type="file" id="input-import-backup" accept=".json" style="display: none;" />
+            <button class="btn btn-secondary" id="btn-import-backup">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Import JSON Backup
+            </button>
+            <button class="btn btn-danger" id="btn-clear-db">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Clear Storage
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="btn btn-primary" id="btn-save-settings">Save Settings</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= PREVIEW MODAL ================= -->
+  <div class="modal-overlay" id="preview-modal">
+    <div class="modal-window">
+      <div class="modal-head">
+        <div class="modal-title-box">
+          <h2 id="modal-skill-title">Skill Title</h2>
+          <p id="modal-skill-subtitle">slug.skill.md &bull; 0 tokens</p>
+        </div>
+        <button class="modal-close-btn" id="modal-btn-close">&times;</button>
+      </div>
+
+      <div class="modal-main">
+        <aside class="modal-nav">
+          <button class="modal-nav-btn active" data-pane="modal-pane-rendered">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            Directives (Rendered)
+          </button>
+          <button class="modal-nav-btn" data-pane="modal-pane-meta">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Frontmatter Meta
+          </button>
+          <button class="modal-nav-btn" id="modal-tab-scripts" data-pane="modal-pane-scripts">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            Helper Scripts (<span id="modal-scripts-count">0</span>)
+          </button>
+          <button class="modal-nav-btn" id="modal-tab-refs" data-pane="modal-pane-refs">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            References (<span id="modal-refs-count">0</span>)
+          </button>
+          <button class="modal-nav-btn" data-pane="modal-pane-raw">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+            Raw Markdown Source
+          </button>
+        </aside>
+
+        <section class="modal-content-panel">
+          <!-- Rendered Markdown Pane -->
+          <div class="preview-tab-pane active" id="modal-pane-rendered">
+            <div class="markdown-rendered" id="modal-rendered-content"></div>
+          </div>
+
+          <!-- Metadata Grid Pane -->
+          <div class="preview-tab-pane" id="modal-pane-meta">
+            <div class="meta-table-grid" id="modal-meta-grid"></div>
+          </div>
+
+          <!-- Scripts Pane -->
+          <div class="preview-tab-pane" id="modal-pane-scripts">
+            <div class="script-tabs-strip" id="modal-script-selector"></div>
+            <pre class="code-viewer-block" id="modal-script-code">Select a script above to view source...</pre>
+          </div>
+
+          <!-- References Pane -->
+          <div class="preview-tab-pane" id="modal-pane-refs">
+            <div class="script-tabs-strip" id="modal-ref-selector"></div>
+            <div class="markdown-rendered" id="modal-ref-content">Select a reference document above to view...</div>
+          </div>
+
+          <!-- Raw Markdown Pane -->
+          <div class="preview-tab-pane" id="modal-pane-raw">
+            <pre class="code-viewer-block" id="modal-raw-source"></pre>
+          </div>
+        </section>
+      </div>
+
+      <div class="modal-foot">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <label style="font-size: 12px; color: var(--text-dim);">Format:</label>
+          <select id="modal-format-select" class="input-styled" style="padding: 6px 10px; font-size: 12px;">
+            <option value="skill.md">Standard .skill.md</option>
+            <option value="claude.md">Claude Code (CLAUDE.md)</option>
+            <option value="cursorrules">Cursor Rules (.cursorrules)</option>
+            <option value="windsurfrules">Windsurf Rules (.windsurfrules)</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-outline" id="modal-btn-download">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download
+          </button>
+          <button class="btn btn-secondary" id="modal-btn-copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Copy Playbook
+          </button>
+          <button class="btn btn-primary" id="modal-btn-done">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Stack -->
+  <div class="toast-stack" id="toast-container"></div>
+
+  <!-- Prism.js for syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js"></script>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

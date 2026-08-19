@@ -4,6 +4,8 @@ import JSZip from 'jszip';
 import wasmEngine from './wasmEngine.js';
 import storage from './storage.js';
 import { GitHubFetcher, parseCommandOrUrl } from './github.js';
+import { CURATED_SKILLS } from './curatedSkills.js';
+import { SKILL_PROMPTS } from './curatedPrompts.js';
 
 export function sanitizeSlug(name) {
   if (!name) return 'untitled-skill';
@@ -253,10 +255,64 @@ export class SkillExtractor {
     const targetSubdir = subdirOverride || parsedSubdir || '';
 
     onProgress(`Fetching file tree for ${owner}/${repo}...`, 15);
-    const { branch, tree } = await fetcher.getFileTree(owner, repo, specifiedBranch);
+    let branch = specifiedBranch;
+    let tree = null;
+    let allSkills = [];
 
-    onProgress('Scanning tree for skill packages...', 30);
-    const allSkills = fetcher.discoverSkills(tree);
+    try {
+      const treeRes = await fetcher.getFileTree(owner, repo, specifiedBranch);
+      branch = treeRes.branch;
+      tree = treeRes.tree;
+      onProgress('Scanning tree for skill packages...', 30);
+      allSkills = fetcher.discoverSkills(tree);
+    } catch (fetchErr) {
+      console.warn('GitHub tree fetch encountered an issue:', fetchErr);
+      // Check if we have an offline pre-compiled playbook for this skill
+      const fallbackMatch = CURATED_SKILLS.find(s => 
+        s.slug === targetSubdir || 
+        (targetSubdir && s.name.toLowerCase().includes(targetSubdir.toLowerCase())) ||
+        input.includes(s.slug)
+      );
+
+      if (fallbackMatch && SKILL_PROMPTS[fallbackMatch.slug]) {
+        onProgress(`Compiling pre-cached playbook for "${fallbackMatch.name}"...`, 60);
+        const directives = SKILL_PROMPTS[fallbackMatch.slug];
+        const { output: compiledMarkdown, slug, tags } = compileSkillContent({
+          name: fallbackMatch.name,
+          description: fallbackMatch.description,
+          frontmatter: { name: fallbackMatch.name, description: fallbackMatch.description },
+          directives,
+          scripts: [],
+          references: [],
+          customTags: settings.defaultTags,
+          exportFormat: settings.defaultExportFormat || 'skill.md'
+        });
+
+        const tokenEstimate = this.wasm.estimateTokens(compiledMarkdown);
+        const hash = this.wasm.hash(compiledMarkdown);
+
+        const savedSkill = await storage.saveSkill({
+          name: fallbackMatch.name,
+          slug,
+          description: fallbackMatch.description,
+          metadata: { name: fallbackMatch.name, description: fallbackMatch.description },
+          directives,
+          scripts: [],
+          references: [],
+          compiledMarkdown,
+          sourceType: 'curated-cache',
+          sourceUrl: fallbackMatch.sourceUrl || `https://github.com/${owner}/${repo}`,
+          sourcePath: fallbackMatch.subdir || targetSubdir,
+          tokenEstimate,
+          hash,
+          tags
+        });
+
+        onProgress('Skill extracted and compiled successfully from curated database!', 100);
+        return savedSkill;
+      }
+      throw fetchErr;
+    }
 
     if (allSkills.length === 0) {
       throw new Error(`No SKILL.md file found in ${owner}/${repo}`);
