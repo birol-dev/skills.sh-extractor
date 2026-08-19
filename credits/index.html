@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Credits & Sources — Skill Extractor</title>
+  <meta name="description" content="Every skill in the Skill Extractor catalog is written by another author. This page credits the open-source repositories the curated skill library is sourced from.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#09090b">
+  <link rel="canonical" href="https://skillextract.birol.tech/credits/">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%2309090b' stroke='%23ffffff' stroke-width='6'/><path d='M30 65 L50 30 L70 65 M38 52 L62 52' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/landing/landing.css">
+  <link rel="stylesheet" href="/credits/credits.css">
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <header class="navbar" id="mainNavbar">
+      <div class="nav-container">
+        <a href="/" class="brand-link" aria-label="Skill Extractor home">
+          <span class="brand-name">Skill Extractor</span>
+        </a>
+        <nav class="nav-links">
+          <a href="/#skills-catalog" class="nav-link">Skills Library</a>
+          <a href="/#faq" class="nav-link">FAQ</a>
+          <a href="/credits/" class="nav-link" aria-current="page">Credits</a>
+        </nav>
+        <div class="nav-actions">
+          <a href="/app/" class="btn btn-primary nav-cta">
+            <span>Launch Compiler</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="credits-section">
+        <div class="section-container credits-container">
+          <span class="editorial-kicker">CREDITS</span>
+          <h1 class="section-title">
+            Every skill here was written by <br>
+            <span class="serif-title">someone else.</span>
+          </h1>
+          <p class="credits-intro">
+            Skill Extractor is a compiler, not an author. It unpacks and reformats agent skills that were
+            researched and written by the people and communities below. The catalog currently ships
+            <strong id="creditsTotalCount">—</strong> curated skills, grouped here by the repository they
+            came from. If you use a skill from this library, credit belongs to its original author —
+            follow the link to their repo.
+          </p>
+
+          <div class="credits-list" id="creditsList" aria-live="polite">
+            <!-- Populated by credits.js -->
+          </div>
+
+          <p class="credits-footnote">
+            Spot an attribution error, or are you the author of one of these skills and want changes made?
+            Open an issue on the
+            <a href="https://github.com/Birol-dev/skills.sh-extractor" target="_blank" rel="noopener noreferrer">Skill Extractor GitHub repo ↗</a>.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-container">
+        <div class="footer-left">
+          <div class="footer-brand">
+            <span class="f-name">Skill Extractor</span>
+          </div>
+          <p class="footer-bio">
+            Democratizing access to modular AI skills and prompt engineering. Pure client-side WebAssembly.
+          </p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <span class="col-title">Navigation</span>
+            <a href="/#hero">Top</a>
+            <a href="/#skills-catalog">Curated Skills</a>
+            <a href="/#faq">FAQ</a>
+          </div>
+          <div class="footer-col">
+            <span class="col-title">App</span>
+            <a href="/app/">Compiler Engine</a>
+            <a href="/credits/">Credits & Sources</a>
+            <a href="https://github.com/Birol-dev/skills.sh-extractor" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+          </div>
+          <div class="footer-col">
+            <span class="col-title">Creator</span>
+            <a href="https://birol.tech" target="_blank" rel="noopener noreferrer">birol.tech ↗</a>
+            <a href="https://github.com/Birol-dev" target="_blank" rel="noopener noreferrer">Birol GitHub ↗</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-bottom-content">
+          <span>Open Source • Built by <a href="https://birol.tech" target="_blank" rel="noopener noreferrer" class="footer-author-link">birol.tech</a> for everyone who creates with AI.</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script type="module" src="/credits/credits.js"></script>
+</body>
+</html>

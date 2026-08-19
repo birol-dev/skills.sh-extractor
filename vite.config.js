@@ -17,7 +17,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         app: resolve(__dirname, 'app/index.html'),
-        landing: resolve(__dirname, 'landing/index.html')
+        landing: resolve(__dirname, 'landing/index.html'),
+        credits: resolve(__dirname, 'credits/index.html')
       }
     }
   }

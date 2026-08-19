@@ -180,33 +180,18 @@ body {
 }
 
 .brand-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  color: var(--text-white);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1;
   text-decoration: none;
-  color: var(--text-white);
 }
 
-.brand-glyph {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  border: 1px solid var(--border-medium);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-white);
+.brand-name {
+  display: block;
+  color: inherit;
 }
-
-.brand-text {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-}
-.brand-name { color: var(--text-white); }
 
 .nav-links {
   display: flex;
