@@ -206,7 +206,12 @@ body {
   font-weight: 500;
   transition: color var(--transition-fast);
 }
-.nav-link:hover {
+.nav-link:hover,
+.nav-link[aria-current="page"],
+body[data-page="mission"] .nav-link[data-nav="mission"],
+body[data-page="skills"] .nav-link[data-nav="skills"],
+body[data-page="how-it-works"] .nav-link[data-nav="how-it-works"],
+body[data-page="faq"] .nav-link[data-nav="faq"] {
   color: var(--text-white);
 }
 
@@ -883,6 +888,10 @@ body {
   overflow: hidden;
   transition: all var(--transition-smooth);
 }
+.skill-card[hidden] {
+  display: none !important;
+}
+
 .skill-card:hover {
   transform: translateY(-2px);
   border-color: var(--border-medium);
@@ -1148,7 +1157,7 @@ body {
   padding: 0 20px;
 }
 .faq-item.active .faq-answer {
-  max-height: 220px;
+  max-height: 480px;
   padding: 0 20px 18px 20px;
 }
 
@@ -1572,4 +1581,111 @@ body {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+/* --------------------------------------------------------------------------
+   19. Dedicated SEO pages (intro, breadcrumbs, extra copy)
+   -------------------------------------------------------------------------- */
+.page-intro-section {
+  padding-top: 48px;
+  padding-bottom: 8px;
+}
+
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.breadcrumb-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.breadcrumb-nav a:hover {
+  color: var(--text-white);
+}
+
+.breadcrumb-sep {
+  color: var(--text-faint);
+}
+
+.seo-extra-section {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.seo-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.seo-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px;
+}
+
+.seo-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-white);
+  margin-bottom: 8px;
+}
+
+.seo-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.seo-prose {
+  max-width: 760px;
+}
+
+.seo-prose h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-white);
+  margin: 28px 0 8px;
+}
+
+.seo-prose p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.seo-prose a,
+.seo-crosslinks a,
+.faq-answer a {
+  color: var(--text-white);
+}
+
+.seo-crosslinks {
+  margin-top: 28px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 760px;
+}
+
+.footer-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-updated {
+  color: var(--text-muted);
+}
+
+.footer-meta-sep {
+  color: var(--text-faint);
 }

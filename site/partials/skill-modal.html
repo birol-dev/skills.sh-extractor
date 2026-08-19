@@ -1,0 +1,38 @@
+  <div class="modal-backdrop" id="skillPreviewModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="card-ambient-overlay"></div>
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-cat-tag" id="modalCategoryBadge">CATEGORY</span>
+          <h3 class="modal-title" id="modalTitle">Skill Name</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="modalCloseBtn" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" id="modalDescription"></p>
+        <div class="modal-code-wrapper">
+          <div class="modal-code-header">
+            <span>CONSOLIDATED PROMPT PLAYBOOK</span>
+            <span class="modal-tokens" id="modalTokens">~1,840 tokens</span>
+          </div>
+          <pre class="modal-code"><code id="modalPromptCode"></code></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="modalDismissBtn">Close</button>
+        <button type="button" class="btn btn-secondary" id="modalOpenInAppBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Open in Compiler App</span>
+        </button>
+        <button type="button" class="btn btn-primary" id="modalCopyBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span>Copy Full Prompt</span>
+        </button>
+      </div>
+    </div>
+  </div>

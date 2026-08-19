@@ -1,0 +1,3 @@
+# Cloudflare Pages redirects
+/landing    /    301
+/landing/   /    301

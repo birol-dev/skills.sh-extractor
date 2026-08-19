@@ -1,32 +1,30 @@
 # Skill Extractor & Playbook Compiler
 
-> Pure Client-Side WebAssembly (WASM) Single Page Application for compiling, consolidating, and exporting AI Agent Skills into single-file playbooks for Claude Code, Cursor, Windsurf, Antigravity, and GitHub Copilot.
+> Pure client-side WebAssembly compiler for skills.sh playbooks. Unpack GitHub skill repos and npx commands into paste-ready prompts for Claude, ChatGPT, Cursor, Windsurf, Antigravity, and GitHub Copilot — no terminal required.
 
 ## Overview
-Skill Extractor allows developers, marketers, copywriters, and creators to unpack modular skill packages (from `skills.sh`, GitHub repositories, and NPX commands) into consolidated prompt playbooks without running terminal commands, installing Node.js runtimes, or sending data to third-party servers.
+Skill Extractor lets marketers, copywriters, designers, and developers unpack modular skill packages (from skills.sh, GitHub, and NPX commands) into consolidated prompt playbooks without Node.js, CLI installs, or sending data to a Skill Extractor server.
 
 ## Core Capabilities
-- **WASM Linear Memory Engine**: Accelerates fuzzy Levenshtein subdirectory matching, string normalization, token estimation, and FNV-1a hashing in-browser without server overhead.
-- **100% Client-Side Privacy**: Runs completely in the browser sandbox. No API keys, credentials, or proprietary source code ever leave the user's local machine.
-- **Multi-Agent Playbook Exporters**: Compiles raw `SKILL.md` repositories and helper scripts into target formats:
-  - Claude Code (`CLAUDE.md`)
-  - Cursor (`.cursorrules` / `.mdc`)
-  - Windsurf (`.windsurfrules`)
-  - Antigravity IDE (`.agents/skills/<name>/SKILL.md`)
-  - Standard `skills.sh` (`.skill.md`)
-- **Deterministic Script Consolidation**: Inlines helper scripts (`scripts/`, `bin/`) and collapsible reference markdown (`references/`, `docs/`) to reduce agent context bloat by up to 78%.
-- **Multiple Ingestion Methods**: Accepts NPX commands (`npx skills add <url>`), GitHub repository URLs (`owner/repo`), local folders (File System Access API), and drag-and-drop `.zip` files.
-- **Persistent IndexedDB Gallery**: Full offline storage with live fuzzy search, tag filtering, 1-click clipboard copy, and direct OS file drag export.
+- **WASM engine**: In-browser fuzzy matching, token estimation, and hashing.
+- **Client-side privacy**: Processing stays in the browser sandbox. No Skill Extractor backend.
+- **Exporters**: Claude Code (`CLAUDE.md`), Cursor, Windsurf, Antigravity, standard `.skill.md`.
+- **Inputs**: NPX commands, GitHub URLs, local folders, `.zip` drops, and a 55+ curated catalog.
 
-## Key URLs & Resources
-- Web App Compiler: https://skill-extractor.pages.dev/
-- Product Landing Page: https://skill-extractor.pages.dev/landing/
-- Machine-Readable Pricing: https://skill-extractor.pages.dev/pricing.md
-- Sitemaps: https://skill-extractor.pages.dev/sitemap.xml
-- Creator Website: https://birol.tech
-- GitHub Source Repository: https://github.com/Birol-dev/skills.sh-extractor
-- License: MIT (Free and Open-Source for personal and commercial use)
+## Key URLs
+- Homepage: https://skillextract.birol.tech/
+- Mission (why no terminal): https://skillextract.birol.tech/mission/
+- Skills library: https://skillextract.birol.tech/skills/
+- How it works: https://skillextract.birol.tech/how-it-works/
+- FAQ: https://skillextract.birol.tech/faq/
+- Compiler app: https://skillextract.birol.tech/app/
+- Credits & sources: https://skillextract.birol.tech/credits/
+- Machine-readable pricing: https://skillextract.birol.tech/pricing.md
+- Sitemap: https://skillextract.birol.tech/sitemap.xml
+- Creator: https://birol.tech
+- Source: https://github.com/Birol-dev/skills.sh-extractor
+- License: MIT
 
 ## Pricing Summary
-- Standard Edition: $0 Free (Open-Source, Uncapped Local Executions, Zero Telemetry)
-- Enterprise & Teams: $0 Free (Self-hostable, Static HTML/WASM Bundle, Zero Backend Infrastructure)
+- Standard Edition: $0 (open source, uncapped local executions, zero telemetry)
+- Enterprise & Teams: $0 (self-hostable static HTML/WASM bundle, no backend)

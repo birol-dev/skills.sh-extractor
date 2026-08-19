@@ -1,0 +1,142 @@
+      <section class="hero-section" id="hero">
+        <div class="hero-container">
+          
+          <div class="hero-editorial-lead">
+            <span class="lead-number">01</span>
+            <span class="lead-text">THE OPEN SKILLS PROJECT</span>
+          </div>
+
+          <h1 class="hero-headline">
+            Every skill on <span class="serif-accent">skills.sh</span>,<br>
+            now without the <span class="serif-emphasis">terminal.</span>
+          </h1>
+
+          <p class="hero-subtext">
+            skills.sh is packed with elite AI prompt systems for copywriting, marketing, design, SEO, and coding. But they were locked behind terminal commands. We unlocked them so <em>anyone</em> can unpack, copy, and use 55+ skills in 1-click.
+          </p>
+
+          <div class="hero-widget-card" id="heroInteractiveWidget">
+            <div class="widget-topbar">
+              <div class="widget-meta-left">
+                <span class="widget-dot"></span>
+                <span class="widget-title">Live Skill Unpacker</span>
+              </div>
+              <div class="widget-meta-right">
+                <span class="widget-ready-pill">Ready to Extract</span>
+              </div>
+            </div>
+
+            <div class="widget-body">
+              <div class="widget-preset-tabs" id="presetTabs">
+                <button type="button" class="preset-tab active" data-skill="copywriting">
+                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                    <path d="M2 2l7.586 7.586"></path>
+                  </svg>
+                  <span>Copywriting</span>
+                </button>
+                <button type="button" class="preset-tab" data-skill="ab-testing">
+                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                    <polyline points="16 7 22 7 22 13"></polyline>
+                  </svg>
+                  <span>Growth Marketing</span>
+                </button>
+                <button type="button" class="preset-tab" data-skill="svg-logo-designer">
+                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M8 12h8"></path>
+                    <path d="M12 8v8"></path>
+                  </svg>
+                  <span>SVG Logo Design</span>
+                </button>
+                <button type="button" class="preset-tab" data-skill="cold-email">
+                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                  <span>Cold Outreach</span>
+                </button>
+                <button type="button" class="preset-tab" data-skill="ai-seo">
+                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <span>AI SEO & GEO</span>
+                </button>
+                <button type="button" class="preset-tab" data-skill="typescript-strict">
+                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                  </svg>
+                  <span>TypeScript</span>
+                </button>
+              </div>
+
+              <div class="widget-input-bar">
+                <div class="input-prompt-glyph">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+                <input 
+                  type="text" 
+                  id="widgetSkillInput" 
+                  class="widget-input" 
+                  value="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'"
+                  placeholder="Enter skills.sh command or GitHub repo..."
+                  spellcheck="false"
+                >
+                <button type="button" class="btn btn-primary widget-submit-btn" id="widgetExtractBtn">
+                  <span class="btn-spinner" id="widgetSpinner"></span>
+                  <span class="btn-text">Extract in App</span>
+                  <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="widget-preview-box" id="widgetOutputPanel">
+                <div class="preview-header">
+                  <div class="preview-title-col">
+                    <span class="preview-category" id="outputBadge">COPYWRITING</span>
+                    <h3 class="preview-name" id="outputSkillName">Direct-Response Landing Page Copywriter</h3>
+                  </div>
+                  <div class="preview-actions">
+                    <span class="preview-tokens" id="outputTokens">~1,840 tokens</span>
+                    <button type="button" class="btn btn-primary btn-copy-compact" id="widgetCopyPromptBtn">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                      <span>Copy Prompt</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="preview-code-scroll">
+                  <pre class="preview-code" id="outputCodeSnippet"><code><!-- Prompt content loaded dynamically --></code></pre>
+                </div>
+              </div>
+            </div>
+
+            <div class="widget-bottom-bar">
+              <div class="widget-bottom-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Zero Terminal Required</span>
+              </div>
+              <div class="widget-bottom-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>100% In-Browser Privacy</span>
+              </div>
+              <div class="widget-bottom-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Paste into Claude, ChatGPT & Cursor</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>

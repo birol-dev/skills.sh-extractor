@@ -4,26 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Primary Meta Tags -->
   <title>Skill Extractor — AI Prompts & Skills for Everyone (No Terminal Needed)</title>
-  <meta name="title" content="Skill Extractor — AI Prompts & Skills for Everyone (No Terminal Needed)">
   <meta name="description" content="Unlock skills.sh superpowers without terminal commands. Extract, browse, and copy 55+ curated AI prompts for marketing, copywriting, design, SEO, and coding in 1-click. 100% Client-Side WebAssembly.">
-  <meta name="keywords" content="skills.sh, skill extractor, AI prompts, prompt engineering, marketing skills, copywriting prompts, Claude Code, Cursor rules, ChatGPT prompts, Antigravity, AI SEO, WebAssembly">
   <meta name="author" content="Birol (birol.tech)">
-  <meta name="creator" content="Birol">
-  <meta name="publisher" content="Birol Tech">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta name="theme-color" content="#09090b">
-  <meta name="application-name" content="Skill Extractor">
-  <meta name="apple-mobile-web-app-title" content="Skill Extractor">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="format-detection" content="telephone=no">
   
-  <!-- Canonical URL -->
   <link rel="canonical" href="https://skillextract.birol.tech/">
 
-  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://skillextract.birol.tech/">
   <meta property="og:site_name" content="Skill Extractor">
@@ -31,25 +19,14 @@
   <meta property="og:description" content="Unlock skills.sh superpowers without terminal commands. Extract, browse, and copy 55+ curated AI prompts for marketing, copywriting, design, SEO, and coding in 1-click.">
   <meta property="og:locale" content="en_US">
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://skillextract.birol.tech/">
   <meta name="twitter:title" content="Skill Extractor — AI Prompts & Skills for Everyone">
   <meta name="twitter:description" content="Unlock skills.sh superpowers without terminal commands. Instant 1-click extraction for Claude Code, Cursor, ChatGPT, and Antigravity.">
   <meta name="twitter:creator" content="@birol">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%2309090b' stroke='%23ffffff' stroke-width='6'/><path d='M30 65 L50 30 L70 65 M38 52 L62 52' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
-  
-  <!-- Google Fonts: Instrument Serif + Inter + JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="/landing/landing.css">
+  <!-- include:site/partials/head-assets.html -->
 
-  <!-- Comprehensive JSON-LD Structured Data Schema (@graph) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -105,12 +82,6 @@
             "position": 1,
             "name": "Home",
             "item": "https://skillextract.birol.tech/"
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Skills Library & Docs",
-            "item": "https://skillextract.birol.tech/"
           }
         ]
       },
@@ -119,6 +90,7 @@
         "@id": "https://skillextract.birol.tech/#howto",
         "name": "How to extract skills.sh prompts without a terminal",
         "description": "Step-by-step guide to unpacking and using AI skills directly in your web browser.",
+        "url": "https://skillextract.birol.tech/how-it-works/",
         "step": [
           {
             "@type": "HowToStep",
@@ -190,638 +162,27 @@
   }
   </script>
 </head>
-<body>
-  <!-- WebGL Dynamic Monotone Background Shader Canvas -->
-  <div class="shader-container" aria-hidden="true">
-    <canvas id="shaderCanvas"></canvas>
-    <div class="shader-vignette"></div>
-    <div class="shader-grid-overlay"></div>
-  </div>
+<body data-page="home">
+  <!-- include:site/partials/shader.html -->
 
-  <!-- Main Application Wrapper -->
   <div class="page-wrapper">
-    
-    <!-- Top Monotone Navigation Bar -->
-    <header class="navbar" id="mainNavbar">
-      <div class="nav-container">
-        <a href="#hero" class="brand-link" aria-label="Skill Extractor home">
-          <span class="brand-name">Skill Extractor</span>
-        </a>
+    <!-- include:site/partials/navbar.html -->
 
-        <nav class="nav-links">
-          <a href="#the-problem" class="nav-link">The Mission</a>
-          <a href="#skills-catalog" class="nav-link">Skills Library (55+)</a>
-          <a href="#how-it-works" class="nav-link">How It Works</a>
-          <a href="#faq" class="nav-link">FAQ</a>
-        </nav>
-
-        <div class="nav-actions">
-          <a href="https://github.com/Birol-dev/skills.sh-extractor" class="btn btn-outline nav-github-btn" target="_blank" rel="noopener noreferrer" title="View Source on GitHub">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-            </svg>
-            <span>GitHub</span>
-          </a>
-          <a href="/app/" class="btn btn-primary nav-cta" id="navLaunchAppBtn">
-            <span>Launch Compiler</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="7" y1="17" x2="17" y2="7"></line>
-              <polyline points="7 7 17 7 17 17"></polyline>
-            </svg>
-          </a>
-        </div>
-      </div>
-    </header>
-
-    <!-- Main Content Container -->
     <main>
-      
-      <!-- HERO SECTION -->
-      <section class="hero-section" id="hero">
-        <div class="hero-container">
-          
-          <div class="hero-editorial-lead">
-            <span class="lead-number">01</span>
-            <span class="lead-text">THE OPEN SKILLS PROJECT</span>
-          </div>
-
-          <h1 class="hero-headline">
-            Every skill on <span class="serif-accent">skills.sh</span>,<br>
-            now without the <span class="serif-emphasis">terminal.</span>
-          </h1>
-
-          <p class="hero-subtext">
-            skills.sh is packed with elite AI prompt systems for copywriting, marketing, design, SEO, and coding. But they were locked behind terminal commands. We unlocked them so <em>anyone</em> can unpack, copy, and use 55+ skills in 1-click.
-          </p>
-
-          <!-- Interactive Hero Mini-Extractor Widget -->
-          <div class="hero-widget-card" id="heroInteractiveWidget">
-            <div class="widget-topbar">
-              <div class="widget-meta-left">
-                <span class="widget-dot"></span>
-                <span class="widget-title">Live Skill Unpacker</span>
-              </div>
-              <div class="widget-meta-right">
-                <span class="widget-ready-pill">Ready to Extract</span>
-              </div>
-            </div>
-
-            <div class="widget-body">
-              <!-- Preset Selector -->
-              <div class="widget-preset-tabs" id="presetTabs">
-                <button type="button" class="preset-tab active" data-skill="copywriting">
-                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                    <path d="M2 2l7.586 7.586"></path>
-                  </svg>
-                  <span>Copywriting</span>
-                </button>
-                <button type="button" class="preset-tab" data-skill="ab-testing">
-                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-                    <polyline points="16 7 22 7 22 13"></polyline>
-                  </svg>
-                  <span>Growth Marketing</span>
-                </button>
-                <button type="button" class="preset-tab" data-skill="svg-logo-designer">
-                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M8 12h8"></path>
-                    <path d="M12 8v8"></path>
-                  </svg>
-                  <span>SVG Logo Design</span>
-                </button>
-                <button type="button" class="preset-tab" data-skill="cold-email">
-                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  <span>Cold Outreach</span>
-                </button>
-                <button type="button" class="preset-tab" data-skill="ai-seo">
-                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                  <span>AI SEO & GEO</span>
-                </button>
-                <button type="button" class="preset-tab" data-skill="typescript-strict">
-                  <svg class="preset-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="16 18 22 12 16 6"></polyline>
-                    <polyline points="8 6 2 12 8 18"></polyline>
-                  </svg>
-                  <span>TypeScript</span>
-                </button>
-              </div>
-
-              <!-- Input Bar -->
-              <div class="widget-input-bar">
-                <div class="input-prompt-glyph">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-                <input 
-                  type="text" 
-                  id="widgetSkillInput" 
-                  class="widget-input" 
-                  value="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'"
-                  placeholder="Enter skills.sh command or GitHub repo..."
-                  spellcheck="false"
-                >
-                <button type="button" class="btn btn-primary widget-submit-btn" id="widgetExtractBtn">
-                  <span class="btn-spinner" id="widgetSpinner"></span>
-                  <span class="btn-text">Extract in App</span>
-                  <svg class="btn-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </button>
-              </div>
-
-              <!-- Clean Live Preview Panel -->
-              <div class="widget-preview-box" id="widgetOutputPanel">
-                <div class="preview-header">
-                  <div class="preview-title-col">
-                    <span class="preview-category" id="outputBadge">COPYWRITING</span>
-                    <h3 class="preview-name" id="outputSkillName">Direct-Response Landing Page Copywriter</h3>
-                  </div>
-                  <div class="preview-actions">
-                    <span class="preview-tokens" id="outputTokens">~1,840 tokens</span>
-                    <button type="button" class="btn btn-primary btn-copy-compact" id="widgetCopyPromptBtn">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                      </svg>
-                      <span>Copy Prompt</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="preview-code-scroll">
-                  <pre class="preview-code" id="outputCodeSnippet"><code><!-- Prompt content loaded dynamically --></code></pre>
-                </div>
-              </div>
-            </div>
-
-            <div class="widget-bottom-bar">
-              <div class="widget-bottom-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Zero Terminal Required</span>
-              </div>
-              <div class="widget-bottom-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>100% In-Browser Privacy</span>
-              </div>
-              <div class="widget-bottom-item">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Paste into Claude, ChatGPT & Cursor</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- THE PROBLEM VS THE SOLUTION -->
-      <section class="section problem-section" id="the-problem">
-        <div class="section-container">
-          
-          <div class="section-editorial-header">
-            <span class="editorial-kicker">02 / THE PROBLEM & SOLUTION</span>
-            <h2 class="section-title">
-              Skills shouldn't be reserved for <br>
-              <span class="serif-title">people who know the command line.</span>
-            </h2>
-            <p class="section-description">
-              The AI community created unbelievable prompt systems on skills.sh. But non-technical creators were locked out by developer friction. We made it instant for everyone.
-            </p>
-          </div>
-
-          <div class="comparison-grid">
-            
-            <!-- The Old Friction Card -->
-            <div class="comparison-card friction-card">
-              <div class="card-section-label">THE CLI BARRIER</div>
-              <h3 class="card-heading">Locked Behind Developer Tools</h3>
-              <p class="card-text">
-                To try a single marketing or copywriting skill, non-developers had to deal with frustrating command-line tooling:
-              </p>
-              <ul class="clean-bullet-list">
-                <li>
-                  <span class="bullet-cross">✕</span>
-                  <div><strong>Requires Node.js & NPM:</strong> Installing multi-gigabyte developer runtimes just to inspect a prompt.</div>
-                </li>
-                <li>
-                  <span class="bullet-cross">✕</span>
-                  <div><strong>Cryptic Terminal Commands:</strong> Running <code>npx skills add</code> and debugging path errors.</div>
-                </li>
-                <li>
-                  <span class="bullet-cross">✕</span>
-                  <div><strong>Buried in Repositories:</strong> Digging through multi-layered folders to find the actual instructions.</div>
-                </li>
-              </ul>
-              
-              <!-- Clean Minimalist CLI Card Visual -->
-              <div class="card-visual-cli">
-                <div class="cli-header">
-                  <span class="cli-dot"></span><span class="cli-dot"></span><span class="cli-dot"></span>
-                  <span class="cli-title">bash — npm error</span>
-                </div>
-                <div class="cli-content">
-                  <span class="cli-cmd">$ npx skills add https://github.com/rknall/claude-skills</span>
-                  <span class="cli-err">error: command not found: npx</span>
-                  <span class="cli-sub">Node.js runtime required to unpack skills.</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- The 1-Click Solution Card -->
-            <div class="comparison-card solution-card">
-              <div class="card-section-label active-label">THE 1-CLICK EXTRACTOR</div>
-              <h3 class="card-heading">Instant Superpowers for Everyone</h3>
-              <p class="card-text">
-                One click in your browser. Complete AI playbooks ready to paste anywhere you work:
-              </p>
-              <ul class="clean-bullet-list">
-                <li>
-                  <span class="bullet-check">✓</span>
-                  <div><strong>Zero Installation:</strong> Runs instantly in Chrome, Safari, Firefox, Edge, or mobile.</div>
-                </li>
-                <li>
-                  <span class="bullet-check">✓</span>
-                  <div><strong>Paste URL or Browse:</strong> Enter any repo or choose from 55+ curated skills.</div>
-                </li>
-                <li>
-                  <span class="bullet-check">✓</span>
-                  <div><strong>1-Click Clipboard Ready:</strong> Formatted for ChatGPT, Claude.ai, Cursor, and Windsurf.</div>
-                </li>
-              </ul>
-
-              <!-- Clean Solution Card Visual -->
-              <div class="card-visual-solution">
-                <div class="solution-header">
-                  <span class="solution-tag">WASM ACCELERATED</span>
-                  <span class="solution-status">Ready to Paste</span>
-                </div>
-                <div class="solution-content">
-                  <div class="solution-row">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                      <path d="M2 17l10 5 10-5"></path>
-                      <path d="M2 12l10 5 10-5"></path>
-                    </svg>
-                    <span class="sol-title">Marketing & Copywriting Playbook</span>
-                    <span class="sol-ready">COMPILED</span>
-                  </div>
-                  <div class="sol-btn-mock">Copy into ChatGPT / Claude</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      <!-- SKILLS BEYOND CODE (CATEGORIES & CATALOG) -->
-      <section class="section skills-section" id="skills-catalog">
-        <div class="section-container">
-          
-          <div class="section-editorial-header">
-            <span class="editorial-kicker">03 / 55+ CURATED SKILLS FOR EVERY CRAFT</span>
-            <h2 class="section-title">
-              Not just for code.<br>
-              <span class="serif-title">Curated capabilities across all disciplines.</span>
-            </h2>
-            <p class="section-description">
-              Browse our library of 55+ pre-compiled prompt playbooks for copywriting, marketing, design, SEO, sales, pricing, and development:
-            </p>
-          </div>
-
-          <!-- Category Filter Tabs -->
-          <div class="catalog-tab-bar" id="catalogFilters">
-            <button type="button" class="catalog-tab active" data-category="all">
-              <span>All Disciplines (55)</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="copywriting">
-              <span>Copywriting</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="marketing">
-              <span>Marketing & Growth</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="design">
-              <span>Design & Visuals</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="sales">
-              <span>Sales & Outbound</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="seo">
-              <span>SEO & GEO</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="monetization">
-              <span>Pricing & Offers</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="strategy">
-              <span>Strategy & Ops</span>
-            </button>
-            <button type="button" class="catalog-tab" data-category="dev">
-              <span>Engineering</span>
-            </button>
-          </div>
-
-          <!-- Dynamic Skills Grid (Populated via landing.js) -->
-          <div class="skills-grid" id="skillsGrid"></div>
-
-          <!-- Bottom Full App Banner -->
-          <div class="catalog-launch-bar">
-            <div class="launch-bar-text">
-              <h4 class="launch-bar-title">Need custom repository compilation or offline exports?</h4>
-              <p class="launch-bar-sub">Launch the full WebAssembly Compiler App with IndexedDB offline storage, multi-file bundling, and custom export formats.</p>
-            </div>
-            <a href="/app/" class="btn btn-primary launch-bar-btn">
-              <span>Open Compiler Workstation</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </a>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- HOW IT WORKS SECTION -->
-      <section class="section how-section" id="how-it-works">
-        <div class="section-container">
-          
-          <div class="section-editorial-header">
-            <span class="editorial-kicker">04 / HOW IT WORKS</span>
-            <h2 class="section-title">
-              Three direct steps to <br>
-              <span class="serif-title">any AI prompt playbook.</span>
-            </h2>
-            <p class="section-description">
-              No developer tools, no subscriptions, zero lag. Pure in-browser WebAssembly execution.
-            </p>
-          </div>
-
-          <div class="steps-grid">
-            
-            <div class="step-card">
-              <div class="card-ambient-overlay"></div>
-              <div class="step-num">01</div>
-              <h3 class="step-title">Paste or Pick a Skill</h3>
-              <p class="step-text">
-                Paste any GitHub repository URL, a skills.sh CLI statement, drop a `.zip` archive, or select from 55+ curated pre-compiled skills.
-              </p>
-            </div>
-
-            <div class="step-card">
-              <div class="card-ambient-overlay"></div>
-              <div class="step-num">02</div>
-              <h3 class="step-title">Instant Browser Extraction</h3>
-              <p class="step-text">
-                Our client-side WebAssembly engine parses the skill directives, helper scripts, and markdown documentation in milliseconds.
-              </p>
-            </div>
-
-            <div class="step-card">
-              <div class="card-ambient-overlay"></div>
-              <div class="step-num">03</div>
-              <h3 class="step-title">Copy & Use in Any AI</h3>
-              <p class="step-text">
-                Click "Copy Prompt" and paste directly into Claude, ChatGPT, Cursor, Windsurf, or export as `.md` file for custom local setups.
-              </p>
-            </div>
-
-          </div>
-
-          <!-- Minimalist Platform Compatibility Row -->
-          <div class="platforms-clean-bar">
-            <span class="platforms-header-label">Works with:</span>
-            <div class="platforms-names">
-              <span>ChatGPT</span>
-              <span class="dot-sep">•</span>
-              <span>Claude</span>
-              <span class="dot-sep">•</span>
-              <span>Cursor</span>
-              <span class="dot-sep">•</span>
-              <span>Windsurf</span>
-              <span class="dot-sep">•</span>
-              <span>Antigravity</span>
-              <span class="dot-sep">•</span>
-              <span>GitHub Copilot</span>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- FREQUENTLY ASKED QUESTIONS -->
-      <section class="section faq-section" id="faq">
-        <div class="section-container">
-          
-          <div class="section-editorial-header">
-            <span class="editorial-kicker">05 / QUESTIONS & ANSWERS</span>
-            <h2 class="section-title">
-              Clear answers, <br>
-              <span class="serif-title">no technical jargon.</span>
-            </h2>
-          </div>
-
-          <div class="faq-accordion" id="faqAccordion">
-            
-            <div class="faq-item">
-              <button type="button" class="faq-question">
-                <span>What exactly is skills.sh?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
-                <p>
-                  skills.sh is a modern standard for packaging modular AI instructions, prompts, and playbooks. Instead of asking an AI generic questions, a "skill" gives it deep domain knowledge—like expert marketing tactics, copywriting formulas, or code architectures.
-                </p>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <button type="button" class="faq-question">
-                <span>Why did you build this Extractor?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
-                <p>
-                  skills.sh was originally designed for developers using the command line with <code>npm</code>. But most people who need copywriting, marketing, design, and growth skills aren't developers. We built this tool so anyone can browse, unpack, and copy any skill in 1-click right from their web browser.
-                </p>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <button type="button" class="faq-question">
-                <span>Do I need to install Node.js, Git, or anything else?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
-                <p>
-                  No. Zero installation. Everything runs 100% inside your browser using WebAssembly. You can use it on any Mac, Windows, Linux, Chromebook, or mobile device.
-                </p>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <button type="button" class="faq-question">
-                <span>How do I use an extracted skill with ChatGPT or Claude?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
-                <p>
-                  Simply click <strong>"Copy Prompt"</strong>. Then open ChatGPT, Claude, or any AI chat window, paste the prompt as your first message (or add it to your Custom Instructions / Projects), and start chatting!
-                </p>
-              </div>
-            </div>
-
-            <div class="faq-item">
-              <button type="button" class="faq-question">
-                <span>Is my data private?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
-                <p>
-                  Yes, 100%. Because the extractor runs entirely client-side with WebAssembly and local IndexedDB, your files, prompts, and repositories are processed directly in your browser. Nothing is ever saved to an external database.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      <!-- BOTTOM FINAL CALL TO ACTION -->
-      <section class="section cta-section">
-        <div class="section-container">
-          <div class="final-cta-card">
-            <div class="card-ambient-overlay"></div>
-            <div class="cta-inner">
-              <span class="editorial-kicker">06 / GET STARTED</span>
-              <h2 class="cta-headline">
-                The world’s best AI prompts, <br>
-                <span class="serif-title">one click away.</span>
-              </h2>
-              <p class="cta-sub">
-                No npm commands. No terminal errors. Pure instant capability for your AI workflows.
-              </p>
-              <div class="cta-buttons">
-                <a href="/app/" class="btn btn-primary btn-large">
-                  <span>Launch Compiler Workstation</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </a>
-                <a href="#skills-catalog" class="btn btn-outline btn-large">
-                  <span>Explore 55+ Skills</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <!-- include:site/partials/sections/hero.html -->
+      <!-- include:site/partials/sections/mission.html -->
+      <!-- include:site/partials/sections/skills.html -->
+      <!-- include:site/partials/sections/how-it-works.html -->
+      <!-- include:site/partials/sections/faq.html -->
+      <!-- include:site/partials/sections/cta.html -->
     </main>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-      <div class="footer-container">
-        <div class="footer-left">
-          <div class="footer-brand">
-            <span class="f-name">Skill Extractor</span>
-          </div>
-          <p class="footer-bio">
-            Democratizing access to modular AI skills and prompt engineering. Pure client-side WebAssembly.
-          </p>
-        </div>
-        <div class="footer-links">
-          <div class="footer-col">
-            <span class="col-title">Navigation</span>
-            <a href="#hero">Top</a>
-            <a href="#the-problem">The Mission</a>
-            <a href="#skills-catalog">Curated Skills</a>
-            <a href="#faq">FAQ</a>
-          </div>
-          <div class="footer-col">
-            <span class="col-title">App</span>
-            <a href="/app/">Compiler Engine</a>
-            <a href="https://skills.sh" target="_blank" rel="noopener noreferrer">skills.sh Official ↗</a>
-            <a href="/credits/">Credits & Sources</a>
-            <a href="https://github.com/Birol-dev/skills.sh-extractor" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-          </div>
-          <div class="footer-col">
-            <span class="col-title">Creator</span>
-            <a href="https://birol.tech" target="_blank" rel="noopener noreferrer">birol.tech ↗</a>
-            <a href="https://github.com/Birol-dev" target="_blank" rel="noopener noreferrer">Birol GitHub ↗</a>
-          </div>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <div class="footer-bottom-content">
-          <span>Open Source • Built by <a href="https://birol.tech" target="_blank" rel="noopener noreferrer" class="footer-author-link">birol.tech</a> for everyone who creates with AI.</span>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <time datetime="2026-08-19" class="footer-mono" style="color: var(--text-muted);">Updated August 2026</time>
-            <span style="color: var(--text-faint);">•</span>
-            <span class="footer-mono">Skill Extractor v2.0</span>
-          </div>
-        </div>
-      </div>
-    </footer>
-
+    <!-- include:site/partials/footer.html -->
   </div>
 
-  <!-- Interactive Skill Preview Modal -->
-  <div class="modal-backdrop" id="skillPreviewModal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="card-ambient-overlay"></div>
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <span class="modal-cat-tag" id="modalCategoryBadge">CATEGORY</span>
-          <h3 class="modal-title" id="modalTitle">Skill Name</h3>
-        </div>
-        <button type="button" class="modal-close-btn" id="modalCloseBtn" aria-label="Close modal">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-desc" id="modalDescription"></p>
-        <div class="modal-code-wrapper">
-          <div class="modal-code-header">
-            <span>CONSOLIDATED PROMPT PLAYBOOK</span>
-            <span class="modal-tokens" id="modalTokens">~1,840 tokens</span>
-          </div>
-          <pre class="modal-code"><code id="modalPromptCode"></code></pre>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" id="modalDismissBtn">Close</button>
-        <button type="button" class="btn btn-secondary" id="modalOpenInAppBtn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-          </svg>
-          <span>Open in Compiler App</span>
-        </button>
-        <button type="button" class="btn btn-primary" id="modalCopyBtn">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          <span>Copy Full Prompt</span>
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- include:site/partials/skill-modal.html -->
+  <!-- include:site/partials/toast.html -->
 
-  <!-- Toast Notification container -->
-  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
-
-  <!-- JavaScript -->
   <script type="module" src="/landing/landing.js"></script>
 </body>
 </html>

@@ -1,4 +1,7 @@
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
+import { initNavActive } from '../landing/js/nav.js';
+
+initNavActive();
 
 // Display metadata for each upstream source repo. Keyed by sourceUrl.
 const SOURCE_INFO = {

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>How to Extract skills.sh Prompts in Your Browser — Skill Extractor</title>
+  <meta name="description" content="Unpack a skills.sh playbook in three steps: pick a skill or paste a GitHub URL, extract it with in-browser WebAssembly, then copy the prompt into Claude, ChatGPT, or Cursor.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="author" content="Birol (birol.tech)">
+  <meta name="theme-color" content="#09090b">
+  <link rel="canonical" href="https://skillextract.birol.tech/how-it-works/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillextract.birol.tech/how-it-works/">
+  <meta property="og:site_name" content="Skill Extractor">
+  <meta property="og:title" content="How to Extract skills.sh Prompts in Your Browser">
+  <meta property="og:description" content="Three steps: pick or paste a skill, extract it client-side, copy it into any AI tool. No Node.js required.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://skillextract.birol.tech/how-it-works/">
+  <meta name="twitter:title" content="How to Extract skills.sh Prompts in Your Browser">
+  <meta name="twitter:description" content="Pick a skill, extract it with WebAssembly, paste into Claude, ChatGPT, or Cursor.">
+  <meta name="twitter:creator" content="@birol">
+
+  <!-- include:site/partials/head-assets.html -->
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://skillextract.birol.tech/how-it-works/#webpage",
+        "url": "https://skillextract.birol.tech/how-it-works/",
+        "name": "How to Extract skills.sh Prompts in Your Browser",
+        "description": "Unpack a skills.sh playbook in three steps using in-browser WebAssembly. No terminal required.",
+        "isPartOf": { "@id": "https://skillextract.birol.tech/#website" },
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://skillextract.birol.tech/how-it-works/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://skillextract.birol.tech/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "How It Works",
+            "item": "https://skillextract.birol.tech/how-it-works/"
+          }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "@id": "https://skillextract.birol.tech/how-it-works/#howto",
+        "name": "How to extract skills.sh prompts without a terminal",
+        "description": "Unpack a skills.sh or GitHub skill into a single prompt you can paste into Claude, ChatGPT, Cursor, Windsurf, or Antigravity.",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Paste or pick a skill",
+            "text": "Choose a skill from the curated library, paste a GitHub repository URL, drop a .zip archive, or enter an npx skills add command."
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Extract in the browser",
+            "text": "The WebAssembly engine reads SKILL.md, helper scripts, and reference docs locally. Nothing is uploaded to a Skill Extractor server."
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Copy and use in any AI",
+            "text": "Click Copy Prompt and paste into Claude, ChatGPT, Cursor, Windsurf, Antigravity, or export a markdown file for local agent setups."
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body data-page="how-it-works">
+  <div class="page-wrapper">
+    <!-- include:site/partials/navbar.html -->
+
+    <main>
+      <section class="section page-intro-section">
+        <div class="section-container">
+          <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span class="breadcrumb-sep" aria-hidden="true">/</span>
+            <span>How It Works</span>
+          </nav>
+          <span class="editorial-kicker">BROWSER EXTRACTION</span>
+          <h1 class="section-title">
+            How to extract skills.sh prompts <br>
+            <span class="serif-title">in your browser.</span>
+          </h1>
+          <p class="section-description">
+            Skill Extractor compiles a skill folder into one paste-ready playbook. The work happens on your machine with WebAssembly. You do not install Node.js, sign in, or send the repo to our servers.
+          </p>
+        </div>
+      </section>
+
+      <!-- include:site/partials/sections/how-it-works.html -->
+
+      <section class="section seo-extra-section">
+        <div class="section-container">
+          <div class="section-editorial-header">
+            <span class="editorial-kicker">THE WALKTHROUGH</span>
+            <h2 class="section-title">
+              Curated cards or a raw repo— <br>
+              <span class="serif-title">same compiler path.</span>
+            </h2>
+          </div>
+          <div class="seo-prose">
+            <h3>1. Start from the library or a URL</h3>
+            <p>
+              On the <a href="/skills/">skills library</a>, pick a card and copy the prompt, or open the
+              <a href="/app/">compiler workstation</a> and paste a GitHub URL, <code>owner/repo</code> shorthand, or a full <code>npx skills add</code> statement. Zip drops and local folders work in the app too.
+            </p>
+            <h3>2. What the engine actually compiles</h3>
+            <p>
+              It reads <code>SKILL.md</code> frontmatter, inlines helper scripts, and folds reference markdown into one file. The result is the same playbook you would get after a successful CLI install, minus the runtime.
+            </p>
+            <h3>3. Paste into the tool you already use</h3>
+            <p>
+              ChatGPT, Claude, Cursor, Windsurf, Antigravity, and GitHub Copilot all accept a pasted system prompt. Export markdown if you keep skills in a local agents folder.
+            </p>
+            <h3>Privacy</h3>
+            <p>
+              Extraction is client-side. IndexedDB storage stays in your browser. That is the point of the WASM build: the prompt never needs to transit a Skill Extractor backend.
+            </p>
+          </div>
+          <p class="seo-crosslinks">
+            Still blocked by the CLI? Read <a href="/mission/">why we built this</a>.
+            Setup questions are on the <a href="/faq/">FAQ</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- include:site/partials/sections/cta.html -->
+    </main>
+
+    <!-- include:site/partials/footer.html -->
+  </div>
+
+  <!-- include:site/partials/toast.html -->
+  <script type="module" src="/landing/page-chrome.js"></script>
+</body>
+</html>

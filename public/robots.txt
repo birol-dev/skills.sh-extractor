@@ -1,5 +1,5 @@
-# robots.txt for Skill Extractor & WebAssembly Playbook Compiler
-# Website: https://skill-extractor.pages.dev
+# robots.txt for Skill Extractor
+# Website: https://skillextract.birol.tech
 # Creator: https://birol.tech
 
 User-agent: *
@@ -38,7 +38,4 @@ Allow: /
 User-agent: Applebot
 Allow: /
 
-# Sitemaps and AI Context Files
-Sitemap: https://skill-extractor.pages.dev/sitemap.xml
-# LLM Context: https://skill-extractor.pages.dev/llms.txt
-# Machine Pricing: https://skill-extractor.pages.dev/pricing.md
+Sitemap: https://skillextract.birol.tech/sitemap.xml

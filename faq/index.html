@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Skill Extractor FAQ — skills.sh Without Node.js or a Terminal</title>
+  <meta name="description" content="Answers about skills.sh, browser extraction, Cursor, Antigravity, offline use, attribution, and whether Skill Extractor is free. No Node.js or terminal required.">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="author" content="Birol (birol.tech)">
+  <meta name="theme-color" content="#09090b">
+  <link rel="canonical" href="https://skillextract.birol.tech/faq/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillextract.birol.tech/faq/">
+  <meta property="og:site_name" content="Skill Extractor">
+  <meta property="og:title" content="Skill Extractor FAQ — skills.sh Without a Terminal">
+  <meta property="og:description" content="How browser extraction works, which AI tools are supported, privacy, attribution, and custom GitHub repos.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://skillextract.birol.tech/faq/">
+  <meta name="twitter:title" content="Skill Extractor FAQ">
+  <meta name="twitter:description" content="skills.sh without Node.js: Cursor, Antigravity, privacy, credits, and custom repos.">
+  <meta name="twitter:creator" content="@birol">
+
+  <!-- include:site/partials/head-assets.html -->
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://skillextract.birol.tech/faq/#webpage",
+        "url": "https://skillextract.birol.tech/faq/",
+        "name": "Skill Extractor FAQ",
+        "description": "Answers about skills.sh, browser extraction, Cursor, Antigravity, offline use, attribution, and pricing.",
+        "isPartOf": { "@id": "https://skillextract.birol.tech/#website" },
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://skillextract.birol.tech/faq/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://skillextract.birol.tech/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "FAQ",
+            "item": "https://skillextract.birol.tech/faq/"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://skillextract.birol.tech/faq/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What exactly is skills.sh?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "skills.sh is a modern standard for packaging modular AI instructions, prompts, and playbooks. Instead of asking an AI generic questions, a skill gives it deep domain knowledge like expert marketing tactics, copywriting formulas, or code architectures."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why did you build this Extractor?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "skills.sh was originally designed for developers using the command line with npm. Most people who need copywriting, marketing, design, and growth skills are not developers. Skill Extractor lets anyone browse, unpack, and copy a skill in the browser."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to install Node.js, Git, or anything else?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Zero installation. Everything runs inside your browser using WebAssembly on Mac, Windows, Linux, Chromebook, or mobile."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I use an extracted skill with ChatGPT or Claude?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Click Copy Prompt, then paste it as the first message in ChatGPT or Claude, or add it to Custom Instructions / Projects."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is my data private?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Extraction runs client-side with WebAssembly and local IndexedDB. Files and prompts are processed in your browser and are not saved to an external Skill Extractor database."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does this work with Cursor and Antigravity?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Copy the compiled prompt into Cursor, Windsurf, Antigravity, or GitHub Copilot the same way you would paste it into ChatGPT or Claude. The compiler app can also export markdown for local agent folders."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I extract a custom GitHub repo, not just the curated list?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Open the compiler workstation, paste any public GitHub skill repository URL or npx skills add command, and extract it. The 55+ library is a starting catalog, not a limit."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Skill Extractor work offline?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "After the page and WASM engine load, curated prompts and IndexedDB playbooks work without a network. Fetching a new GitHub repository still needs connectivity to GitHub."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who writes the skills in the library?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Skill Extractor is a compiler, not an author. Each curated skill is sourced from a public repository. The Credits page lists authors and links back to the original repos."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Skill Extractor free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. It is open source under the MIT license. There is no paid tier and no telemetry backend."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is this different from running npx skills add?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "npx skills add installs a skill through Node.js on your machine. Skill Extractor performs the unpack and compile step in the browser so you can read and copy the playbook without a CLI toolchain."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body data-page="faq">
+  <div class="page-wrapper">
+    <!-- include:site/partials/navbar.html -->
+
+    <main>
+      <section class="section page-intro-section">
+        <div class="section-container">
+          <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span class="breadcrumb-sep" aria-hidden="true">/</span>
+            <span>FAQ</span>
+          </nav>
+          <span class="editorial-kicker">QUESTIONS</span>
+          <h1 class="section-title">
+            Skill Extractor FAQ: skills.sh <br>
+            <span class="serif-title">without Node.js or a terminal.</span>
+          </h1>
+          <p class="section-description">
+            Short answers for setup, privacy, Cursor and Antigravity, custom repos, and who actually wrote the prompts. The homepage FAQ is a subset; this page is the full set.
+          </p>
+        </div>
+      </section>
+
+      <!-- include:site/partials/sections/faq.html -->
+
+      <section class="section seo-extra-section">
+        <div class="section-container">
+          <div class="section-editorial-header">
+            <span class="editorial-kicker">MORE DETAIL</span>
+            <h2 class="section-title">
+              Tools, repos, offline use, <br>
+              <span class="serif-title">and who to credit.</span>
+            </h2>
+          </div>
+
+          <div class="faq-accordion" id="faqAccordionExtra">
+            <div class="faq-item">
+              <button type="button" class="faq-question">
+                <span>Does this work with Cursor and Antigravity?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>
+                  Yes. Copy the compiled prompt into Cursor, Windsurf, Antigravity, or GitHub Copilot the same way you would paste it into ChatGPT or Claude. The <a href="/app/">compiler app</a> can also export markdown for local agent folders.
+                </p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" class="faq-question">
+                <span>Can I extract a custom GitHub repo, not just the curated list?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>
+                  Yes. Open the <a href="/app/">compiler workstation</a>, paste any public GitHub skill repository URL or <code>npx skills add</code> command, and extract it. The <a href="/skills/">55+ library</a> is a starting catalog, not a limit.
+                </p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" class="faq-question">
+                <span>Does Skill Extractor work offline?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>
+                  After the page and WASM engine load, curated prompts and IndexedDB playbooks work without a network. Fetching a new GitHub repository still needs connectivity to GitHub.
+                </p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" class="faq-question">
+                <span>Who writes the skills in the library?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>
+                  Skill Extractor is a compiler, not an author. Each curated skill is sourced from a public repository. See <a href="/credits/">Credits &amp; Sources</a> for authors and original repo links.
+                </p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" class="faq-question">
+                <span>Is Skill Extractor free?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>
+                  Yes. It is open source under the MIT license. There is no paid tier and no telemetry backend. The source is on <a href="https://github.com/Birol-dev/skills.sh-extractor" target="_blank" rel="noopener noreferrer">GitHub</a>.
+                </p>
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" class="faq-question">
+                <span>How is this different from running npx skills add?</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="faq-answer">
+                <p>
+                  <code>npx skills add</code> installs a skill through Node.js on your machine. Skill Extractor performs the unpack and compile step in the browser so you can read and copy the playbook without a CLI toolchain. That is the <a href="/mission/">problem we started from</a>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p class="seo-crosslinks">
+            Walk through the <a href="/how-it-works/">extraction steps</a> or
+            <a href="/skills/">browse the library</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- include:site/partials/sections/cta.html -->
+    </main>
+
+    <!-- include:site/partials/footer.html -->
+  </div>
+
+  <!-- include:site/partials/toast.html -->
+  <script type="module" src="/landing/page-faq.js"></script>
+</body>
+</html>
