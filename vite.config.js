@@ -14,7 +14,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'esnext',
-    assetsInlineLimit: 100000000,
+    assetsInlineLimit: 4096,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
@@ -24,6 +25,25 @@ export default defineConfig({
         skills: resolve(__dirname, 'skills/index.html'),
         howItWorks: resolve(__dirname, 'how-it-works/index.html'),
         faq: resolve(__dirname, 'faq/index.html')
+      },
+      output: {
+        manualChunks(id) {
+          if (id.includes('curatedPrompts')) {
+            return 'curated-prompts';
+          }
+          if (id.includes('curatedSkills')) {
+            return 'curated-skills';
+          }
+          if (id.includes('node_modules/jszip')) {
+            return 'vendor-jszip';
+          }
+          if (id.includes('node_modules/marked')) {
+            return 'vendor-marked';
+          }
+          if (id.includes('node_modules/prismjs')) {
+            return 'vendor-prism';
+          }
+        }
       }
     }
   }

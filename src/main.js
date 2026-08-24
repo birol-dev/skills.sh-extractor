@@ -1,10 +1,18 @@
-// skills.sh Extractor - Client-Side WebAssembly Application
-import { marked } from 'marked';
-import JSZip from 'jszip';
+// skills.sh Extractor - Client-Side WebAssembly Application (Performance Optimized)
 import wasmEngine from './services/wasmEngine.js';
 import storage from './services/storage.js';
 import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug } from './services/extractor.js';
 import { CURATED_SKILLS } from './services/curatedSkills.js';
+
+// Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
+const CURATED_SEARCH_INDEX = CURATED_SKILLS.map(s => ({
+  skill: s,
+  normName: s.name.toLowerCase(),
+  normSlug: s.slug.toLowerCase(),
+  normCat: s.category.toLowerCase(),
+  normDesc: s.description.toLowerCase(),
+  normTags: (s.tags || []).join(' ').toLowerCase()
+}));
 
 // Application State
 let currentSkills = [];
@@ -12,6 +20,32 @@ let activeFilterTag = 'all';
 let selectedSkill = null;
 let currentModalFormat = 'skill.md';
 let selectedFolderFiles = [];
+
+// Lazy-loaded dependencies
+let _marked = null;
+async function parseMarkdown(text) {
+  if (!_marked) {
+    const mod = await import('marked');
+    _marked = mod.marked;
+  }
+  return _marked.parse(text || '');
+}
+
+let _prism = null;
+async function highlightCodeUnder(container) {
+  if (!container) return;
+  if (!_prism) {
+    try {
+      const prismMod = await import('prismjs');
+      _prism = prismMod.default || prismMod;
+    } catch (e) {
+      // Ignore if prism not available
+    }
+  }
+  if (_prism && _prism.highlightAllUnder) {
+    _prism.highlightAllUnder(container);
+  }
+}
 
 // DOM Elements Cache
 const views = {
@@ -76,7 +110,7 @@ const settingExportFormat = document.getElementById('setting-export-format');
 const settingGhToken = document.getElementById('setting-gh-token');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnExportBackup = document.getElementById('btn-export-backup');
-const btnImportBackup = document.getElementById('btn-import-backup');
+const btnImportBackup = document.getElementById('input-import-backup');
 const inputImportBackup = document.getElementById('input-import-backup');
 const btnClearDb = document.getElementById('btn-clear-db');
 
@@ -111,7 +145,7 @@ const modalRefsCount = document.getElementById('modal-refs-count');
 
 const toastContainer = document.getElementById('toast-container');
 
-// Toast Notification (Crisp Vector Icons, Zero Emojis)
+// Toast Notification
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast-msg ${type}`;
@@ -191,11 +225,9 @@ function setupInputTabs() {
 
 // Setup Extraction Logic
 function setupExtraction() {
-  // 1. Setup Auto-Suggest and Quick-Pick Presets
   setupAutosuggest();
   setupQuickChips();
 
-  // 2. GitHub / NPX extract
   btnExtractGithub.addEventListener('click', async () => {
     const input = inputGithubCmd.value.trim();
     if (!input) {
@@ -225,9 +257,7 @@ function setupExtraction() {
     }
   });
 
-  // 2. Local Folder extract
   btnSelectFolder.addEventListener('click', async () => {
-    // Try File System Access API if supported
     if (window.showDirectoryPicker) {
       try {
         const dirHandle = await window.showDirectoryPicker();
@@ -236,7 +266,6 @@ function setupExtraction() {
           for await (const entry of handle.values()) {
             if (entry.kind === 'file') {
               const file = await entry.getFile();
-              // Polyfill relative path
               Object.defineProperty(file, 'webkitRelativePath', {
                 value: currentPath ? `${currentPath}/${file.name}` : file.name
               });
@@ -256,8 +285,6 @@ function setupExtraction() {
         if (e.name === 'AbortError') return;
       }
     }
-
-    // Fallback to standard input file
     inputFolderFile.click();
   });
 
@@ -298,7 +325,6 @@ function setupExtraction() {
     }
   });
 
-  // 3. ZIP Dropzone extract
   zipDropzone.addEventListener('click', () => inputZipFile.click());
 
   zipDropzone.addEventListener('dragover', (e) => {
@@ -350,7 +376,7 @@ async function handleZipFile(file) {
   }
 }
 
-// Setup Gallery & Card Rendering
+// Setup Gallery & Card Rendering (Event Delegation & Fragment Batched)
 async function loadGallery() {
   currentSkills = await storage.getSkills();
   badgeSkillCount.innerText = currentSkills.length;
@@ -376,18 +402,72 @@ function renderTagFilterBar() {
     pill.className = `tag-pill ${activeFilterTag === tag ? 'active' : ''}`;
     pill.setAttribute('data-tag', tag);
     pill.innerText = `${tag} (${count})`;
-    pill.addEventListener('click', () => {
-      activeFilterTag = tag;
-      renderTagFilterBar();
-      renderGalleryCards();
-    });
     galleryTagBar.appendChild(pill);
   });
+}
 
-  galleryTagBar.querySelector('[data-tag="all"]').addEventListener('click', () => {
-    activeFilterTag = 'all';
-    renderTagFilterBar();
+// Single Event Delegation for Gallery Grid
+function setupGalleryDelegation() {
+  if (!galleryCardsGrid || galleryCardsGrid.dataset.delegated) return;
+  galleryCardsGrid.dataset.delegated = 'true';
+
+  galleryTagBar.addEventListener('click', (e) => {
+    const pill = e.target.closest('.tag-pill');
+    if (!pill) return;
+    activeFilterTag = pill.getAttribute('data-tag') || 'all';
+    galleryTagBar.querySelectorAll('.tag-pill').forEach(p => {
+      p.classList.toggle('active', p.getAttribute('data-tag') === activeFilterTag);
+    });
     renderGalleryCards();
+  });
+
+  galleryCardsGrid.addEventListener('click', async (e) => {
+    const card = e.target.closest('.skill-card');
+    if (!card) return;
+    const skillId = card.getAttribute('data-skill-id');
+    const skill = currentSkills.find(s => s.id === skillId);
+    if (!skill) return;
+
+    if (e.target.closest('.btn-card-preview')) {
+      openPreviewModal(skill);
+      return;
+    }
+
+    if (e.target.closest('.btn-card-copy')) {
+      await navigator.clipboard.writeText(skill.compiledMarkdown);
+      showToast(`Copied "${skill.name}" playbook to clipboard!`, 'success');
+      return;
+    }
+
+    if (e.target.closest('.btn-card-download')) {
+      downloadFile(`${skill.slug || 'skill'}.skill.md`, skill.compiledMarkdown);
+      showToast(`Downloaded ${skill.name}.skill.md`, 'success');
+      return;
+    }
+
+    if (e.target.closest('.btn-card-delete')) {
+      if (confirm(`Delete skill playbook "${skill.name}"?`)) {
+        await storage.deleteSkill(skill.id);
+        showToast('Skill deleted', 'info');
+        loadGallery();
+      }
+      return;
+    }
+  });
+
+  galleryCardsGrid.addEventListener('dragstart', (e) => {
+    const dragHandle = e.target.closest('.drag-export-handle');
+    if (!dragHandle) return;
+    const card = dragHandle.closest('.skill-card');
+    if (!card) return;
+    const skill = currentSkills.find(s => s.id === card.getAttribute('data-skill-id'));
+    if (!skill) return;
+
+    const fileName = `${skill.slug || 'skill'}.skill.md`;
+    const blob = new Blob([skill.compiledMarkdown], { type: 'text/markdown' });
+    const fileUrl = URL.createObjectURL(blob);
+    e.dataTransfer.setData('DownloadURL', `text/markdown:${fileName}:${fileUrl}`);
+    e.dataTransfer.setData('text/plain', skill.compiledMarkdown);
   });
 }
 
@@ -416,9 +496,12 @@ function renderGalleryCards() {
 
   galleryEmptyState.style.display = 'none';
 
+  const fragment = document.createDocumentFragment();
+
   filtered.forEach(skill => {
     const card = document.createElement('div');
     card.className = 'skill-card';
+    card.setAttribute('data-skill-id', skill.id);
     const sizeKb = ((skill.sizeBytes || 0) / 1024).toFixed(1);
     const dateStr = new Date(skill.dateAdded).toLocaleDateString();
     const tokenEst = (skill.tokenEstimate || wasmEngine.estimateTokens(skill.compiledMarkdown || '')).toLocaleString();
@@ -472,42 +555,10 @@ function renderGalleryCards() {
       </div>
     `;
 
-    // Preview
-    card.querySelector('.btn-card-preview').addEventListener('click', () => openPreviewModal(skill));
-
-    // Copy
-    card.querySelector('.btn-card-copy').addEventListener('click', async () => {
-      await navigator.clipboard.writeText(skill.compiledMarkdown);
-      showToast(`Copied "${skill.name}" playbook to clipboard!`, 'success');
-    });
-
-    // Download
-    card.querySelector('.btn-card-download').addEventListener('click', () => {
-      downloadFile(`${skill.slug || 'skill'}.skill.md`, skill.compiledMarkdown);
-      showToast(`Downloaded ${skill.name}.skill.md`, 'success');
-    });
-
-    // Delete
-    card.querySelector('.btn-card-delete').addEventListener('click', async () => {
-      if (confirm(`Delete skill playbook "${skill.name}"?`)) {
-        await storage.deleteSkill(skill.id);
-        showToast('Skill deleted', 'info');
-        loadGallery();
-      }
-    });
-
-    // Drag and Drop Export
-    const dragHandle = card.querySelector('.drag-export-handle');
-    dragHandle.addEventListener('dragstart', (e) => {
-      const fileName = `${skill.slug || 'skill'}.skill.md`;
-      const blob = new Blob([skill.compiledMarkdown], { type: 'text/markdown' });
-      const fileUrl = URL.createObjectURL(blob);
-      e.dataTransfer.setData('DownloadURL', `text/markdown:${fileName}:${fileUrl}`);
-      e.dataTransfer.setData('text/plain', skill.compiledMarkdown);
-    });
-
-    galleryCardsGrid.appendChild(card);
+    fragment.appendChild(card);
   });
+
+  galleryCardsGrid.appendChild(fragment);
 }
 
 function downloadFile(filename, content) {
@@ -522,7 +573,7 @@ function downloadFile(filename, content) {
   URL.revokeObjectURL(url);
 }
 
-// Auto-Suggest Setup (Real-Time WASM & Fuzzy Match)
+// Auto-Suggest Setup (Pre-indexed & Fast)
 function setupAutosuggest() {
   const dropdown = document.getElementById('autosuggest-dropdown');
   if (!dropdown || !inputGithubCmd) return;
@@ -532,17 +583,11 @@ function setupAutosuggest() {
     let matches = [];
 
     if (!q) {
-      // Show top curated recommendations when input is empty/focused
       matches = CURATED_SKILLS.slice(0, 7);
     } else {
-      matches = CURATED_SKILLS.filter(s => {
-        const nameMatch = s.name.toLowerCase().includes(q);
-        const slugMatch = s.slug.toLowerCase().includes(q);
-        const catMatch = s.category.toLowerCase().includes(q);
-        const tagMatch = (s.tags || []).some(t => t.toLowerCase().includes(q));
-        const descMatch = s.description.toLowerCase().includes(q);
-        return nameMatch || slugMatch || catMatch || tagMatch || descMatch;
-      }).slice(0, 8);
+      matches = CURATED_SEARCH_INDEX.filter(item => {
+        return item.normName.includes(q) || item.normSlug.includes(q) || item.normCat.includes(q) || item.normTags.includes(q) || item.normDesc.includes(q);
+      }).slice(0, 8).map(item => item.skill);
     }
 
     if (matches.length === 0) {
@@ -550,10 +595,12 @@ function setupAutosuggest() {
       return;
     }
 
-    dropdown.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     matches.forEach(item => {
       const div = document.createElement('div');
       div.className = 'autosuggest-item';
+      div.setAttribute('data-cmd', item.command);
+      div.setAttribute('data-name', item.name);
       div.innerHTML = `
         <div class="autosuggest-info">
           <div class="autosuggest-name">${escapeHtml(item.name)}</div>
@@ -561,19 +608,22 @@ function setupAutosuggest() {
         </div>
         <span class="autosuggest-badge">${escapeHtml(item.badge)}</span>
       `;
-
-      div.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        inputGithubCmd.value = item.command;
-        dropdown.style.display = 'none';
-        showToast(`Selected "${item.name}"`, 'info');
-      });
-
-      dropdown.appendChild(div);
+      fragment.appendChild(div);
     });
 
+    dropdown.innerHTML = '';
+    dropdown.appendChild(fragment);
     dropdown.style.display = 'flex';
   }
+
+  dropdown.addEventListener('mousedown', (e) => {
+    const item = e.target.closest('.autosuggest-item');
+    if (!item) return;
+    e.preventDefault();
+    inputGithubCmd.value = item.getAttribute('data-cmd') || '';
+    dropdown.style.display = 'none';
+    showToast(`Selected "${item.getAttribute('data-name')}"`, 'info');
+  });
 
   inputGithubCmd.addEventListener('input', () => {
     renderSuggestions(inputGithubCmd.value);
@@ -608,13 +658,12 @@ function setupQuickChips() {
   });
 }
 
-// Curated Skills Hub with Live Search & Category Filter
+// Curated Skills Hub with Event Delegation
 let activeCuratedCat = 'all';
 let curatedSearchQuery = '';
 
 function renderCuratedHub() {
   if (!curatedCardsGrid) return;
-  curatedCardsGrid.innerHTML = '';
 
   const catButtons = document.querySelectorAll('#curated-category-bar .tag-filter');
   catButtons.forEach(btn => {
@@ -629,9 +678,27 @@ function renderCuratedHub() {
   const searchInput = document.getElementById('curated-search-input');
   if (searchInput && !searchInput.dataset.bound) {
     searchInput.dataset.bound = 'true';
+    let searchDebounce = null;
     searchInput.addEventListener('input', (e) => {
-      curatedSearchQuery = e.target.value.trim().toLowerCase();
-      filterAndRenderCurated();
+      cancelAnimationFrame(searchDebounce);
+      searchDebounce = requestAnimationFrame(() => {
+        curatedSearchQuery = e.target.value.trim().toLowerCase();
+        filterAndRenderCurated();
+      });
+    });
+  }
+
+  if (!curatedCardsGrid.dataset.delegated) {
+    curatedCardsGrid.dataset.delegated = 'true';
+    curatedCardsGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-curated-extract');
+      if (!btn) return;
+      const cmd = btn.getAttribute('data-cmd');
+      if (cmd) {
+        switchView('extract');
+        inputGithubCmd.value = cmd;
+        btnExtractGithub.click();
+      }
     });
   }
 
@@ -642,17 +709,13 @@ function filterAndRenderCurated() {
   if (!curatedCardsGrid) return;
   curatedCardsGrid.innerHTML = '';
 
-  const filtered = CURATED_SKILLS.filter(item => {
-    const matchesCat = (activeCuratedCat === 'all' || item.category === activeCuratedCat);
+  const filtered = CURATED_SEARCH_INDEX.filter(item => {
+    const matchesCat = (activeCuratedCat === 'all' || item.skill.category === activeCuratedCat);
     if (!matchesCat) return false;
 
     if (!curatedSearchQuery) return true;
-    const nameMatch = item.name.toLowerCase().includes(curatedSearchQuery);
-    const slugMatch = item.slug.toLowerCase().includes(curatedSearchQuery);
-    const descMatch = item.description.toLowerCase().includes(curatedSearchQuery);
-    const tagMatch = (item.tags || []).some(t => t.toLowerCase().includes(curatedSearchQuery));
-    return nameMatch || slugMatch || descMatch || tagMatch;
-  });
+    return item.normName.includes(curatedSearchQuery) || item.normSlug.includes(curatedSearchQuery) || item.normDesc.includes(curatedSearchQuery) || item.normTags.includes(curatedSearchQuery);
+  }).map(item => item.skill);
 
   if (filtered.length === 0) {
     curatedCardsGrid.innerHTML = `
@@ -662,6 +725,8 @@ function filterAndRenderCurated() {
     `;
     return;
   }
+
+  const fragment = document.createDocumentFragment();
 
   filtered.forEach(item => {
     const card = document.createElement('div');
@@ -679,25 +744,21 @@ function filterAndRenderCurated() {
         ${(item.tags || []).map(t => `<span class="curated-tag">${escapeHtml(t)}</span>`).join('')}
       </div>
       <div style="margin-top: auto; display: flex; gap: 8px;">
-        <button class="btn btn-primary btn-curated-extract" style="width: 100%;">
+        <button class="btn btn-primary btn-curated-extract" data-cmd="${escapeHtml(item.command)}" style="width: 100%;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           1-Click Extract
         </button>
       </div>
     `;
 
-    card.querySelector('.btn-curated-extract').addEventListener('click', async () => {
-      switchView('extract');
-      inputGithubCmd.value = item.command;
-      btnExtractGithub.click();
-    });
-
-    curatedCardsGrid.appendChild(card);
+    fragment.appendChild(card);
   });
+
+  curatedCardsGrid.appendChild(fragment);
 }
 
 // Modal Inspector
-function openPreviewModal(skill) {
+async function openPreviewModal(skill) {
   selectedSkill = skill;
   currentModalFormat = 'skill.md';
   modalFormatSelect.value = 'skill.md';
@@ -709,8 +770,9 @@ function openPreviewModal(skill) {
   const parsed = parseSkillMarkdown(skill.compiledMarkdown);
 
   // 1. Directives Rendered Markdown
-  modalRenderedContent.innerHTML = marked.parse(parsed.directives || skill.directives || 'No directives body provided.');
-  if (window.Prism) Prism.highlightAllUnder(modalRenderedContent);
+  const html = await parseMarkdown(parsed.directives || skill.directives || 'No directives body provided.');
+  modalRenderedContent.innerHTML = html;
+  highlightCodeUnder(modalRenderedContent);
 
   // 2. Metadata Grid
   modalMetaGrid.innerHTML = '';
@@ -760,16 +822,16 @@ function openPreviewModal(skill) {
       const chip = document.createElement('button');
       chip.className = `script-tab-chip ${idx === 0 ? 'active' : ''}`;
       chip.innerText = `references/${ref.fileName}`;
-      chip.addEventListener('click', () => {
+      chip.addEventListener('click', async () => {
         modalRefSelector.querySelectorAll('.script-tab-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        modalRefContent.innerHTML = marked.parse(ref.content);
-        if (window.Prism) Prism.highlightAllUnder(modalRefContent);
+        modalRefContent.innerHTML = await parseMarkdown(ref.content);
+        highlightCodeUnder(modalRefContent);
       });
       modalRefSelector.appendChild(chip);
     });
-    modalRefContent.innerHTML = marked.parse(parsed.references[0].content);
-    if (window.Prism) Prism.highlightAllUnder(modalRefContent);
+    modalRefContent.innerHTML = await parseMarkdown(parsed.references[0].content);
+    highlightCodeUnder(modalRefContent);
   } else {
     modalRefContent.innerHTML = '<p style="color: var(--text-dim);">No reference documentation attached.</p>';
   }
@@ -813,7 +875,6 @@ function setupModal() {
     if (e.target === previewModal) closeModal();
   });
 
-  // Modal Format Switcher
   modalFormatSelect.addEventListener('change', () => {
     if (!selectedSkill) return;
     currentModalFormat = modalFormatSelect.value;
@@ -888,7 +949,6 @@ function setupWasmDiagnostics() {
     }, 50);
   });
 
-  // Token Estimator Sandbox
   wasmTestInput.addEventListener('input', () => {
     const text = wasmTestInput.value;
     const tokens = wasmEngine.estimateTokens(text);
@@ -945,7 +1005,6 @@ function setupSettings() {
     }
   });
 
-  // Export All ZIP
   btnExportAllZip.addEventListener('click', async () => {
     const skills = await storage.getSkills();
     if (skills.length === 0) {
@@ -953,6 +1012,7 @@ function setupSettings() {
       return;
     }
 
+    const { default: JSZip } = await import('jszip');
     const zip = new JSZip();
     skills.forEach(s => {
       const fileName = `${s.slug || 'skill'}.skill.md`;
@@ -974,7 +1034,6 @@ function setupSettings() {
 
 // Global Event Listeners & Boot
 document.addEventListener('DOMContentLoaded', async () => {
-  // Navigation Buttons
   Object.keys(navButtons).forEach(viewName => {
     navButtons[viewName]?.addEventListener('click', () => switchView(viewName));
   });
@@ -982,30 +1041,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnGalleryNewExtract?.addEventListener('click', () => switchView('extract'));
   btnEmptyExtract?.addEventListener('click', () => switchView('extract'));
 
-  // Gallery live search
-  gallerySearchInput?.addEventListener('input', () => renderGalleryCards());
+  // Gallery live search debounced with requestAnimationFrame
+  let searchDebounce = null;
+  gallerySearchInput?.addEventListener('input', () => {
+    cancelAnimationFrame(searchDebounce);
+    searchDebounce = requestAnimationFrame(() => renderGalleryCards());
+  });
 
-  // Setup modules
   setupInputTabs();
   setupExtraction();
+  setupGalleryDelegation();
   setupModal();
   setupWasmDiagnostics();
   setupSettings();
 
-  // Initialize WASM and Load Database
   await wasmEngine.ready();
   await loadGallery();
 
-  // Run initial lightweight benchmark on load
   const initialBench = wasmEngine.runBenchmark(1000);
-  statWasmSpeedup.innerText = initialBench.speedup;
+  if (statWasmSpeedup) statWasmSpeedup.innerText = initialBench.speedup;
 
-  // Handle URL query parameter from landing page redirect (e.g. ?extract=... or ?skill=...)
   const urlParams = new URLSearchParams(window.location.search);
   const inputQuery = urlParams.get('extract') || urlParams.get('url') || urlParams.get('link') || urlParams.get('query') || urlParams.get('cmd') || urlParams.get('skill');
   if (inputQuery) {
     let cleanQuery = decodeURIComponent(inputQuery).trim();
-    // Check if inputQuery is a slug of a curated skill
     const foundSkill = CURATED_SKILLS.find(s => s.slug === cleanQuery || s.id === cleanQuery || s.name.toLowerCase() === cleanQuery.toLowerCase());
     if (foundSkill) {
       cleanQuery = foundSkill.command;
@@ -1024,7 +1083,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }, 150);
       }
-      // Clean query parameter from browser address bar without reloading
       const cleanUrl = window.location.pathname + window.location.hash;
       window.history.replaceState({}, '', cleanUrl);
     }

@@ -1,4 +1,4 @@
-// IndexedDB Storage Manager for Skill Extractor
+// IndexedDB Storage Manager for Skill Extractor (with In-Memory Caching)
 const DB_NAME = 'SkillExtractorDB';
 const DB_VERSION = 1;
 const STORE_SKILLS = 'skills';
@@ -7,35 +7,45 @@ const STORE_SETTINGS = 'settings';
 class StorageManager {
   constructor() {
     this.db = null;
+    this.cachedSkills = null;
+    this.cachedSettings = null;
     this.initPromise = this.initDB();
   }
 
   async initDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
+    if (typeof indexedDB === 'undefined') {
+      return null;
+    }
+    return new Promise((resolve) => {
+      try {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE_SKILLS)) {
-          const skillStore = db.createObjectStore(STORE_SKILLS, { keyPath: 'id' });
-          skillStore.createIndex('name', 'name', { unique: false });
-          skillStore.createIndex('dateAdded', 'dateAdded', { unique: false });
-          skillStore.createIndex('slug', 'slug', { unique: false });
-        }
-        if (!db.objectStoreNames.contains(STORE_SETTINGS)) {
-          db.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
-        }
-      };
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_SKILLS)) {
+            const skillStore = db.createObjectStore(STORE_SKILLS, { keyPath: 'id' });
+            skillStore.createIndex('name', 'name', { unique: false });
+            skillStore.createIndex('dateAdded', 'dateAdded', { unique: false });
+            skillStore.createIndex('slug', 'slug', { unique: false });
+          }
+          if (!db.objectStoreNames.contains(STORE_SETTINGS)) {
+            db.createObjectStore(STORE_SETTINGS, { keyPath: 'key' });
+          }
+        };
 
-      request.onsuccess = (e) => {
-        this.db = e.target.result;
-        resolve(this.db);
-      };
+        request.onsuccess = (e) => {
+          this.db = e.target.result;
+          resolve(this.db);
+        };
 
-      request.onerror = (e) => {
-        console.warn('IndexedDB failed to open, fallback to localStorage will be used:', e);
+        request.onerror = (e) => {
+          console.warn('IndexedDB failed to open, fallback to localStorage will be used:', e);
+          resolve(null);
+        };
+      } catch (err) {
+        console.warn('IndexedDB initialization exception:', err);
         resolve(null);
-      };
+      }
     });
   }
 
@@ -44,20 +54,30 @@ class StorageManager {
     return !!this.db;
   }
 
-  // Skills CRUD
-  async getSkills() {
+  // Skills CRUD (Cache-First)
+  async getSkills(forceRefresh = false) {
+    if (!forceRefresh && this.cachedSkills !== null) {
+      return this.cachedSkills;
+    }
+
     await this.ready();
     if (!this.db) {
       // LocalStorage fallback
       try {
-        const raw = localStorage.getItem('skill_extractor_skills');
-        return raw ? JSON.parse(raw) : [];
+        if (typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem('skill_extractor_skills');
+          this.cachedSkills = raw ? JSON.parse(raw) : [];
+        } else {
+          this.cachedSkills = [];
+        }
+        return this.cachedSkills;
       } catch (e) {
+        this.cachedSkills = [];
         return [];
       }
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const tx = this.db.transaction(STORE_SKILLS, 'readonly');
       const store = tx.objectStore(STORE_SKILLS);
       const request = store.getAll();
@@ -66,28 +86,20 @@ class StorageManager {
         const skills = request.result || [];
         // Sort descending by dateAdded
         skills.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+        this.cachedSkills = skills;
         resolve(skills);
       };
 
-      request.onerror = () => resolve([]);
+      request.onerror = () => {
+        this.cachedSkills = [];
+        resolve([]);
+      };
     });
   }
 
   async getSkill(id) {
-    await this.ready();
-    if (!this.db) {
-      const skills = await this.getSkills();
-      return skills.find(s => s.id === id) || null;
-    }
-
-    return new Promise((resolve) => {
-      const tx = this.db.transaction(STORE_SKILLS, 'readonly');
-      const store = tx.objectStore(STORE_SKILLS);
-      const request = store.get(id);
-
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => resolve(null);
-    });
+    const skills = await this.getSkills();
+    return skills.find(s => s.id === id) || null;
   }
 
   async saveSkill(skill) {
@@ -113,15 +125,20 @@ class StorageManager {
       lastModified: new Date().toISOString()
     };
 
+    // Update in-memory cache immediately
+    const skills = await this.getSkills();
+    const existingIdx = skills.findIndex(s => s.id === item.id || s.slug === item.slug);
+    if (existingIdx >= 0) {
+      skills[existingIdx] = item;
+    } else {
+      skills.unshift(item);
+    }
+    this.cachedSkills = skills;
+
     if (!this.db) {
-      const skills = await this.getSkills();
-      const existingIdx = skills.findIndex(s => s.id === item.id || s.slug === item.slug);
-      if (existingIdx >= 0) {
-        skills[existingIdx] = item;
-      } else {
-        skills.unshift(item);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('skill_extractor_skills', JSON.stringify(skills));
       }
-      localStorage.setItem('skill_extractor_skills', JSON.stringify(skills));
       return item;
     }
 
@@ -137,10 +154,13 @@ class StorageManager {
 
   async deleteSkill(id) {
     await this.ready();
+    const skills = await this.getSkills();
+    this.cachedSkills = skills.filter(s => s.id !== id);
+
     if (!this.db) {
-      const skills = await this.getSkills();
-      const filtered = skills.filter(s => s.id !== id);
-      localStorage.setItem('skill_extractor_skills', JSON.stringify(filtered));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('skill_extractor_skills', JSON.stringify(this.cachedSkills));
+      }
       return true;
     }
 
@@ -154,8 +174,8 @@ class StorageManager {
     });
   }
 
-  // Settings
-  async getSettings() {
+  // Settings (Cache-First)
+  async getSettings(forceRefresh = false) {
     const defaults = {
       defaultTags: 'verified, agent-skill',
       defaultExportFormat: 'skill.md', // 'skill.md' | 'claude.md' | 'cursorrules' | 'windsurfrules' | 'antigravity'
@@ -165,12 +185,22 @@ class StorageManager {
       editorFontSize: 13
     };
 
+    if (!forceRefresh && this.cachedSettings !== null) {
+      return this.cachedSettings;
+    }
+
     await this.ready();
     if (!this.db) {
       try {
-        const raw = localStorage.getItem('skill_extractor_settings');
-        return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+        if (typeof localStorage !== 'undefined') {
+          const raw = localStorage.getItem('skill_extractor_settings');
+          this.cachedSettings = raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+        } else {
+          this.cachedSettings = defaults;
+        }
+        return this.cachedSettings;
       } catch (e) {
+        this.cachedSettings = defaults;
         return defaults;
       }
     }
@@ -182,26 +212,34 @@ class StorageManager {
 
       request.onsuccess = () => {
         if (request.result?.value) {
-          resolve({ ...defaults, ...request.result.value });
+          this.cachedSettings = { ...defaults, ...request.result.value };
         } else {
-          resolve(defaults);
+          this.cachedSettings = defaults;
         }
+        resolve(this.cachedSettings);
       };
-      request.onerror = () => resolve(defaults);
+      request.onerror = () => {
+        this.cachedSettings = defaults;
+        resolve(defaults);
+      };
     });
   }
 
   async saveSettings(settings) {
     await this.ready();
+    this.cachedSettings = { ...(this.cachedSettings || {}), ...settings };
+
     if (!this.db) {
-      localStorage.setItem('skill_extractor_settings', JSON.stringify(settings));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('skill_extractor_settings', JSON.stringify(this.cachedSettings));
+      }
       return true;
     }
 
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction(STORE_SETTINGS, 'readwrite');
       const store = tx.objectStore(STORE_SETTINGS);
-      const request = store.put({ key: 'app_config', value: settings });
+      const request = store.put({ key: 'app_config', value: this.cachedSettings });
 
       request.onsuccess = () => resolve(true);
       request.onerror = (e) => reject(e);
@@ -243,8 +281,13 @@ class StorageManager {
 
   async clearAll() {
     await this.ready();
+    this.cachedSkills = [];
+    this.cachedSettings = null;
+
     if (!this.db) {
-      localStorage.removeItem('skill_extractor_skills');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('skill_extractor_skills');
+      }
       return true;
     }
 

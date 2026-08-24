@@ -1,5 +1,4 @@
 // GitHub Client-Side API & Parser for Skill Extractor
-import JSZip from 'jszip';
 import wasmEngine from './wasmEngine.js';
 
 export function parseCommandOrUrl(input) {
@@ -222,6 +221,7 @@ export class GitHubFetcher {
     }
 
     if (onProgress) onProgress('Unpacking archive in WebAssembly memory...', 50);
+    const { default: JSZip } = await import('jszip');
     const zip = await JSZip.loadAsync(zipData);
     return zip;
   }

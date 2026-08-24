@@ -1,11 +1,37 @@
 // Core Client-Side Skill Extractor & Compiler Engine
-import yaml from 'js-yaml';
-import JSZip from 'jszip';
 import wasmEngine from './wasmEngine.js';
 import storage from './storage.js';
 import { GitHubFetcher, parseCommandOrUrl } from './github.js';
-import { CURATED_SKILLS } from './curatedSkills.js';
-import { SKILL_PROMPTS } from './curatedPrompts.js';
+
+export function dumpFrontmatterYaml(obj) {
+  let res = '';
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined || value === null) continue;
+    if (Array.isArray(value)) {
+      if (value.length === 0) continue;
+      res += `${key}:\n`;
+      for (const item of value) {
+        res += `  - ${typeof item === 'string' && (item.includes(':') || item.includes('#') || item.includes('\n')) ? JSON.stringify(item) : item}\n`;
+      }
+    } else if (typeof value === 'object') {
+      res += `${key}:\n`;
+      for (const [subKey, subVal] of Object.entries(value)) {
+        if (subVal !== undefined && subVal !== null) {
+          res += `  ${subKey}: ${typeof subVal === 'string' && (subVal.includes(':') || subVal.includes('#') || subVal.includes('\n')) ? JSON.stringify(subVal) : subVal}\n`;
+        }
+      }
+    } else if (typeof value === 'string' && (value.includes('\n') || value.includes(':') || value.includes('"') || value.includes('#'))) {
+      if (value.includes('\n')) {
+        res += `${key}: >-\n  ${value.split('\n').join('\n  ')}\n`;
+      } else {
+        res += `${key}: ${JSON.stringify(value)}\n`;
+      }
+    } else {
+      res += `${key}: ${value}\n`;
+    }
+  }
+  return res;
+}
 
 export function sanitizeSlug(name) {
   if (!name) return 'untitled-skill';
@@ -225,7 +251,7 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
 
   // Standard .skill.md
   let output = `---\n`;
-  output += yaml.dump(finalFrontmatter, { lineWidth: -1 });
+  output += dumpFrontmatterYaml(finalFrontmatter);
   output += `---\n\n`;
   output += directives;
   output += scriptsContent;
@@ -465,6 +491,7 @@ export class SkillExtractor {
     const settings = await storage.getSettings();
 
     onProgress('Loading and decompressing ZIP archive...', 20);
+    const { default: JSZip } = await import('jszip');
     const zip = await JSZip.loadAsync(zipFile);
 
     onProgress('Searching archive for SKILL.md...', 40);

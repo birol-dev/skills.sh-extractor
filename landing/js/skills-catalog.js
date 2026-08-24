@@ -2,6 +2,8 @@ import { CURATED_SKILLS } from '../../src/services/curatedSkills.js';
 import { showToast } from './toast.js';
 import { loadPrompts } from './prompts.js';
 
+const SKILLS_BY_SLUG = new Map(CURATED_SKILLS.map(s => [s.slug, s]));
+
 export function initSkillsCatalog() {
   const tabs = document.querySelectorAll('.catalog-tab');
   const grid = document.getElementById('skillsGrid');
@@ -18,6 +20,7 @@ export function initSkillsCatalog() {
 
   if (!grid) return;
 
+  const cachedCards = grid.querySelectorAll('.skill-card');
   let currentModalSkill = null;
 
   async function promptFor(slug, fallback) {
@@ -26,8 +29,7 @@ export function initSkillsCatalog() {
   }
 
   function filterGrid(filterCat = 'all') {
-    const cards = grid.querySelectorAll('.skill-card');
-    cards.forEach((card) => {
+    cachedCards.forEach((card) => {
       const match = filterCat === 'all' || card.dataset.category === filterCat;
       card.hidden = !match;
     });
@@ -42,7 +44,7 @@ export function initSkillsCatalog() {
   });
 
   async function openModal(slug) {
-    const s = CURATED_SKILLS.find(item => item.slug === slug);
+    const s = SKILLS_BY_SLUG.get(slug);
     if (!s || !modal) return;
 
     const prompt = await promptFor(slug, `# ${s.name}\n\n${s.description}`);
@@ -80,7 +82,7 @@ export function initSkillsCatalog() {
     if (copyBtn) {
       e.stopPropagation();
       const slug = copyBtn.dataset.copyId;
-      const s = CURATED_SKILLS.find(item => item.slug === slug);
+      const s = SKILLS_BY_SLUG.get(slug);
       const prompt = await promptFor(slug, s ? `# ${s.name}\n\n${s.description}` : '');
       navigator.clipboard.writeText(prompt).then(() => {
         showToast(`Copied "${s ? s.name : slug}" prompt!`, 'success');

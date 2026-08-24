@@ -1,8 +1,11 @@
+// WebGL Atmospheric Background Shader (Optimized with IntersectionObserver & DPR Capping)
 export function initShader() {
   const canvas = document.getElementById('shaderCanvas');
   if (!canvas) return;
 
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  const gl = canvas.getContext('webgl', { powerPreference: 'low-power', alpha: false, antialias: false, depth: false, stencil: false })
+          || canvas.getContext('experimental-webgl');
+
   if (!gl) {
     initCanvas2DFallback(canvas);
     return;
@@ -47,20 +50,16 @@ export function initShader() {
     }
 
     void main() {
-      vec2 uv = gl_FragCoord.xy / u_resolution.xy;
       vec2 st = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
-
       vec2 mouseNorm = (u_mouse.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
       float distToMouse = length(st - mouseNorm);
       float mouseWave = smoothstep(0.4, 0.0, distToMouse) * 0.25;
 
       float t = u_time * 0.12;
-
       vec2 q = vec2(fbm(st + vec2(0.0, t)), fbm(st + vec2(5.2, 1.3)));
       vec2 r = vec2(fbm(st + 4.0 * q + vec2(1.7 - t * 0.15, 9.2)), fbm(st + 4.0 * q + vec2(8.3, 2.8 + t * 0.1)));
 
       float f = fbm(st + 3.0 * r + mouseWave);
-
       float intensity = smoothstep(0.1, 0.9, f);
       intensity = pow(intensity, 2.2);
 
@@ -129,33 +128,68 @@ export function initShader() {
   let mouseY = window.innerHeight * 0.5;
   let targetMouseX = mouseX;
   let targetMouseY = mouseY;
+  let mousePending = false;
 
   window.addEventListener('mousemove', (e) => {
     targetMouseX = e.clientX;
     targetMouseY = window.innerHeight - e.clientY;
   }, { passive: true });
 
+  let resizeTimer = null;
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    // Cap DPR to 1.0 for ambient background to save 75% GPU fill rate on high-DPI displays
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.0);
     const width = window.innerWidth;
     const height = window.innerHeight;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);
   }
 
-  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('resize', () => {
+    if (!resizeTimer) {
+      resizeTimer = requestAnimationFrame(() => {
+        resize();
+        resizeTimer = null;
+      });
+    }
+  }, { passive: true });
+
   resize();
 
   let startTime = performance.now();
   let isRendering = true;
+  let isIntersecting = true;
+  let rafId = null;
+
+  // IntersectionObserver to halt rendering when hero/shader is scrolled out of viewport
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      isIntersecting = entries[0].isIntersecting;
+      updateRenderState();
+    }, { threshold: 0.05 });
+    observer.observe(canvas);
+  }
 
   document.addEventListener('visibilitychange', () => {
-    isRendering = !document.hidden;
-    if (isRendering) requestAnimationFrame(render);
+    updateRenderState();
   });
 
+  function updateRenderState() {
+    const shouldRender = isIntersecting && !document.hidden;
+    if (shouldRender !== isRendering) {
+      isRendering = shouldRender;
+      if (isRendering && !rafId) {
+        rafId = requestAnimationFrame(render);
+      } else if (!isRendering && rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+  }
+
   function render() {
+    rafId = null;
     if (!isRendering) return;
 
     mouseX += (targetMouseX - mouseX) * 0.05;
@@ -168,10 +202,10 @@ export function initShader() {
     gl.uniform1f(timeLocation, currentTime);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    requestAnimationFrame(render);
+    rafId = requestAnimationFrame(render);
   }
 
-  requestAnimationFrame(render);
+  rafId = requestAnimationFrame(render);
 }
 
 function initCanvas2DFallback(canvas) {
@@ -182,11 +216,29 @@ function initCanvas2DFallback(canvas) {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', resize, { passive: true });
   resize();
 
   let step = 0;
+  let isRendering = true;
+  let rafId = null;
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      const isVisible = entries[0].isIntersecting && !document.hidden;
+      if (isVisible !== isRendering) {
+        isRendering = isVisible;
+        if (isRendering && !rafId) rafId = requestAnimationFrame(draw);
+        else if (!isRendering && rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      }
+    });
+    observer.observe(canvas);
+  }
+
   function draw() {
+    rafId = null;
+    if (!isRendering) return;
+
     step += 0.005;
     ctx.fillStyle = '#09090b';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -203,7 +255,7 @@ function initCanvas2DFallback(canvas) {
       }
       ctx.stroke();
     }
-    requestAnimationFrame(draw);
+    rafId = requestAnimationFrame(draw);
   }
-  requestAnimationFrame(draw);
+  rafId = requestAnimationFrame(draw);
 }

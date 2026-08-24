@@ -1,5 +1,9 @@
-// WebAssembly Acceleration Engine for Skill Extractor
+// WebAssembly Acceleration Engine for Skill Extractor (Zero-Copy Optimized)
 import { WASM_BINARY_BASE64 } from '../wasm/wasmBinary.js';
+
+// Module-level cached TextEncoder / TextDecoder instances to eliminate GC thrashing
+const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+const textDecoder = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null;
 
 class WasmEngine {
   constructor() {
@@ -7,6 +11,7 @@ class WasmEngine {
     this.memory = null;
     this.exports = null;
     this.isReady = false;
+    this.memView = null;
     this.initPromise = this.init();
   }
 
@@ -25,6 +30,7 @@ class WasmEngine {
       this.instance = module.instance;
       this.exports = module.instance.exports;
       this.memory = this.exports.memory;
+      this.memView = new Uint8Array(this.memory.buffer);
       this.isReady = true;
       console.log('[WASM] Engine initialized successfully (', len, 'bytes)');
       return true;
@@ -40,14 +46,28 @@ class WasmEngine {
     return this.isReady;
   }
 
-  // 1. Hash string (FNV-1a 32-bit)
+  // Ensure WASM linear memory buffer can hold `bytesNeeded`
+  ensureMemory(bytesNeeded) {
+    if (!this.memory) return null;
+    const currentBytes = this.memory.buffer.byteLength;
+    if (bytesNeeded > currentBytes) {
+      const pagesNeeded = Math.ceil((bytesNeeded - currentBytes) / 65536) + 1;
+      this.memory.grow(pagesNeeded);
+      this.memView = new Uint8Array(this.memory.buffer);
+    } else if (!this.memView || this.memView.buffer !== this.memory.buffer) {
+      this.memView = new Uint8Array(this.memory.buffer);
+    }
+    return this.memView;
+  }
+
+  // 1. Hash string (FNV-1a 32-bit, zero-copy into WASM memory)
   hash(str) {
     if (!str) return '0';
-    if (this.isReady && this.exports?.hash_fnv1a) {
-      const bytes = new TextEncoder().encode(str);
-      const memView = new Uint8Array(this.memory.buffer);
-      memView.set(bytes, 0);
-      const hashInt = this.exports.hash_fnv1a(0, bytes.length) >>> 0;
+    if (this.isReady && this.exports?.hash_fnv1a && textEncoder) {
+      const maxBytes = str.length * 3 + 4;
+      const mem = this.ensureMemory(maxBytes);
+      const { written } = textEncoder.encodeInto(str, mem);
+      const hashInt = this.exports.hash_fnv1a(0, written) >>> 0;
       return hashInt.toString(16).padStart(8, '0');
     }
     // JS Fallback
@@ -62,32 +82,26 @@ class WasmEngine {
   // 2. Normalize alphanumeric (lowercased, only a-z and 0-9)
   normalize(str) {
     if (!str) return '';
-    if (this.isReady && this.exports?.normalize_alpha) {
-      const bytes = new TextEncoder().encode(str);
-      const memView = new Uint8Array(this.memory.buffer);
-      memView.set(bytes, 0);
-      const dstOffset = bytes.length + 10;
-      const outLen = this.exports.normalize_alpha(0, bytes.length, dstOffset);
-      const outBytes = new Uint8Array(this.memory.buffer, dstOffset, outLen);
-      return new TextDecoder().decode(outBytes);
+    if (this.isReady && this.exports?.normalize_alpha && textEncoder && textDecoder) {
+      const maxBytes = str.length * 3 + 32;
+      const mem = this.ensureMemory(maxBytes * 2);
+      const { written } = textEncoder.encodeInto(str, mem);
+      const dstOffset = written + 8;
+      const outLen = this.exports.normalize_alpha(0, written, dstOffset);
+      return textDecoder.decode(mem.subarray(dstOffset, dstOffset + outLen));
     }
     // JS Fallback
     return str.toLowerCase().replace(/[^a-z0-9]/g, '');
   }
 
-  // 3. Estimate LLM tokens (Wasm byte scanner)
+  // 3. Estimate LLM tokens (Fast zero-copy Wasm byte scanner)
   estimateTokens(text) {
     if (!text) return 0;
-    if (this.isReady && this.exports?.estimate_tokens) {
-      const bytes = new TextEncoder().encode(text);
-      // Ensure memory buffer is big enough
-      if (bytes.length > this.memory.buffer.byteLength) {
-        const pagesNeeded = Math.ceil((bytes.length - this.memory.buffer.byteLength) / 65536) + 1;
-        this.memory.grow(pagesNeeded);
-      }
-      const memView = new Uint8Array(this.memory.buffer);
-      memView.set(bytes, 0);
-      return this.exports.estimate_tokens(0, bytes.length);
+    if (this.isReady && this.exports?.estimate_tokens && textEncoder) {
+      const maxBytes = text.length * 3 + 16;
+      const mem = this.ensureMemory(maxBytes);
+      const { written } = textEncoder.encodeInto(text, mem);
+      return this.exports.estimate_tokens(0, written);
     }
     // JS Fallback
     const words = text.trim().split(/\s+/).filter(Boolean);
@@ -95,81 +109,85 @@ class WasmEngine {
     return Math.round(words.length * 1.3 + symbols * 0.5);
   }
 
-  // 4. Levenshtein edit distance
+  // 4. Levenshtein edit distance (zero intermediate allocations)
   levenshtein(s1, s2) {
     if (s1 === s2) return 0;
     if (!s1) return s2.length;
     if (!s2) return s1.length;
 
-    if (this.isReady && this.exports?.levenshtein) {
-      const b1 = new TextEncoder().encode(s1);
-      const b2 = new TextEncoder().encode(s2);
-      const memView = new Uint8Array(this.memory.buffer);
-      
+    if (this.isReady && this.exports?.levenshtein && textEncoder) {
+      const maxLen1 = s1.length * 3 + 2;
+      const maxLen2 = s2.length * 3 + 2;
+      const bufSize = (maxLen2 + 4) * 4;
+      const totalNeeded = maxLen1 + maxLen2 + bufSize + 32;
+      const mem = this.ensureMemory(totalNeeded);
+
       const s1Ptr = 0;
-      const s2Ptr = b1.length + 1;
-      const bufPtr = s2Ptr + b2.length + 4;
+      const { written: len1 } = textEncoder.encodeInto(s1, mem.subarray(s1Ptr));
+      const s2Ptr = len1 + 1;
+      const { written: len2 } = textEncoder.encodeInto(s2, mem.subarray(s2Ptr));
+      const bufPtr = s2Ptr + len2 + 4;
 
-      memView.set(b1, s1Ptr);
-      memView.set(b2, s2Ptr);
-
-      return this.exports.levenshtein(s1Ptr, b1.length, s2Ptr, b2.length, bufPtr);
+      return this.exports.levenshtein(s1Ptr, len1, s2Ptr, len2, bufPtr);
     }
 
     // JS Fallback
     const m = s1.length;
     const n = s2.length;
-    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i++) dp[i][0] = i;
-    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    const dp = new Uint16Array((m + 1) * (n + 1));
+    for (let i = 0; i <= m; i++) dp[i * (n + 1)] = i;
+    for (let j = 0; j <= n; j++) dp[j] = j;
 
     for (let i = 1; i <= m; i++) {
+      const iOffset = i * (n + 1);
+      const prevOffset = (i - 1) * (n + 1);
       for (let j = 1; j <= n; j++) {
-        const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + cost
-        );
+        const cost = s1.charCodeAt(i - 1) === s2.charCodeAt(j - 1) ? 0 : 1;
+        const del = dp[prevOffset + j] + 1;
+        const ins = dp[iOffset + (j - 1)] + 1;
+        const sub = dp[prevOffset + (j - 1)] + cost;
+        dp[iOffset + j] = del < ins ? (del < sub ? del : sub) : (ins < sub ? ins : sub);
       }
     }
-    return dp[m][n];
+    return dp[m * (n + 1) + n];
   }
 
   // 5. Fuzzy Match Score (0 - 1000)
-  fuzzyMatch(query, target) {
+  fuzzyMatch(query, target, preNormQ = null, preNormT = null) {
     if (!query) return 1000;
     if (!target) return 0;
 
-    const normQ = this.normalize(query);
-    const normT = this.normalize(target);
+    const normQ = preNormQ !== null ? preNormQ : this.normalize(query);
+    const normT = preNormT !== null ? preNormT : this.normalize(target);
 
     if (normQ === normT) return 1000;
     if (normT.includes(normQ)) return 900;
 
-    if (this.isReady && this.exports?.fuzzy_score) {
-      const b1 = new TextEncoder().encode(normQ);
-      const b2 = new TextEncoder().encode(normT);
-      const memView = new Uint8Array(this.memory.buffer);
-      
-      const qPtr = 0;
-      const tPtr = b1.length + 2;
-      memView.set(b1, qPtr);
-      memView.set(b2, tPtr);
+    if (this.isReady && this.exports?.fuzzy_score && textEncoder) {
+      const qBytesMax = normQ.length * 3 + 2;
+      const tBytesMax = normT.length * 3 + 2;
+      const mem = this.ensureMemory(qBytesMax + tBytesMax + 16);
 
-      return this.exports.fuzzy_score(qPtr, b1.length, tPtr, b2.length);
+      const qPtr = 0;
+      const { written: qLen } = textEncoder.encodeInto(normQ, mem.subarray(qPtr));
+      const tPtr = qLen + 2;
+      const { written: tLen } = textEncoder.encodeInto(normT, mem.subarray(tPtr));
+
+      return this.exports.fuzzy_score(qPtr, qLen, tPtr, tLen);
     }
 
-    // JS Fallback
+    // Fast JS Subsequence Match
     let score = 0;
     let qi = 0;
-    for (let ti = 0; ti < normT.length && qi < normQ.length; ti++) {
-      if (normQ[qi] === normT[ti]) {
+    const qLen = normQ.length;
+    const tLen = normT.length;
+    for (let ti = 0; ti < tLen && qi < qLen; ti++) {
+      if (normQ.charCodeAt(qi) === normT.charCodeAt(ti)) {
         score += 10;
         qi++;
       }
     }
-    return qi === normQ.length ? Math.min(1000, Math.round((score * 100) / normT.length)) : 0;
+    return qi === qLen ? Math.min(1000, Math.round((score * 100) / tLen)) : 0;
   }
 
   // Benchmark suite comparing WASM vs pure JS
