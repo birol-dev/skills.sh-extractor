@@ -9,6 +9,15 @@
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta name="theme-color" content="#09090b">
   
+  <!-- Favicons for Browsers, Google Search & Mobile -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  
   <!-- Canonical URL -->
   <link rel="canonical" href="https://skillextract.birol.tech/app/">
 
@@ -67,22 +76,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="brand-header">
-        <div class="brand-icon-wrapper">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
-        </div>
-        <div class="brand-title">
-          Skill Extractor
-          <span class="brand-sub">WASM Engine</span>
-        </div>
-      </div>
-
-      <div class="wasm-badge" id="sidebar-wasm-badge" title="WebAssembly linear memory acceleration active">
-        <div class="wasm-dot"></div>
-        <span>WASM Accelerated</span>
+        <div class="brand-title">Skill Extractor</div>
       </div>
 
       <div class="nav-section">
@@ -125,7 +119,7 @@
       <div class="sidebar-footer">
         <div class="stat-pill">
           <span>Storage:</span>
-          <strong id="sidebar-storage-stat">IndexedDB Active</strong>
+          <strong id="sidebar-storage-stat">Local</strong>
         </div>
         <div style="font-size: 10.5px; line-height: 1.4; color: var(--text-dim);">Pure WebAssembly SPA &bull; Zero Backend</div>
       </div>

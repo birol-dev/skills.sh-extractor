@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.wrangler/
 *.log
 temp_extract/
 assets/drag-icon.png
