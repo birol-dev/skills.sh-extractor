@@ -6,3 +6,13 @@ assets/drag-icon.png
 .agents
 .claude
 agent/skills
+
+# --- auto-added by cleanup (missing patterns) ---
+.next/
+.open-next/
+.turbo/
+.vercel/
+.venv/
+.opencode/
+coverage/
+.env
