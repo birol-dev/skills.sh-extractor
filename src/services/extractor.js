@@ -2,43 +2,48 @@
 import wasmEngine from './wasmEngine.js';
 import storage from './storage.js';
 import { GitHubFetcher, parseCommandOrUrl } from './github.js';
+import yaml from 'js-yaml';
+import { CURATED_SKILLS } from './curatedSkills.js';
+import { SKILL_PROMPTS } from './curatedPrompts.js';
 
 export function dumpFrontmatterYaml(obj) {
-  let res = '';
-  for (const [key, value] of Object.entries(obj)) {
-    if (value === undefined || value === null) continue;
-    if (Array.isArray(value)) {
-      if (value.length === 0) continue;
-      res += `${key}:\n`;
-      for (const item of value) {
-        res += `  - ${typeof item === 'string' && (item.includes(':') || item.includes('#') || item.includes('\n')) ? JSON.stringify(item) : item}\n`;
-      }
-    } else if (typeof value === 'object') {
-      res += `${key}:\n`;
-      for (const [subKey, subVal] of Object.entries(value)) {
-        if (subVal !== undefined && subVal !== null) {
-          res += `  ${subKey}: ${typeof subVal === 'string' && (subVal.includes(':') || subVal.includes('#') || subVal.includes('\n')) ? JSON.stringify(subVal) : subVal}\n`;
-        }
-      }
-    } else if (typeof value === 'string' && (value.includes('\n') || value.includes(':') || value.includes('"') || value.includes('#'))) {
-      if (value.includes('\n')) {
-        res += `${key}: >-\n  ${value.split('\n').join('\n  ')}\n`;
-      } else {
-        res += `${key}: ${JSON.stringify(value)}\n`;
-      }
-    } else {
-      res += `${key}: ${value}\n`;
-    }
-  }
-  return res;
+  return yaml.dump(obj, {
+    lineWidth: -1,
+    noRefs: true,
+    skipInvalid: true
+  });
 }
 
 export function sanitizeSlug(name) {
   if (!name) return 'untitled-skill';
-  return name
+  return String(name)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .replace(/(^-|-$)/g, '') || 'untitled-skill';
+}
+
+function parseFrontmatter(content) {
+  const yamlMatch = content.match(/^---\r?\n([\s\S]+?)\r?\n---/);
+  if (!yamlMatch) {
+    return { frontmatter: {}, directives: content };
+  }
+
+  let frontmatter = {};
+  try {
+    const parsed = yaml.load(yamlMatch[1]);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      frontmatter = parsed;
+    } else if (parsed !== undefined && parsed !== null) {
+      console.warn('Ignoring SKILL.md frontmatter because it must be a YAML mapping.');
+    }
+  } catch (error) {
+    console.warn('YAML parsing warning:', error);
+  }
+
+  return {
+    frontmatter,
+    directives: content.substring(yamlMatch[0].length).trim()
+  };
 }
 
 export function detectLanguage(filename) {
@@ -172,24 +177,28 @@ export function parseSkillMarkdown(content) {
 }
 
 export function compileSkillContent({ name, description, frontmatter = {}, directives = '', scripts = [], references = [], customTags = '', exportFormat = 'skill.md' }) {
-  const cleanName = frontmatter.name || name || 'Untitled Skill';
-  const cleanDesc = frontmatter.description || description || 'No description provided';
+  const normalizedFrontmatter = frontmatter && typeof frontmatter === 'object' && !Array.isArray(frontmatter)
+    ? frontmatter
+    : {};
+  const cleanName = String(normalizedFrontmatter.name || name || 'Untitled Skill');
+  const cleanDesc = String(normalizedFrontmatter.description || description || 'No description provided');
   const slug = sanitizeSlug(cleanName);
 
   // Merge extra tags
   let tags = [];
-  if (frontmatter.tags) {
-    tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [frontmatter.tags];
+  if (normalizedFrontmatter.tags) {
+    tags = Array.isArray(normalizedFrontmatter.tags) ? normalizedFrontmatter.tags : [normalizedFrontmatter.tags];
   }
   if (customTags) {
     const extra = customTags.split(',').map(t => t.trim()).filter(Boolean);
     tags = [...new Set([...tags, ...extra])];
   }
+  tags = tags.map(tag => String(tag).trim()).filter(Boolean);
 
   const finalFrontmatter = {
+    ...normalizedFrontmatter,
     name: cleanName,
     description: cleanDesc,
-    ...frontmatter,
     tags: tags.length > 0 ? tags : undefined
   };
 
@@ -228,7 +237,7 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
   }
 
   // Format based on chosen target format
-  if (exportFormat === 'cursorrules' || exportFormat === 'mdc') {
+  if (exportFormat === 'cursorrules' || exportFormat === 'mdc' || exportFormat === 'windsurfrules') {
     let output = `# ${cleanName}\n\n`;
     output += `> ${cleanDesc}\n\n`;
     if (tags.length > 0) {
@@ -266,7 +275,7 @@ export class SkillExtractor {
   }
 
   // 1. Extract from GitHub URL or NPX Command
-  async extractFromGitHub({ input, subdirOverride = '', onProgress = () => {} }) {
+  async extractFromGitHub({ input, subdirOverride = '', onProgress = () => {} } = {}) {
     await this.wasm.ready();
     const settings = await storage.getSettings();
     const fetcher = new GitHubFetcher(settings.githubToken);
@@ -433,18 +442,7 @@ export class SkillExtractor {
 
     // Parse Frontmatter and Compile
     onProgress('Parsing frontmatter and consolidating playbook...', 90);
-    let frontmatter = {};
-    let directives = skillMdRaw;
-
-    const yamlMatch = skillMdRaw.match(/^---\r?\n([\s\S]+?)\r?\n---/);
-    if (yamlMatch) {
-      try {
-        frontmatter = yaml.load(yamlMatch[1]) || {};
-        directives = skillMdRaw.substring(yamlMatch[0].length).trim();
-      } catch (e) {
-        console.warn('YAML parsing warning:', e);
-      }
-    }
+    const { frontmatter, directives } = parseFrontmatter(skillMdRaw);
 
     const skillName = frontmatter.name || targetSkillFile.name || repo;
     const skillDesc = frontmatter.description || 'No description provided';
@@ -486,7 +484,7 @@ export class SkillExtractor {
   }
 
   // 2. Extract from Zip File (Blob / ArrayBuffer)
-  async extractFromZip(zipFile, { subdirOverride = '', onProgress = () => {} }) {
+  async extractFromZip(zipFile, { subdirOverride = '', onProgress = () => {} } = {}) {
     await this.wasm.ready();
     const settings = await storage.getSettings();
 
@@ -549,16 +547,7 @@ export class SkillExtractor {
     }
 
     onProgress('Compiling skill playbook...', 85);
-    let frontmatter = {};
-    let directives = skillMdRaw;
-
-    const yamlMatch = skillMdRaw.match(/^---\r?\n([\s\S]+?)\r?\n---/);
-    if (yamlMatch) {
-      try {
-        frontmatter = yaml.load(yamlMatch[1]) || {};
-        directives = skillMdRaw.substring(yamlMatch[0].length).trim();
-      } catch (e) {}
-    }
+    const { frontmatter, directives } = parseFrontmatter(skillMdRaw);
 
     const skillName = frontmatter.name || targetEntry.name || 'Extracted Zip Skill';
     const skillDesc = frontmatter.description || 'Extracted from ZIP archive';
@@ -599,7 +588,7 @@ export class SkillExtractor {
   }
 
   // 3. Extract from Local Folder (Files list from webkitdirectory or File System API)
-  async extractFromFolder(files, { onProgress = () => {} }) {
+  async extractFromFolder(files, { onProgress = () => {} } = {}) {
     await this.wasm.ready();
     const settings = await storage.getSettings();
 
@@ -647,16 +636,7 @@ export class SkillExtractor {
     }
 
     onProgress('Parsing and compiling local skill...', 80);
-    let frontmatter = {};
-    let directives = skillMdRaw;
-
-    const yamlMatch = skillMdRaw.match(/^---\r?\n([\s\S]+?)\r?\n---/);
-    if (yamlMatch) {
-      try {
-        frontmatter = yaml.load(yamlMatch[1]) || {};
-        directives = skillMdRaw.substring(yamlMatch[0].length).trim();
-      } catch (e) {}
-    }
+    const { frontmatter, directives } = parseFrontmatter(skillMdRaw);
 
     const skillName = frontmatter.name || (baseDir ? baseDir.split('/').pop() : 'Local Skill');
     const skillDesc = frontmatter.description || 'Extracted from local directory';

@@ -19,6 +19,10 @@ export function parseCommandOrUrl(input) {
           subdir = args[i + 1].replace(/['"]/g, '');
           break;
         }
+        if (arg.startsWith('--skill=')) {
+          subdir = args[i].slice('--skill='.length).replace(/['"]/g, '');
+          break;
+        }
       }
 
       const parsedRepo = parseGitHubUrl(source);
@@ -53,33 +57,51 @@ export function parseCommandOrUrl(input) {
 
 export function parseGitHubUrl(urlStr) {
   if (!urlStr) return null;
-  let clean = urlStr.trim().replace(/\.git$/i, '');
+  let clean = urlStr.trim();
+  if (!clean) return null;
 
-  // Handle standard GitHub URLs: https://github.com/owner/repo/tree/branch/sub/path
-  const treeMatch = clean.match(/github\.com\/([^\/]+)\/([^\/]+)\/tree\/([^\/]+)\/?(.*)/i);
-  if (treeMatch) {
-    return {
-      owner: treeMatch[1],
-      repo: treeMatch[2],
-      branch: treeMatch[3],
-      subdir: treeMatch[4] || ''
-    };
+  // Accept GitHub's SSH clone notation in addition to browser URLs.
+  const sshMatch = clean.match(/^git@github\.com:([^\s]+)$/i);
+  if (sshMatch) clean = `https://github.com/${sshMatch[1]}`;
+
+  const urlLike = /^(?:https?:)?\/\/(?:www\.)?github\.com\//i.test(clean)
+    || /^github\.com\//i.test(clean);
+  if (urlLike) {
+    try {
+      const normalizedUrl = clean.startsWith('//')
+        ? `https:${clean}`
+        : /^https?:\/\//i.test(clean) ? clean : `https://${clean}`;
+      const parsedUrl = new URL(normalizedUrl);
+      if (!/^www\.github\.com$/i.test(parsedUrl.hostname) && !/^github\.com$/i.test(parsedUrl.hostname)) {
+        return null;
+      }
+
+      const parts = parsedUrl.pathname.split('/').filter(Boolean).map(part => decodeURIComponent(part));
+      if (parts.length < 2) return null;
+
+      const owner = parts[0];
+      const repo = parts[1].replace(/\.git$/i, '');
+      if (!owner || !repo) return null;
+
+      if (parts[2] === 'tree' && parts[3]) {
+        return {
+          owner,
+          repo,
+          branch: parts[3],
+          subdir: parts.slice(4).join('/')
+        };
+      }
+
+      return { owner, repo, branch: '', subdir: '' };
+    } catch {
+      return null;
+    }
   }
 
-  // Handle standard GitHub repo URLs: https://github.com/owner/repo
-  const repoUrlMatch = clean.match(/github\.com\/([^\/]+)\/([^\/]+)/i);
-  if (repoUrlMatch) {
-    return {
-      owner: repoUrlMatch[1],
-      repo: repoUrlMatch[2].split('/')[0],
-      branch: '',
-      subdir: ''
-    };
-  }
-
-  // Handle shorthand: owner/repo or owner/repo/subdir
-  const parts = clean.split('/');
-  if (parts.length >= 2 && !clean.includes(':')) {
+  // Handle shorthand: owner/repo or owner/repo/subdir.
+  clean = clean.replace(/[?#].*$/, '').replace(/\.git$/i, '');
+  const parts = clean.split('/').filter(Boolean);
+  if (parts.length >= 2 && !clean.includes(':') && !clean.includes(' ') && !clean.includes('\\')) {
     return {
       owner: parts[0],
       repo: parts[1],

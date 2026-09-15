@@ -1,8 +1,10 @@
 import assert from 'assert';
+import JSZip from 'jszip';
+import yaml from 'js-yaml';
 import wasmEngine from '../src/services/wasmEngine.js';
 import storage from '../src/services/storage.js';
-import { parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml } from '../src/services/extractor.js';
-import { parseCommandOrUrl } from '../src/services/github.js';
+import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml } from '../src/services/extractor.js';
+import { parseCommandOrUrl, parseGitHubUrl } from '../src/services/github.js';
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
 import { SKILL_PROMPTS } from '../src/services/curatedPrompts.js';
 
@@ -121,12 +123,44 @@ async function runAllTests() {
     assert.strictEqual(updated.githubToken, 'ghp_fake123');
   });
 
+  await asyncTest('storage: a repeated slug updates the same record', async () => {
+    await storage.clearAll();
+    const original = await storage.saveSkill({
+      id: 'original-skill',
+      name: 'Repeated Skill',
+      slug: 'repeated-skill',
+      compiledMarkdown: 'first version'
+    });
+    const replacement = await storage.saveSkill({
+      name: 'Repeated Skill',
+      slug: 'repeated-skill',
+      compiledMarkdown: 'second version'
+    });
+
+    assert.strictEqual(replacement.id, original.id);
+    const skills = await storage.getSkills();
+    assert.strictEqual(skills.length, 1);
+    assert.strictEqual(skills[0].compiledMarkdown, 'second version');
+  });
+
+  await asyncTest('storage: clearAll removes settings as well as skills', async () => {
+    await storage.saveSettings({ githubToken: 'should-be-cleared', defaultExportFormat: 'cursorrules' });
+    await storage.clearAll();
+
+    const settings = await storage.getSettings();
+    assert.strictEqual(settings.githubToken, '');
+    assert.strictEqual(settings.defaultExportFormat, 'skill.md');
+    assert.strictEqual((await storage.getSkills()).length, 0);
+  });
+
   // Group 3: Extractor & Compiler Tests
   console.log('\n--- 3. Extractor & Compiler Tests ---');
   test('sanitizeSlug: converts names to URL/file-safe slugs', () => {
     assert.strictEqual(sanitizeSlug('SVG Logo Designer'), 'svg-logo-designer');
     assert.strictEqual(sanitizeSlug('A/B Testing & Optimization!'), 'a-b-testing-optimization');
     assert.strictEqual(sanitizeSlug(''), 'untitled-skill');
+    assert.strictEqual(sanitizeSlug('***'), 'untitled-skill');
+    assert.strictEqual(sanitizeSlug(2026), '2026');
   });
 
   test('detectLanguage: file extension mappings', () => {
@@ -154,6 +188,17 @@ async function runAllTests() {
     assert(yamlStr.includes('description: Skill description'));
     assert(yamlStr.includes('tags:'));
     assert(yamlStr.includes('  - tag1'));
+  });
+
+  test('dumpFrontmatterYaml: safely round-trips YAML-sensitive values', () => {
+    const original = {
+      name: 'true',
+      description: 'A value: with a colon # and a comment marker',
+      empty: '',
+      nested: { instruction: 'use: carefully' },
+      tags: ['yes', 'a: b']
+    };
+    assert.deepStrictEqual(yaml.load(dumpFrontmatterYaml(original)), original);
   });
 
   test('parseSkillMarkdown & compileSkillContent: all export formats', () => {
@@ -219,6 +264,98 @@ Detailed guide content here.
       exportFormat: 'cursorrules'
     });
     assert(cursorRules.output.startsWith('# Test Extractor Skill\n\n> Testing directives parsing'));
+
+    const windsurfRules = compileSkillContent({
+      name: 'Test Extractor Skill',
+      description: 'Testing directives parsing',
+      directives: parsed.directives,
+      exportFormat: 'windsurfrules'
+    });
+    assert(windsurfRules.output.startsWith('# Test Extractor Skill'));
+    assert(!windsurfRules.output.startsWith('---'));
+  });
+
+  await asyncTest('extractor: ZIP imports parse frontmatter and bundle direct children', async () => {
+    await storage.clearAll();
+    const zip = new JSZip();
+    zip.file('sample-skill/SKILL.md', `---\nname: ZIP Test Skill\ndescription: Handles YAML frontmatter\ntags:\n  - archive\n---\n# Instructions\nUse the bundled helper.`);
+    zip.file('sample-skill/scripts/helper.js', 'export const answer = 42;');
+    zip.file('sample-skill/references/guide.md', '# Guide\nReference text.');
+
+    const saved = await extractor.extractFromZip(await zip.generateAsync({ type: 'nodebuffer' }));
+    assert.strictEqual(saved.name, 'ZIP Test Skill');
+    assert.strictEqual(saved.description, 'Handles YAML frontmatter');
+    assert.strictEqual(saved.scripts.length, 1);
+    assert.strictEqual(saved.references.length, 1);
+    assert(saved.compiledMarkdown.includes('name: ZIP Test Skill'));
+  });
+
+  await asyncTest('extractor: GitHub imports parse frontmatter and bundle direct children', async () => {
+    await storage.clearAll();
+    const originalFetch = globalThis.fetch;
+    const mockResponse = (body, type = 'json') => ({
+      ok: true,
+      status: 200,
+      json: async () => type === 'json' ? body : JSON.parse(body),
+      text: async () => type === 'text' ? body : JSON.stringify(body)
+    });
+
+    globalThis.fetch = async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes('/git/trees/main')) {
+        return mockResponse({
+          tree: [
+            { type: 'blob', path: 'skill/SKILL.md' },
+            { type: 'blob', path: 'skill/scripts/helper.js' },
+            { type: 'blob', path: 'skill/references/guide.md' }
+          ]
+        });
+      }
+      if (requestUrl.endsWith('/repos/acme/example')) {
+        return mockResponse({ default_branch: 'main' });
+      }
+      if (requestUrl.endsWith('/skill/SKILL.md')) {
+        return mockResponse('---\nname: GitHub Test Skill\ndescription: Downloaded from a mocked repository\n---\n# Instructions\nFollow this.', 'text');
+      }
+      if (requestUrl.endsWith('/skill/scripts/helper.js')) {
+        return mockResponse('export const helper = true;', 'text');
+      }
+      if (requestUrl.endsWith('/skill/references/guide.md')) {
+        return mockResponse('# Guide\nReference text.', 'text');
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    };
+
+    try {
+      const saved = await extractor.extractFromGitHub({ input: 'acme/example' });
+      assert.strictEqual(saved.name, 'GitHub Test Skill');
+      assert.strictEqual(saved.sourceType, 'github');
+      assert.strictEqual(saved.scripts.length, 1);
+      assert.strictEqual(saved.references.length, 1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await asyncTest('extractor: unavailable GitHub source falls back to the curated cache', async () => {
+    await storage.clearAll();
+    const cachedSkill = CURATED_SKILLS.find(skill => SKILL_PROMPTS[skill.slug] && skill.command.includes(skill.slug));
+    assert(cachedSkill, 'Expected a curated skill with a local prompt and command');
+
+    const originalFetch = globalThis.fetch;
+    const originalWarn = console.warn;
+    globalThis.fetch = async () => {
+      throw new Error('Simulated offline connection');
+    };
+    console.warn = () => {};
+    try {
+      const saved = await extractor.extractFromGitHub({ input: cachedSkill.command });
+      assert.strictEqual(saved.sourceType, 'curated-cache');
+      assert.strictEqual(saved.name, cachedSkill.name);
+    } finally {
+      globalThis.fetch = originalFetch;
+      console.warn = originalWarn;
+    }
   });
 
   // Group 4: GitHub Command Parsing
@@ -230,6 +367,9 @@ Detailed guide content here.
     assert.strictEqual(res.owner, 'rknall');
     assert.strictEqual(res.repo, 'claude-skills');
     assert.strictEqual(res.subdir, 'SVG Logo Designer');
+
+    const equalsSyntax = parseCommandOrUrl('npx skills add acme/example --skill=demo-skill');
+    assert.strictEqual(equalsSyntax.subdir, 'demo-skill');
   });
 
   test('parseCommandOrUrl: parses direct github repo URLs', () => {
@@ -240,6 +380,20 @@ Detailed guide content here.
     assert.strictEqual(res.repo, 'anthropic-quickstarts');
     assert.strictEqual(res.branch, 'main');
     assert.strictEqual(res.subdir, 'computer-use-demo');
+  });
+
+  test('parseGitHubUrl: supports SSH, URL query strings, and strict GitHub hosts', () => {
+    const treeUrl = parseGitHubUrl('https://github.com/acme/example/tree/main/skills/demo?tab=readme#top');
+    assert.deepStrictEqual(treeUrl, {
+      owner: 'acme', repo: 'example', branch: 'main', subdir: 'skills/demo'
+    });
+    assert.deepStrictEqual(parseGitHubUrl('git@github.com:acme/example.git'), {
+      owner: 'acme', repo: 'example', branch: '', subdir: ''
+    });
+    assert.deepStrictEqual(parseGitHubUrl('//github.com/acme/example'), {
+      owner: 'acme', repo: 'example', branch: '', subdir: ''
+    });
+    assert.strictEqual(parseGitHubUrl('https://notgithub.com/acme/example'), null);
   });
 
   // Group 5: Curated Catalog & Prompt Integrity

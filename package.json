@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node scripts/test-all.js",
     "favicons": "node scripts/generateFavicons.js",
     "preview": "vite preview",
     "deploy": "vite build && wrangler pages deploy dist --project-name=skill-extractor --commit-dirty=true"

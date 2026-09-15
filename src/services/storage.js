@@ -129,6 +129,10 @@ class StorageManager {
     const skills = await this.getSkills();
     const existingIdx = skills.findIndex(s => s.id === item.id || s.slug === item.slug);
     if (existingIdx >= 0) {
+      // A slug identifies a skill to users. Reuse the original primary key so
+      // IndexedDB updates that record instead of retaining a hidden duplicate.
+      item.id = skills[existingIdx].id;
+      item.dateAdded = skills[existingIdx].dateAdded || item.dateAdded;
       skills[existingIdx] = item;
     } else {
       skills.unshift(item);
@@ -227,7 +231,8 @@ class StorageManager {
 
   async saveSettings(settings) {
     await this.ready();
-    this.cachedSettings = { ...(this.cachedSettings || {}), ...settings };
+    const currentSettings = await this.getSettings();
+    this.cachedSettings = { ...currentSettings, ...settings };
 
     if (!this.db) {
       if (typeof localStorage !== 'undefined') {
@@ -287,14 +292,15 @@ class StorageManager {
     if (!this.db) {
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('skill_extractor_skills');
+        localStorage.removeItem('skill_extractor_settings');
       }
       return true;
     }
 
     return new Promise((resolve) => {
-      const tx = this.db.transaction(STORE_SKILLS, 'readwrite');
-      const store = tx.objectStore(STORE_SKILLS);
-      store.clear();
+      const tx = this.db.transaction([STORE_SKILLS, STORE_SETTINGS], 'readwrite');
+      tx.objectStore(STORE_SKILLS).clear();
+      tx.objectStore(STORE_SETTINGS).clear();
       tx.oncomplete = () => resolve(true);
       tx.onerror = () => resolve(false);
     });

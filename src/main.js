@@ -110,7 +110,7 @@ const settingExportFormat = document.getElementById('setting-export-format');
 const settingGhToken = document.getElementById('setting-gh-token');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnExportBackup = document.getElementById('btn-export-backup');
-const btnImportBackup = document.getElementById('input-import-backup');
+const btnImportBackup = document.getElementById('btn-import-backup');
 const inputImportBackup = document.getElementById('input-import-backup');
 const btnClearDb = document.getElementById('btn-clear-db');
 
