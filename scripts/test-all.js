@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import wasmEngine from '../src/services/wasmEngine.js';
 import storage from '../src/services/storage.js';
 import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml, parseFrontmatter, extractFallbackDescription } from '../src/services/extractor.js';
-import { parseCommandOrUrl, parseGitHubUrl } from '../src/services/github.js';
+import { parseCommandOrUrl, parseGitHubUrl, GitHubFetcher } from '../src/services/github.js';
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
 import { SKILL_PROMPTS } from '../src/services/curatedPrompts.js';
 
@@ -405,6 +405,46 @@ Rewrite AI-sounding text so it reads like the writer.`;
     assert.strictEqual(parsedBroken.directives, '# Title\nDirectives text');
   });
 
+  test('parseFrontmatter: literal ... closer is not confused with 3-char YAML lines', () => {
+    // A bare 3-char line previously matched the unescaped `...` closer and truncated YAML.
+    const md = '---\na: 1\nxyz\nmore: 2\n---\n# Body\nHello';
+    const parsed = parseFrontmatter(md);
+    assert.strictEqual(parsed.yamlStr, 'a: 1\nxyz\nmore: 2');
+    assert.strictEqual(parsed.directives, '# Body\nHello');
+
+    const validShort = parseFrontmatter('---\na: 1\nid: x\nmore: 2\n---\n# Body\nHello');
+    assert.strictEqual(validShort.frontmatter.a, 1);
+    assert.strictEqual(validShort.frontmatter.more, 2);
+    assert.strictEqual(validShort.directives, '# Body\nHello');
+
+    const dots = parseFrontmatter('---\nname: Dot Delimiter\ndescription: Ends with dots\n...\n# Title\nDirectives text');
+    assert.strictEqual(dots.frontmatter.name, 'Dot Delimiter');
+    assert.strictEqual(dots.directives, '# Title\nDirectives text');
+  });
+
+  test('compileSkillContent: strips leaked frontmatter from all export bodies', () => {
+    const leaked = '---\nname: Bad\ndescription: desc\n---\n# Body\nHello';
+    for (const format of ['skill.md', 'claude.md', 'cursorrules', 'windsurfrules']) {
+      const compiled = compileSkillContent({
+        name: 'Bad',
+        description: 'desc',
+        directives: leaked,
+        exportFormat: format
+      });
+      const withoutLeadingFence = compiled.output.replace(/^---\n[\s\S]*?\n---\n*/, '');
+      assert(!withoutLeadingFence.includes('name: Bad'), `${format} body should not re-emit leaked frontmatter`);
+      assert(compiled.output.includes('# Body'), `${format} should keep the markdown body`);
+    }
+  });
+
+  await asyncTest('storage: exportAllToJson redacts github tokens', async () => {
+    await storage.saveSettings({ githubToken: 'ghp_should_not_leak', defaultExportFormat: 'skill.md' });
+    const jsonStr = await storage.exportAllToJson();
+    const parsed = JSON.parse(jsonStr);
+    assert.strictEqual(parsed.settings.githubToken, '');
+    assert(!jsonStr.includes('ghp_should_not_leak'));
+  });
+
   test('extractFallbackDescription: extracts first substantive paragraph', () => {
     const markdown = `# Main Title
 
@@ -495,6 +535,17 @@ Keep what it says. Do not make anything up.`, 'text');
     assert.strictEqual(res.repo, 'anthropic-quickstarts');
     assert.strictEqual(res.branch, 'main');
     assert.strictEqual(res.subdir, 'computer-use-demo');
+  });
+
+  test('discoverSkills: only matches SKILL.md basename, not *skill.md', () => {
+    const fetcher = new GitHubFetcher();
+    const found = fetcher.discoverSkills([
+      { type: 'blob', path: 'pkg/SKILL.md', sha: '1', size: 10 },
+      { type: 'blob', path: 'pkg/myskill.md', sha: '2', size: 10 },
+      { type: 'blob', path: 'notes/FOOSKILL.md', sha: '3', size: 10 },
+      { type: 'blob', path: 'SKILL.md', sha: '4', size: 10 }
+    ]);
+    assert.deepStrictEqual(found.map(f => f.path).sort(), ['SKILL.md', 'pkg/SKILL.md']);
   });
 
   test('parseGitHubUrl: supports SSH, URL query strings, strict GitHub hosts, and blob URLs', () => {

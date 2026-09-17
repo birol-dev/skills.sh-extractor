@@ -12,14 +12,14 @@
     "deploy": "vite build && wrangler pages deploy dist --project-name=skill-extractor --commit-dirty=true"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.3.2",
     "jszip": "^3.10.1",
     "marked": "^15.0.7",
     "prismjs": "^1.29.0"
   },
   "devDependencies": {
     "vite": "^6.2.0",
-    "wrangler": "^4.123.0"
+    "wrangler": "^4.134.0"
   },
   "author": "Birol-dev",
   "license": "MIT"

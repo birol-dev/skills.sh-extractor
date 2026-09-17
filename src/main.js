@@ -186,6 +186,14 @@ function escapeHtml(str) {
   }[m]));
 }
 
+// Strip high-risk markup from rendered skill markdown (untrusted GitHub content).
+function sanitizeRenderedHtml(html) {
+  return String(html || '')
+    .replace(/<(script|iframe|object|embed|link|meta|base|form)(\s|>|\/)/gi, '&lt;$1$2')
+    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/javascript\s*:/gi, '');
+}
+
 // Navigation Switcher
 function switchView(viewName) {
   Object.keys(views).forEach(k => {
@@ -836,7 +844,7 @@ async function openPreviewModal(skill) {
   const parsed = parseSkillMarkdown(skill.compiledMarkdown);
 
   // 1. Directives Rendered Markdown
-  const html = await parseMarkdown(parsed.directives || skill.directives || 'No directives body provided.');
+  const html = sanitizeRenderedHtml(await parseMarkdown(parsed.directives || skill.directives || 'No directives body provided.'));
   modalRenderedContent.innerHTML = html;
   highlightCodeUnder(modalRenderedContent);
 
@@ -894,12 +902,12 @@ async function openPreviewModal(skill) {
       chip.addEventListener('click', async () => {
         modalRefSelector.querySelectorAll('.script-tab-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        modalRefContent.innerHTML = await parseMarkdown(ref.content);
+        modalRefContent.innerHTML = sanitizeRenderedHtml(await parseMarkdown(ref.content));
         highlightCodeUnder(modalRefContent);
       });
       modalRefSelector.appendChild(chip);
     });
-    modalRefContent.innerHTML = await parseMarkdown(parsed.references[0].content);
+    modalRefContent.innerHTML = sanitizeRenderedHtml(await parseMarkdown(parsed.references[0].content));
     highlightCodeUnder(modalRefContent);
   } else {
     modalRefContent.innerHTML = '<p style="color: var(--text-dim);">No reference documentation attached.</p>';

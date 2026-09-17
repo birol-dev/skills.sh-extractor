@@ -186,7 +186,8 @@ export class GitHubFetcher {
   discoverSkills(tree) {
     const skillFiles = [];
     for (const item of tree) {
-      if (item.type === 'blob' && item.path.toLowerCase().endsWith('skill.md')) {
+      const baseName = (item.path || '').split('/').pop() || '';
+      if (item.type === 'blob' && baseName.toLowerCase() === 'skill.md') {
         const parts = item.path.split('/');
         const dir = parts.slice(0, -1).join('/');
         const skillName = parts.length > 1 ? parts[parts.length - 2] : '';
@@ -204,7 +205,11 @@ export class GitHubFetcher {
 
   // Fetch raw file content directly from raw.githubusercontent.com (CORS enabled)
   async fetchRawFile(owner, repo, branch, path) {
-    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+    const encodedPath = String(path || '')
+      .split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
+    const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${encodedPath}`;
     const res = await fetch(rawUrl);
     if (!res.ok) {
       throw new Error(`Failed to download "${path}" (HTTP ${res.status})`);
