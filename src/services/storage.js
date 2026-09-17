@@ -68,7 +68,7 @@ class StorageManager {
           const raw = localStorage.getItem('skill_extractor_skills');
           this.cachedSkills = raw ? JSON.parse(raw) : [];
         } else {
-          this.cachedSkills = [];
+          this.cachedSkills = this.cachedSkills || [];
         }
         return this.cachedSkills;
       } catch (e) {

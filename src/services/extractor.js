@@ -22,27 +22,138 @@ export function sanitizeSlug(name) {
     .replace(/(^-|-$)/g, '') || 'untitled-skill';
 }
 
-function parseFrontmatter(content) {
-  const yamlMatch = content.match(/^---\r?\n([\s\S]+?)\r?\n---/);
-  if (!yamlMatch) {
-    return { frontmatter: {}, directives: content };
+export function extractFallbackDescription(directives) {
+  if (!directives || typeof directives !== 'string') return 'No description provided';
+  const lines = directives.split(/\r?\n/);
+  const paraLines = [];
+  let inPara = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (inPara) break;
+      continue;
+    }
+    // Skip headings, horizontal rules, code blocks, HTML tags, blockquotes, list markers
+    if (trimmed.startsWith('#') || trimmed.startsWith('---') || trimmed.startsWith('```') || trimmed.startsWith('<') || trimmed.startsWith('>') || trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+      if (inPara) break;
+      continue;
+    }
+    inPara = true;
+    paraLines.push(trimmed);
+  }
+  const text = paraLines.join(' ').trim();
+  if (text && text.length > 5) {
+    return text.length > 250 ? text.substring(0, 247) + '...' : text;
+  }
+  return 'No description provided';
+}
+
+function fallbackYamlExtract(yamlStr) {
+  const result = {};
+  if (!yamlStr || typeof yamlStr !== 'string') return result;
+
+  // 1. Extract name
+  const nameMatch = yamlStr.match(/^name:\s*(?:['"]([^'"]+)['"]|([^\r\n#]+))/m);
+  if (nameMatch) {
+    const val = (nameMatch[1] || nameMatch[2] || '').trim();
+    if (val && val.toLowerCase() !== 'root' && val !== 'untitled-skill') {
+      result.name = val;
+    }
+  }
+
+  // 2. Extract description (multiline block scalar | or > or single line)
+  const blockDescMatch = yamlStr.match(/^description:\s*[|>]-?\s*[\r\n]+([\s\S]+?)(?=(?:[\r\n]+[a-zA-Z0-9_-]+:)|$)/m);
+  if (blockDescMatch) {
+    result.description = blockDescMatch[1]
+      .split(/\r?\n/)
+      .map(l => l.replace(/^\s{2,4}/, '').trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+  } else {
+    const singleDescMatch = yamlStr.match(/^description:\s*(?:['"]([\s\S]*?)['"]|([^\r\n]+))/m);
+    if (singleDescMatch) {
+      result.description = (singleDescMatch[1] || singleDescMatch[2] || '').trim();
+    }
+  }
+
+  // 3. Extract license
+  const licMatch = yamlStr.match(/^license:\s*(?:['"]([^'"]+)['"]|([^\r\n#]+))/m);
+  if (licMatch) {
+    result.license = (licMatch[1] || licMatch[2] || '').trim();
+  }
+
+  return result;
+}
+
+export function parseFrontmatter(rawContent) {
+  if (!rawContent || typeof rawContent !== 'string') {
+    return { frontmatter: {}, directives: '', yamlStr: '' };
+  }
+
+  // Strip UTF-8 Byte Order Mark (BOM)
+  let content = rawContent.replace(/^\uFEFF/, '');
+
+  let yamlStr = '';
+  let directives = content;
+
+  // Pattern 1: Fenced with --- or ...
+  // Handles optional leading whitespace/newlines before opening ---
+  // Handles optional trailing whitespace on opening ---
+  // Handles closing --- or ... with optional trailing whitespace
+  const fencedRegex = /^\s*---\s*[\r\n]+([\s\S]*?)[\r\n]+(?:---|...)\s*(?:$|[\r\n]+)/;
+  const match = content.match(fencedRegex);
+
+  if (match) {
+    yamlStr = match[1];
+    directives = content.substring(match[0].length).trim();
+  } else {
+    // Pattern 2: Unfenced YAML block at the start of the file
+    // e.g. starting directly with name: or description: before the first markdown heading or rule
+    const unfencedHeaderMatch = content.match(/^\s*(name:\s*[\s\S]*?)(?=[\r\n]+#+\s+|[\r\n]+---|\s*$)/);
+    if (unfencedHeaderMatch) {
+      yamlStr = unfencedHeaderMatch[1];
+      directives = content.substring(unfencedHeaderMatch[0].length).trim();
+    }
   }
 
   let frontmatter = {};
-  try {
-    const parsed = yaml.load(yamlMatch[1]);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      frontmatter = parsed;
-    } else if (parsed !== undefined && parsed !== null) {
-      console.warn('Ignoring SKILL.md frontmatter because it must be a YAML mapping.');
+  if (yamlStr.trim()) {
+    try {
+      const parsed = yaml.load(yamlStr);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        frontmatter = parsed;
+      } else if (parsed !== undefined && parsed !== null) {
+        console.warn('Ignoring SKILL.md frontmatter because it must be a YAML mapping.');
+      }
+    } catch (error) {
+      // Fallback regex extractor will recover core fields from malformed YAML
     }
-  } catch (error) {
-    console.warn('YAML parsing warning:', error);
+
+    // Apply regex fallback for missing or corrupted core fields
+    const fallback = fallbackYamlExtract(yamlStr);
+    if (!frontmatter.name && fallback.name) {
+      frontmatter.name = fallback.name;
+    }
+    if (!frontmatter.description && fallback.description) {
+      frontmatter.description = fallback.description;
+    }
+    if (!frontmatter.license && fallback.license) {
+      frontmatter.license = fallback.license;
+    }
+  }
+
+  // Ensure directives does NOT retain leading frontmatter text
+  if (directives) {
+    directives = directives.replace(/^\s*---\s*[\r\n]+[\s\S]*?[\r\n]+(?:---|...)\s*[\r\n]*/, '');
+    directives = directives.replace(/^\s*name:\s*[^\r\n]*[\r\n]+(?:description:\s*[\s\S]*?[\r\n]+(?=#|\r?\n\r?\n))?/, '');
+    directives = directives.trim();
   }
 
   return {
     frontmatter,
-    directives: content.substring(yamlMatch[0].length).trim()
+    directives,
+    yamlStr
   };
 }
 
@@ -105,14 +216,8 @@ export function isTextFile(filename) {
 }
 
 export function parseSkillMarkdown(content) {
-  let yamlStr = '';
-  let rest = content;
-
-  const yamlMatch = content.match(/^---\r?\n([\s\S]+?)\r?\n---/);
-  if (yamlMatch) {
-    yamlStr = yamlMatch[1];
-    rest = content.substring(yamlMatch[0].length).trim();
-  }
+  const { frontmatter, directives: cleanDirectives, yamlStr } = parseFrontmatter(content);
+  let rest = cleanDirectives;
 
   let directives = rest;
   let scriptsSection = '';
@@ -169,6 +274,7 @@ export function parseSkillMarkdown(content) {
   }
 
   return {
+    frontmatter,
     yamlStr,
     directives,
     scripts,
@@ -180,8 +286,38 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
   const normalizedFrontmatter = frontmatter && typeof frontmatter === 'object' && !Array.isArray(frontmatter)
     ? frontmatter
     : {};
-  const cleanName = String(normalizedFrontmatter.name || name || 'Untitled Skill');
-  const cleanDesc = String(normalizedFrontmatter.description || description || 'No description provided');
+
+  // Clean directives from any leading frontmatter block to prevent duplication or leak into rendered body
+  let cleanDirectives = String(directives || '').trim();
+  if (cleanDirectives) {
+    cleanDirectives = cleanDirectives.replace(/^\s*---\s*[\r\n]+[\s\S]*?[\r\n]+(?:---|...)\s*[\r\n]*/, '');
+    cleanDirectives = cleanDirectives.replace(/^\s*name:\s*[^\r\n]*[\r\n]+(?:description:\s*[\s\S]*?[\r\n]+(?=#|\r?\n\r?\n))?/, '');
+    cleanDirectives = cleanDirectives.trim();
+  }
+
+  // Derive intelligent name fallback if name is 'root', 'untitled-skill', or missing
+  let rawName = normalizedFrontmatter.name || name;
+  if (!rawName || rawName.toLowerCase() === 'root' || rawName === 'untitled-skill') {
+    const headingMatch = cleanDirectives.match(/^#\s+([^\r\n]+)/m);
+    if (headingMatch) {
+      rawName = headingMatch[1].trim();
+    } else {
+      rawName = 'Untitled Skill';
+    }
+  }
+  const cleanName = String(rawName);
+
+  // Derive intelligent description fallback if description is missing
+  let rawDesc = normalizedFrontmatter.description || description;
+  if (!rawDesc || rawDesc === 'No description provided') {
+    const fallbackDesc = extractFallbackDescription(cleanDirectives);
+    if (fallbackDesc && fallbackDesc !== 'No description provided') {
+      rawDesc = fallbackDesc;
+    } else {
+      rawDesc = 'No description provided';
+    }
+  }
+  const cleanDesc = String(rawDesc);
   const slug = sanitizeSlug(cleanName);
 
   // Merge extra tags
@@ -444,8 +580,23 @@ export class SkillExtractor {
     onProgress('Parsing frontmatter and consolidating playbook...', 90);
     const { frontmatter, directives } = parseFrontmatter(skillMdRaw);
 
-    const skillName = frontmatter.name || targetSkillFile.name || repo;
-    const skillDesc = frontmatter.description || 'No description provided';
+    let skillName = frontmatter.name;
+    if (!skillName || skillName.toLowerCase() === 'root' || skillName === 'untitled-skill') {
+      const headingMatch = directives.match(/^#\s+([^\r\n]+)/m);
+      if (headingMatch) {
+        skillName = headingMatch[1].trim();
+      } else if (targetSkillFile.name && targetSkillFile.name.toLowerCase() !== 'root') {
+        skillName = targetSkillFile.name;
+      } else {
+        skillName = repo || 'Untitled Skill';
+      }
+    }
+
+    let skillDesc = frontmatter.description;
+    if (!skillDesc || skillDesc === 'No description provided') {
+      const extractedDesc = extractFallbackDescription(directives);
+      skillDesc = extractedDesc !== 'No description provided' ? extractedDesc : 'No description provided';
+    }
 
     const { output: compiledMarkdown, slug, tags } = compileSkillContent({
       name: skillName,
@@ -501,7 +652,7 @@ export class SkillExtractor {
       if (!zip.files[path].dir && path.toLowerCase().endsWith('skill.md')) {
         const parts = path.split('/');
         const dir = parts.slice(0, -1).join('/');
-        const name = parts.length > 1 ? parts[parts.length - 2] : 'root';
+        const name = parts.length > 1 ? parts[parts.length - 2] : '';
         skillEntries.push({ path, dir, name });
       }
     }
@@ -549,8 +700,23 @@ export class SkillExtractor {
     onProgress('Compiling skill playbook...', 85);
     const { frontmatter, directives } = parseFrontmatter(skillMdRaw);
 
-    const skillName = frontmatter.name || targetEntry.name || 'Extracted Zip Skill';
-    const skillDesc = frontmatter.description || 'Extracted from ZIP archive';
+    let skillName = frontmatter.name;
+    if (!skillName || skillName.toLowerCase() === 'root' || skillName === 'untitled-skill') {
+      const headingMatch = directives.match(/^#\s+([^\r\n]+)/m);
+      if (headingMatch) {
+        skillName = headingMatch[1].trim();
+      } else if (targetEntry.name && targetEntry.name.toLowerCase() !== 'root') {
+        skillName = targetEntry.name;
+      } else {
+        skillName = 'Extracted Zip Skill';
+      }
+    }
+
+    let skillDesc = frontmatter.description;
+    if (!skillDesc || skillDesc === 'No description provided' || skillDesc === 'Extracted from ZIP archive') {
+      const extractedDesc = extractFallbackDescription(directives);
+      skillDesc = extractedDesc !== 'No description provided' ? extractedDesc : (frontmatter.description || 'Extracted from ZIP archive');
+    }
 
     const { output: compiledMarkdown, slug, tags } = compileSkillContent({
       name: skillName,
@@ -638,8 +804,23 @@ export class SkillExtractor {
     onProgress('Parsing and compiling local skill...', 80);
     const { frontmatter, directives } = parseFrontmatter(skillMdRaw);
 
-    const skillName = frontmatter.name || (baseDir ? baseDir.split('/').pop() : 'Local Skill');
-    const skillDesc = frontmatter.description || 'Extracted from local directory';
+    let skillName = frontmatter.name;
+    if (!skillName || skillName.toLowerCase() === 'root' || skillName === 'untitled-skill') {
+      const headingMatch = directives.match(/^#\s+([^\r\n]+)/m);
+      if (headingMatch) {
+        skillName = headingMatch[1].trim();
+      } else if (baseDir && baseDir.split('/').pop().toLowerCase() !== 'root') {
+        skillName = baseDir.split('/').pop();
+      } else {
+        skillName = 'Local Skill';
+      }
+    }
+
+    let skillDesc = frontmatter.description;
+    if (!skillDesc || skillDesc === 'No description provided' || skillDesc === 'Extracted from local directory') {
+      const extractedDesc = extractFallbackDescription(directives);
+      skillDesc = extractedDesc !== 'No description provided' ? extractedDesc : (frontmatter.description || 'Extracted from local directory');
+    }
 
     const { output: compiledMarkdown, slug, tags } = compileSkillContent({
       name: skillName,

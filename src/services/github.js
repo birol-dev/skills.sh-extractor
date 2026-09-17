@@ -83,12 +83,12 @@ export function parseGitHubUrl(urlStr) {
       const repo = parts[1].replace(/\.git$/i, '');
       if (!owner || !repo) return null;
 
-      if (parts[2] === 'tree' && parts[3]) {
+      if ((parts[2] === 'tree' || parts[2] === 'blob') && parts[3]) {
         return {
           owner,
           repo,
           branch: parts[3],
-          subdir: parts.slice(4).join('/')
+          subdir: parts.slice(4).filter(p => !p.toLowerCase().endsWith('.md')).join('/')
         };
       }
 
@@ -189,7 +189,7 @@ export class GitHubFetcher {
       if (item.type === 'blob' && item.path.toLowerCase().endsWith('skill.md')) {
         const parts = item.path.split('/');
         const dir = parts.slice(0, -1).join('/');
-        const skillName = parts.length > 1 ? parts[parts.length - 2] : 'root';
+        const skillName = parts.length > 1 ? parts[parts.length - 2] : '';
         skillFiles.push({
           path: item.path,
           dir: dir,

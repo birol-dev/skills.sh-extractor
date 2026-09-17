@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import yaml from 'js-yaml';
 import wasmEngine from '../src/services/wasmEngine.js';
 import storage from '../src/services/storage.js';
-import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml } from '../src/services/extractor.js';
+import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml, parseFrontmatter, extractFallbackDescription } from '../src/services/extractor.js';
 import { parseCommandOrUrl, parseGitHubUrl } from '../src/services/github.js';
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
 import { SKILL_PROMPTS } from '../src/services/curatedPrompts.js';
@@ -358,6 +358,121 @@ Detailed guide content here.
     }
   });
 
+  test('parseFrontmatter: handles BOM, varied delimiters, unfenced YAML, and syntax errors', () => {
+    // 1. BOM
+    const withBom = '\uFEFF---\nname: BOM Skill\ndescription: Has UTF-8 BOM\n---\n# Title\nDirectives text';
+    const parsedBom = parseFrontmatter(withBom);
+    assert.strictEqual(parsedBom.frontmatter.name, 'BOM Skill');
+    assert.strictEqual(parsedBom.frontmatter.description, 'Has UTF-8 BOM');
+    assert.strictEqual(parsedBom.directives, '# Title\nDirectives text');
+
+    // 2. Trailing spaces on opening/closing dashes
+    const withSpaces = '---   \r\nname: Spaced Dashes\r\ndescription: Trailing spaces on fence\r\n---   \r\n\r\n# Title\nDirectives text';
+    const parsedSpaces = parseFrontmatter(withSpaces);
+    assert.strictEqual(parsedSpaces.frontmatter.name, 'Spaced Dashes');
+    assert.strictEqual(parsedSpaces.frontmatter.description, 'Trailing spaces on fence');
+    assert.strictEqual(parsedSpaces.directives, '# Title\nDirectives text');
+
+    // 3. Dot closing delimiter (...)
+    const withDots = '---\nname: Dot Delimiter\ndescription: Ends with dots\n...\n# Title\nDirectives text';
+    const parsedDots = parseFrontmatter(withDots);
+    assert.strictEqual(parsedDots.frontmatter.name, 'Dot Delimiter');
+    assert.strictEqual(parsedDots.frontmatter.description, 'Ends with dots');
+    assert.strictEqual(parsedDots.directives, '# Title\nDirectives text');
+
+    // 4. Unfenced YAML header (starts directly with name: without dashes)
+    const unfenced = `name: humanizer
+description: |
+  Rewrite AI-sounding text so it reads like the writer without changing what it says.
+license: MIT
+metadata:
+  version: "3.0.0"
+
+# Humanizer: remove AI writing patterns
+Rewrite AI-sounding text so it reads like the writer.`;
+    const parsedUnfenced = parseFrontmatter(unfenced);
+    assert.strictEqual(parsedUnfenced.frontmatter.name, 'humanizer');
+    assert(parsedUnfenced.frontmatter.description.includes('Rewrite AI-sounding text'));
+    assert.strictEqual(parsedUnfenced.frontmatter.license, 'MIT');
+    assert(!parsedUnfenced.directives.startsWith('name:'));
+    assert(parsedUnfenced.directives.startsWith('# Humanizer: remove AI writing patterns'));
+
+    // 5. Broken YAML syntax (unquoted colon in scalar)
+    const brokenYaml = `---\nname: colon-skill\ndescription: Unquoted colon: here that breaks yaml: yes\n---\n# Title\nDirectives text`;
+    const parsedBroken = parseFrontmatter(brokenYaml);
+    assert.strictEqual(parsedBroken.frontmatter.name, 'colon-skill');
+    assert(parsedBroken.frontmatter.description.includes('Unquoted colon'));
+    assert.strictEqual(parsedBroken.directives, '# Title\nDirectives text');
+  });
+
+  test('extractFallbackDescription: extracts first substantive paragraph', () => {
+    const markdown = `# Main Title
+
+## Section Heading
+
+This is the primary summary paragraph that describes the purpose of this skill. It has several sentences.
+
+Another paragraph following.`;
+    const desc = extractFallbackDescription(markdown);
+    assert(desc.startsWith('This is the primary summary paragraph'));
+    assert(!desc.includes('# Main Title'));
+    assert(!desc.includes('## Section Heading'));
+  });
+
+  await asyncTest('extractor: root-level SKILL.md never names skill root and strips directives cleanly', async () => {
+    await storage.clearAll();
+    const originalFetch = globalThis.fetch;
+    const mockResponse = (body, type = 'json') => ({
+      ok: true,
+      status: 200,
+      json: async () => type === 'json' ? body : JSON.parse(body),
+      text: async () => type === 'text' ? body : JSON.stringify(body)
+    });
+
+    globalThis.fetch = async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes('/git/trees/')) {
+        return mockResponse({
+          tree: [
+            { type: 'blob', path: 'SKILL.md' },
+            { type: 'blob', path: 'scripts/validate.py' }
+          ]
+        });
+      }
+      if (requestUrl.includes('/repos/blader/humanizer')) {
+        return mockResponse({ default_branch: 'main' });
+      }
+      if (requestUrl.endsWith('/SKILL.md')) {
+        return mockResponse(`name: humanizer
+description: |
+  Rewrite AI-sounding text so it reads like the writer without changing what it says.
+license: MIT
+metadata:
+  version: "3.0.0"
+
+# Humanizer: remove AI writing patterns
+Keep what it says. Do not make anything up.`, 'text');
+      }
+      if (requestUrl.endsWith('/scripts/validate.py')) {
+        return mockResponse('print("valid")', 'text');
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    };
+
+    try {
+      const saved = await extractor.extractFromGitHub({ input: 'https://github.com/blader/humanizer' });
+      assert.notStrictEqual(saved.name.toLowerCase(), 'root', 'Skill name must never be root');
+      assert.strictEqual(saved.name, 'humanizer');
+      assert(saved.description.includes('Rewrite AI-sounding text'));
+      assert.strictEqual(saved.slug, 'humanizer');
+      assert(!saved.directives.startsWith('name:'), 'Directives must not leak frontmatter');
+      assert(saved.directives.startsWith('# Humanizer: remove AI writing patterns'));
+      assert.strictEqual(saved.scripts.length, 1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   // Group 4: GitHub Command Parsing
   console.log('\n--- 4. GitHub & NPX Command Parser Tests ---');
   test('parseCommandOrUrl: parses full skills add command with subdirectories', () => {
@@ -382,7 +497,11 @@ Detailed guide content here.
     assert.strictEqual(res.subdir, 'computer-use-demo');
   });
 
-  test('parseGitHubUrl: supports SSH, URL query strings, and strict GitHub hosts', () => {
+  test('parseGitHubUrl: supports SSH, URL query strings, strict GitHub hosts, and blob URLs', () => {
+    const blobUrl = parseGitHubUrl('https://github.com/blader/humanizer/blob/main/SKILL.md');
+    assert.deepStrictEqual(blobUrl, {
+      owner: 'blader', repo: 'humanizer', branch: 'main', subdir: ''
+    });
     const treeUrl = parseGitHubUrl('https://github.com/acme/example/tree/main/skills/demo?tab=readme#top');
     assert.deepStrictEqual(treeUrl, {
       owner: 'acme', repo: 'example', branch: 'main', subdir: 'skills/demo'
@@ -418,6 +537,76 @@ Detailed guide content here.
       }
     }
     assert(foundCount >= 50, `Expected at least 50 prompts found in dictionary, got ${foundCount}`);
+  });
+
+  await asyncTest('storage & gallery: auto-heals corrupted skill entries (named root or missing desc)', async () => {
+    await storage.clearAll();
+
+    const corruptedSource = [
+      'name: humanizer',
+      'description: |',
+      '  Rewrite AI-sounding text so it reads like the writer without changing what it says.',
+      'license: MIT',
+      'metadata:',
+      '  version: "3.0.0"',
+      '',
+      '# Humanizer: remove AI writing patterns',
+      '',
+      'Rewrite AI-sounding text so it reads like the writer, not a chatbot.'
+    ].join('\n');
+
+    await storage.saveSkill({
+      id: 'skill_corrupted_1',
+      name: 'root',
+      slug: 'root',
+      description: 'No description provided',
+      compiledMarkdown: corruptedSource,
+      directives: corruptedSource
+    });
+
+    const storedBefore = await storage.getSkills();
+    assert.strictEqual(storedBefore[0].name, 'root');
+    assert.strictEqual(storedBefore[0].description, 'No description provided');
+
+    // Simulate the gallery load healing loop
+    for (const skill of storedBefore) {
+      const isCorruptedName = !skill.name || skill.name.toLowerCase() === 'root' || skill.name === 'untitled-skill';
+      const isCorruptedDesc = !skill.description || skill.description === 'No description provided';
+      const hasLeakedFrontmatter = typeof skill.directives === 'string' && /^\s*(?:---\s*[\r\n]+|name:\s*)/i.test(skill.directives.trim());
+
+      if (isCorruptedName || isCorruptedDesc || hasLeakedFrontmatter) {
+        const sourceToParse = skill.compiledMarkdown || skill.directives || '';
+        const parsed = parseFrontmatter(sourceToParse);
+
+        let newName = parsed.frontmatter.name;
+        if (!newName || newName.toLowerCase() === 'root' || newName === 'untitled-skill') {
+          const headingMatch = (parsed.directives || skill.directives || '').match(/^#\s+([^\r\n]+)/m);
+          if (headingMatch) {
+            newName = headingMatch[1].trim();
+          }
+        }
+        if (!newName || newName.toLowerCase() === 'root') newName = 'Untitled Skill';
+
+        let newDesc = parsed.frontmatter.description;
+        if (!newDesc || newDesc === 'No description provided') {
+          const extracted = extractFallbackDescription(parsed.directives || skill.directives || '');
+          newDesc = extracted !== 'No description provided' ? extracted : skill.description;
+        }
+
+        skill.name = newName;
+        skill.slug = sanitizeSlug(newName);
+        skill.description = newDesc;
+        skill.directives = parsed.directives;
+        await storage.saveSkill(skill);
+      }
+    }
+
+    const storedAfter = await storage.getSkills(true);
+    assert.strictEqual(storedAfter[0].name, 'humanizer');
+    assert(storedAfter[0].description.includes('Rewrite AI-sounding text'));
+    assert.strictEqual(storedAfter[0].slug, 'humanizer');
+    assert(!storedAfter[0].directives.startsWith('name:'));
+    assert(storedAfter[0].directives.startsWith('# Humanizer: remove AI writing patterns'));
   });
 
   console.log('\n==============================================');

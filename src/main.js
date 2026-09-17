@@ -1,7 +1,7 @@
 // skills.sh Extractor - Client-Side WebAssembly Application (Performance Optimized)
 import wasmEngine from './services/wasmEngine.js';
 import storage from './services/storage.js';
-import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug } from './services/extractor.js';
+import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, parseFrontmatter, extractFallbackDescription } from './services/extractor.js';
 import { CURATED_SKILLS } from './services/curatedSkills.js';
 
 // Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
@@ -379,6 +379,72 @@ async function handleZipFile(file) {
 // Setup Gallery & Card Rendering (Event Delegation & Fragment Batched)
 async function loadGallery() {
   currentSkills = await storage.getSkills();
+
+  // Auto-heal any broken/corrupted skills in storage (e.g. named 'root', missing descriptions, or frontmatter leaked into directives)
+  let updatedAny = false;
+  for (const skill of currentSkills) {
+    const isCorruptedName = !skill.name || skill.name.toLowerCase() === 'root' || skill.name === 'untitled-skill';
+    const isCorruptedDesc = !skill.description || skill.description === 'No description provided';
+    const hasLeakedFrontmatter = typeof skill.directives === 'string' && /^\s*(?:---\s*[\r\n]+|name:\s*)/i.test(skill.directives.trim());
+
+    if (isCorruptedName || isCorruptedDesc || hasLeakedFrontmatter) {
+      const sourceToParse = skill.compiledMarkdown || skill.directives || '';
+      const parsed = parseFrontmatter(sourceToParse);
+
+      let newName = parsed.frontmatter.name;
+      if (!newName || newName.toLowerCase() === 'root' || newName === 'untitled-skill') {
+        const headingMatch = (parsed.directives || skill.directives || '').match(/^#\s+([^\r\n]+)/m);
+        if (headingMatch) {
+          newName = headingMatch[1].trim();
+        } else if (skill.sourcePath) {
+          const parts = skill.sourcePath.split('/');
+          const folder = parts.length > 1 ? parts[parts.length - 2] : '';
+          if (folder && folder.toLowerCase() !== 'root') newName = folder;
+        } else if (skill.sourceUrl && skill.sourceUrl.includes('github.com')) {
+          const repo = skill.sourceUrl.split('/').pop() || '';
+          if (repo) newName = repo;
+        }
+      }
+      if (!newName || newName.toLowerCase() === 'root') {
+        newName = skill.name && skill.name.toLowerCase() !== 'root' ? skill.name : 'Untitled Skill';
+      }
+
+      let newDesc = parsed.frontmatter.description;
+      if (!newDesc || newDesc === 'No description provided') {
+        const extracted = extractFallbackDescription(parsed.directives || skill.directives || '');
+        newDesc = extracted !== 'No description provided' ? extracted : skill.description;
+      }
+
+      if (newName !== skill.name || newDesc !== skill.description || hasLeakedFrontmatter) {
+        skill.name = newName;
+        skill.slug = sanitizeSlug(newName);
+        skill.description = newDesc || 'No description provided';
+        if (parsed.directives) {
+          skill.directives = parsed.directives;
+        }
+        if (Object.keys(parsed.frontmatter).length > 0) {
+          skill.metadata = { ...(skill.metadata || {}), ...parsed.frontmatter, name: newName, description: skill.description };
+        }
+        const recompiled = compileSkillContent({
+          name: skill.name,
+          description: skill.description,
+          frontmatter: skill.metadata,
+          directives: skill.directives,
+          scripts: skill.scripts || [],
+          references: skill.references || [],
+          customTags: (skill.tags || []).join(', ')
+        });
+        skill.compiledMarkdown = recompiled.output;
+        await storage.saveSkill(skill);
+        updatedAny = true;
+      }
+    }
+  }
+
+  if (updatedAny) {
+    currentSkills = await storage.getSkills(true);
+  }
+
   badgeSkillCount.innerText = currentSkills.length;
   renderTagFilterBar();
   renderGalleryCards();
@@ -776,21 +842,24 @@ async function openPreviewModal(skill) {
 
   // 2. Metadata Grid
   modalMetaGrid.innerHTML = '';
-  const lines = (parsed.yamlStr || '').split('\n');
-  lines.forEach(l => {
-    const parts = l.split(':');
-    if (parts.length >= 2) {
-      const k = parts[0].trim();
-      const v = parts.slice(1).join(':').trim();
-      if (k && v) {
-        modalMetaGrid.innerHTML += `
-          <div class="meta-lbl">${escapeHtml(k)}</div>
-          <div class="meta-val">${escapeHtml(v)}</div>
-        `;
+  const metaObj = { ...(skill.metadata || {}), ...(parsed.frontmatter || {}) };
+  const entries = Object.entries(metaObj).filter(([k, v]) => v !== undefined && v !== null && v !== '');
+  if (entries.length > 0) {
+    entries.forEach(([k, v]) => {
+      let valStr = '';
+      if (Array.isArray(v)) {
+        valStr = v.join(', ');
+      } else if (typeof v === 'object') {
+        valStr = JSON.stringify(v);
+      } else {
+        valStr = String(v);
       }
-    }
-  });
-  if (!modalMetaGrid.innerHTML) {
+      modalMetaGrid.innerHTML += `
+        <div class="meta-lbl">${escapeHtml(k)}</div>
+        <div class="meta-val">${escapeHtml(valStr)}</div>
+      `;
+    });
+  } else {
     modalMetaGrid.innerHTML = '<div style="grid-column: span 2; color: var(--text-dim);">No frontmatter properties defined.</div>';
   }
 
