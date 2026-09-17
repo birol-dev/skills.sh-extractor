@@ -101,7 +101,7 @@ export function parseFrontmatter(rawContent) {
   // Handles optional leading whitespace/newlines before opening ---
   // Handles optional trailing whitespace on opening ---
   // Handles closing --- or ... with optional trailing whitespace
-  const fencedRegex = /^\s*---\s*[\r\n]+([\s\S]*?)[\r\n]+(?:---|...)\s*(?:$|[\r\n]+)/;
+  const fencedRegex = /^\s*---\s*[\r\n]+([\s\S]*?)[\r\n]+(?:---|\.\.\.)\s*(?:$|[\r\n]+)/;
   const match = content.match(fencedRegex);
 
   if (match) {
@@ -145,7 +145,7 @@ export function parseFrontmatter(rawContent) {
 
   // Ensure directives does NOT retain leading frontmatter text
   if (directives) {
-    directives = directives.replace(/^\s*---\s*[\r\n]+[\s\S]*?[\r\n]+(?:---|...)\s*[\r\n]*/, '');
+    directives = directives.replace(/^\s*---\s*[\r\n]+[\s\S]*?[\r\n]+(?:---|\.\.\.)\s*[\r\n]*/, '');
     directives = directives.replace(/^\s*name:\s*[^\r\n]*[\r\n]+(?:description:\s*[\s\S]*?[\r\n]+(?=#|\r?\n\r?\n))?/, '');
     directives = directives.trim();
   }
@@ -290,7 +290,7 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
   // Clean directives from any leading frontmatter block to prevent duplication or leak into rendered body
   let cleanDirectives = String(directives || '').trim();
   if (cleanDirectives) {
-    cleanDirectives = cleanDirectives.replace(/^\s*---\s*[\r\n]+[\s\S]*?[\r\n]+(?:---|...)\s*[\r\n]*/, '');
+    cleanDirectives = cleanDirectives.replace(/^\s*---\s*[\r\n]+[\s\S]*?[\r\n]+(?:---|\.\.\.)\s*[\r\n]*/, '');
     cleanDirectives = cleanDirectives.replace(/^\s*name:\s*[^\r\n]*[\r\n]+(?:description:\s*[\s\S]*?[\r\n]+(?=#|\r?\n\r?\n))?/, '');
     cleanDirectives = cleanDirectives.trim();
   }
@@ -379,7 +379,7 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
     if (tags.length > 0) {
       output += `**Tags**: ${tags.join(', ')}\n\n`;
     }
-    output += `## Directives\n\n${directives}`;
+    output += `## Directives\n\n${cleanDirectives}`;
     output += scriptsContent;
     output += referencesContent;
     return { output, slug, name: cleanName, description: cleanDesc, tags };
@@ -388,7 +388,7 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
   if (exportFormat === 'claude.md') {
     let output = `# CLAUDE.md - ${cleanName}\n\n`;
     output += `${cleanDesc}\n\n`;
-    output += `## Instructions & Directives\n\n${directives}`;
+    output += `## Instructions & Directives\n\n${cleanDirectives}`;
     output += scriptsContent;
     output += referencesContent;
     return { output, slug, name: cleanName, description: cleanDesc, tags };
@@ -398,7 +398,7 @@ export function compileSkillContent({ name, description, frontmatter = {}, direc
   let output = `---\n`;
   output += dumpFrontmatterYaml(finalFrontmatter);
   output += `---\n\n`;
-  output += directives;
+  output += cleanDirectives;
   output += scriptsContent;
   output += referencesContent;
 
@@ -649,7 +649,8 @@ export class SkillExtractor {
     // Find all SKILL.md entries
     const skillEntries = [];
     for (const path of zipEntries) {
-      if (!zip.files[path].dir && path.toLowerCase().endsWith('skill.md')) {
+      const baseName = path.split('/').pop() || '';
+      if (!zip.files[path].dir && baseName.toLowerCase() === 'skill.md') {
         const parts = path.split('/');
         const dir = parts.slice(0, -1).join('/');
         const name = parts.length > 1 ? parts[parts.length - 2] : '';
@@ -764,7 +765,8 @@ export class SkillExtractor {
     let skillFile = null;
     for (const file of files) {
       const relPath = file.webkitRelativePath || file.name;
-      if (relPath.toLowerCase().endsWith('skill.md')) {
+      const baseName = relPath.split('/').pop() || file.name;
+      if (baseName.toLowerCase() === 'skill.md') {
         skillFile = file;
         break;
       }

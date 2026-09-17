@@ -255,10 +255,12 @@ class StorageManager {
   async exportAllToJson() {
     const skills = await this.getSkills();
     const settings = await this.getSettings();
+    // Never write the GitHub PAT into downloadable backup files.
+    const { githubToken, ...restSettings } = settings || {};
     return JSON.stringify({
       version: 2,
       exportedAt: new Date().toISOString(),
-      settings,
+      settings: { ...restSettings, githubToken: '' },
       skills
     }, null, 2);
   }
