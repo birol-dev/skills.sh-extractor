@@ -7,6 +7,15 @@ import extractor, { SkillNotFoundError, isExactSkillMatch, resolveTargetSkill, f
 import { parseCommandOrUrl, parseGitHubUrl, GitHubFetcher } from '../src/services/github.js';
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
 import { SKILL_PROMPTS } from '../src/services/curatedPrompts.js';
+import {
+  skillChoiceKey,
+  filterAvailableSkills,
+  toggleSelectionKey,
+  selectAllFilteredKeys,
+  findGalleryDuplicate,
+  formatSelectedCount,
+  normalizeSkillToken
+} from '../src/services/skillChoiceHelpers.js';
 
 let passed = 0;
 let failed = 0;
@@ -690,6 +699,87 @@ Keep what it says. Do not make anything up.`, 'text');
       assert(!CURATED_SKILLS.some(s => s.slug === forbidden), `Forbidden stub slug still present: ${forbidden}`);
     }
     assert(eng.every(s => s.command.includes(`--skill ${s.slug}`) || s.command.includes(`--skill '${s.slug}'`)));
+  });
+
+
+  // Group 3c: Skill-choice multi-select helpers
+  console.log('\n--- 3c. Skill-Choice Multi-Select Helpers ---');
+
+  test('skillChoiceKey: prefers name then dir then path', () => {
+    assert.strictEqual(skillChoiceKey({ name: 'ai-sdk', dir: 'skills/ai-sdk' }), 'ai-sdk');
+    assert.strictEqual(skillChoiceKey({ dir: 'skills/foo' }), 'skills/foo');
+    assert.strictEqual(skillChoiceKey({ path: 'a/SKILL.md' }), 'a/SKILL.md');
+    assert.strictEqual(skillChoiceKey(null), '');
+  });
+
+  test('filterAvailableSkills: substring match on name/dir/desc', () => {
+    const available = [
+      { name: 'island-rescue', dir: 'examples/island-rescue', description: 'Rescue demo' },
+      { name: 'ai-sdk', dir: 'skills/use-ai-sdk', description: 'Vercel AI SDK helpers' },
+      { name: 'shadcn', dir: 'skills/shadcn', description: 'UI components' }
+    ];
+    assert.strictEqual(filterAvailableSkills(available, '').length, 3);
+    assert.strictEqual(filterAvailableSkills(available, 'ai').length, 1);
+    assert.strictEqual(filterAvailableSkills(available, 'ai')[0].name, 'ai-sdk');
+    assert.strictEqual(filterAvailableSkills(available, 'rescue').length, 1);
+    assert.strictEqual(filterAvailableSkills(available, 'UI').length, 1);
+    assert.strictEqual(filterAvailableSkills(available, 'zzzz').length, 0);
+  });
+
+  test('toggleSelectionKey / selectAllFilteredKeys', () => {
+    let sel = [];
+    sel = toggleSelectionKey(sel, 'a');
+    assert.deepStrictEqual(sel, ['a']);
+    sel = toggleSelectionKey(sel, 'b');
+    assert.deepStrictEqual(sel.sort(), ['a', 'b']);
+    sel = toggleSelectionKey(sel, 'a');
+    assert.deepStrictEqual(sel, ['b']);
+    const keys = selectAllFilteredKeys([{ name: 'x' }, { dir: 'y' }, {}]);
+    assert.deepStrictEqual(keys, ['x', 'y']);
+  });
+
+  test('findGalleryDuplicate: matches sourceUrl + name/slug/path', () => {
+    const gallery = [
+      {
+        name: 'ai-sdk',
+        slug: 'ai-sdk',
+        sourceUrl: 'https://github.com/vercel/ai',
+        sourcePath: 'skills/use-ai-sdk/SKILL.md'
+      },
+      {
+        name: 'other',
+        slug: 'other',
+        sourceUrl: 'https://github.com/acme/repo',
+        sourcePath: 'skills/other/SKILL.md'
+      }
+    ];
+    const hit = findGalleryDuplicate(
+      gallery,
+      { name: 'ai-sdk', dir: 'skills/use-ai-sdk', path: 'skills/use-ai-sdk/SKILL.md' },
+      { owner: 'vercel', repo: 'ai' }
+    );
+    assert(hit, 'expected duplicate hit');
+    assert.strictEqual(hit.slug, 'ai-sdk');
+
+    const miss = findGalleryDuplicate(
+      gallery,
+      { name: 'ai-sdk', dir: 'skills/use-ai-sdk' },
+      { owner: 'acme', repo: 'repo' }
+    );
+    assert.strictEqual(miss, null);
+
+    const byPath = findGalleryDuplicate(
+      gallery,
+      { name: 'use-ai-sdk', dir: 'skills/use-ai-sdk', path: 'skills/use-ai-sdk/SKILL.md' },
+      { owner: 'vercel', repo: 'ai' }
+    );
+    assert(byPath, 'path/dir match should hit');
+  });
+
+  test('formatSelectedCount / normalizeSkillToken', () => {
+    assert.strictEqual(formatSelectedCount(0), '0 selected');
+    assert.strictEqual(formatSelectedCount(3), '3 selected');
+    assert.strictEqual(normalizeSkillToken('Use-AI_SDK'), 'useaisdk');
   });
 
   // Group 4: GitHub Command Parsing
