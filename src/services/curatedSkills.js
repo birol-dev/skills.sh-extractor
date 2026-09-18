@@ -901,101 +901,83 @@ export const CURATED_SKILLS = [
     "tokenEstimate": 3660
   },
   {
-    "id": "curated_ts_refactor",
-    "slug": "typescript-strict",
-    "name": "TypeScript Strict Refactorer & Zod Validator",
+    "id": "curated_ai_sdk",
+    "slug": "ai-sdk",
+    "name": "ai-sdk",
     "category": "Engineering & Code",
-    "badge": "TypeScript",
-    "description": "Refactor JavaScript and loose TypeScript to strict type-safe code with zod schemas and exhaustiveness checks.",
-    "command": "npx skills add https://github.com/vercel/ai --skill typescript-strict",
+    "badge": "AI SDK",
+    "description": "Answer questions about the AI SDK and help build AI-powered features. Use when developers ask about generateText, streamText, ToolLoopAgent, agents, RAG, providers, streaming, tool calling, structured output, embeddings, or useChat.",
+    "command": "npx skills add https://github.com/vercel/ai --skill ai-sdk",
     "sourceUrl": "https://github.com/vercel/ai",
-    "subdir": "typescript-strict",
+    "subdir": "ai-sdk",
     "tags": [
-      "typescript",
-      "refactor",
-      "typesafe",
-      "zod",
+      "ai-sdk",
+      "vercel",
+      "agents",
+      "streaming",
       "dev"
     ],
     "icon": "code",
-    "tokenEstimate": 2300
+    "tokenEstimate": 2800
   },
   {
-    "id": "curated_shadcn_ui",
-    "slug": "shadcn-ui",
-    "name": "Shadcn & Tailwind UI Component Architect",
+    "id": "curated_shadcn",
+    "slug": "shadcn",
+    "name": "shadcn",
     "category": "Engineering & Code",
     "badge": "Frontend",
-    "description": "Assemble modern interfaces using Radix primitives, Tailwind CSS utilities, and Framer Motion transitions.",
-    "command": "npx skills add https://github.com/shadcn-ui/ui --skill react-components",
+    "description": "Manages shadcn components and projects — adding, searching, fixing, debugging, styling, and composing UI, including chat interfaces. Applies when working with shadcn/ui, component registries, presets, or any project with a components.json file.",
+    "command": "npx skills add https://github.com/shadcn-ui/ui --skill shadcn",
     "sourceUrl": "https://github.com/shadcn-ui/ui",
-    "subdir": "react-components",
+    "subdir": "shadcn",
     "tags": [
-      "react",
-      "tailwind",
       "shadcn",
       "ui",
-      "css"
+      "react",
+      "components",
+      "tailwind"
     ],
     "icon": "layout",
-    "tokenEstimate": 2150
+    "tokenEstimate": 2600
   },
   {
-    "id": "curated_code_review",
-    "slug": "code-review-security",
-    "name": "Agentic Code Review & Security Audit",
+    "id": "curated_next_dev_loop",
+    "slug": "next-dev-loop",
+    "name": "next-dev-loop",
     "category": "Engineering & Code",
-    "badge": "Security",
-    "description": "Thorough static analysis, vulnerability detection (OWASP Top 10), and clean code architecture compliance.",
-    "command": "npx skills add https://github.com/goldbergyoni/nodebestpractices --skill security-audit",
-    "sourceUrl": "https://github.com/goldbergyoni/nodebestpractices",
-    "subdir": "security-audit",
+    "badge": "Next.js",
+    "description": "Verify Next.js runtime behavior after editing app code. Use this skill to confirm a change actually works in a running app — not just that it compiles or type-checks. Combines /_next/mcp with agent-browser. Requires a running next dev.",
+    "command": "npx skills add https://github.com/vercel/next.js --skill next-dev-loop",
+    "sourceUrl": "https://github.com/vercel/next.js",
+    "subdir": "next-dev-loop",
     "tags": [
-      "security",
-      "audit",
-      "code-review",
-      "owasp"
+      "nextjs",
+      "runtime",
+      "dev-loop",
+      "mcp",
+      "verify"
     ],
-    "icon": "shield",
+    "icon": "layers",
     "tokenEstimate": 2400
   },
   {
-    "id": "curated_nextjs_expert",
-    "slug": "nextjs-app-router",
-    "name": "Next.js App Router & Server Actions Master",
-    "category": "Engineering & Code",
-    "badge": "Fullstack",
-    "description": "Architect scalable Server Components, Server Actions, parallel routes, and cache optimizations in Next.js.",
-    "command": "npx skills add https://github.com/vercel/next.js --skill app-router-expert",
-    "sourceUrl": "https://github.com/vercel/next.js",
-    "subdir": "app-router-expert",
-    "tags": [
-      "nextjs",
-      "react",
-      "rsc",
-      "server-actions"
-    ],
-    "icon": "layers",
-    "tokenEstimate": 2200
-  },
-  {
-    "id": "curated_playwright_vitest",
-    "slug": "playwright-vitest-qa",
-    "name": "E2E & Vitest QA Test Automation",
+    "id": "curated_playwright_dev",
+    "slug": "playwright-dev",
+    "name": "playwright-dev",
     "category": "Engineering & Code",
     "badge": "Testing",
-    "description": "Generate rock-solid end-to-end browser test suites, unit test mocks, and GitHub Actions CI pipelines.",
-    "command": "npx skills add https://github.com/microsoft/playwright --skill test-generator",
+    "description": "Explains how to develop Playwright - add APIs, MCP tools, CLI commands, and vendor dependencies.",
+    "command": "npx skills add https://github.com/microsoft/playwright --skill playwright-dev",
     "sourceUrl": "https://github.com/microsoft/playwright",
-    "subdir": "test-generator",
+    "subdir": "playwright-dev",
     "tags": [
-      "testing",
       "playwright",
-      "vitest",
-      "automation",
-      "qa"
+      "testing",
+      "apis",
+      "mcp",
+      "dev"
     ],
     "icon": "check-circle",
-    "tokenEstimate": 1950
+    "tokenEstimate": 2200
   }
 ];

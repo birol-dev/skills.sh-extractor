@@ -15,60 +15,42 @@ for (const dir of dirs) {
   }
 }
 
-// Add engineering skills
-prompts['typescript-strict'] = `# TypeScript Strict Refactorer & Zod Validator
+// Add engineering skills (real skills.sh names — offline cache stubs)
+prompts['ai-sdk'] = `# ai-sdk
 
-You are a Principal TypeScript Architect enforcing strict type safety and domain-driven design.
+Answer questions about the AI SDK and help build AI-powered features.
 
-## Directives:
-1. **Type Strictness:**
-   - \`noImplicitAny: true\`, \`strictNullChecks: true\`.
-   - Never use \`any\` — use \`unknown\` with type guards or discriminated unions.
+## Guidance
+- Prefer current AI SDK docs over training memory; APIs change frequently.
+- Cover generateText, streamText, tools, agents, embeddings, and useChat patterns.
+- Verify provider options against the installed package version.`;
 
-2. **Runtime Validation:**
-   - Validate all external API inputs and query parameters with \`z.infer<typeof Schema>\`.
-   - Ensure exhaustive switch checks using \`const _exhaustive: never = x\`.`;
+prompts['shadcn'] = `# shadcn
 
-prompts['shadcn-ui'] = `# Shadcn & Tailwind UI Component Architect
+Manages shadcn components and projects — adding, searching, fixing, debugging, styling, and composing UI.
 
-You are a Senior Frontend Engineer crafting clean, accessible UI components.
+## Guidance
+- Use the project's package runner with \`shadcn@latest\`.
+- Respect components.json and registry/preset conventions.
+- Prefer composing existing components over inventing parallel primitives.`;
 
-## Directives:
-1. **Component Design:**
-   - Use Radix UI primitives with Tailwind CSS utility classes.
-   - Support dark mode out of the box with CSS variables.
-   - Maintain full ARIA keyboard accessibility and focus rings.`;
+prompts['next-dev-loop'] = `# next-dev-loop
 
-prompts['code-review-security'] = `# Agentic Code Review & Security Audit
+Verify Next.js runtime behavior after editing app code — not just compile/type-check success.
 
-You are a Senior Security Architect and Static Analysis Reviewer.
+## Guidance
+- Requires a running \`next dev\`.
+- Combine /_next/mcp (framework view) with agent-browser (browser view).
+- Confirm the change works on the live route before declaring done.`;
 
-## Directives:
-1. **Vulnerability Checks:**
-   - Check OWASP Top 10 vulnerabilities (SQLi, XSS, CSRF, insecure deserialization).
-   - Verify rate limiting, CORS configuration, and auth token handling.
-2. **Code Quality:**
-   - Flag N+1 query patterns, memory leaks, unhandled Promise rejections, and missing error boundaries.`;
+prompts['playwright-dev'] = `# playwright-dev
 
-prompts['nextjs-app-router'] = `# Next.js App Router & Server Actions Master
+Explains how to develop Playwright — add APIs, MCP tools, CLI commands, and vendor dependencies.
 
-You are a Next.js Core Architect specializing in modern fullstack React architecture.
-
-## Directives:
-1. **Server vs Client Components:**
-   - Keep data fetching on Server Components. Use Client Components ('use client') strictly for interactivity.
-2. **Server Actions:**
-   - Implement type-safe Server Actions with revalidatePath and optimistic UI updates.`;
-
-prompts['playwright-vitest-qa'] = `# E2E & Vitest QA Test Automation
-
-You are a Principal QA Automation Engineer.
-
-## Directives:
-1. **End-to-End Testing (Playwright):**
-   - Write resilient user flow tests using semantic locators (getByRole, getByText, getByTestId).
-2. **Unit & Integration Testing (Vitest):**
-   - Provide isolated unit tests with mock factories and full branch coverage.`;
+## Guidance
+- Follow monorepo build/test/lint conventions.
+- Prefer semantic locators and stable assertions in examples.
+- Keep API/docs/tests in sync when changing surface area.`;
 
 const outContent = '// Consolidated prompt dictionary for all 55+ curated skills\n' +
   'export const SKILL_PROMPTS = ' + JSON.stringify(prompts, null, 2) + ';\n';

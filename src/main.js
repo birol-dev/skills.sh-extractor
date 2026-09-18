@@ -1,7 +1,7 @@
 // skills.sh Extractor - Client-Side WebAssembly Application (Performance Optimized)
 import wasmEngine from './services/wasmEngine.js';
 import storage from './services/storage.js';
-import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, parseFrontmatter, extractFallbackDescription } from './services/extractor.js';
+import extractor, { SkillNotFoundError, parseSkillMarkdown, compileSkillContent, sanitizeSlug, parseFrontmatter, extractFallbackDescription } from './services/extractor.js';
 import { CURATED_SKILLS } from './services/curatedSkills.js';
 
 // Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
@@ -20,6 +20,7 @@ let activeFilterTag = 'all';
 let selectedSkill = null;
 let currentModalFormat = 'skill.md';
 let selectedFolderFiles = [];
+let pendingSkillChoice = null; // { mode, input?, zipFile?, files?, available, owner, repo, requested }
 
 // Lazy-loaded dependencies
 let _marked = null;
@@ -144,6 +145,12 @@ const modalScriptsCount = document.getElementById('modal-scripts-count');
 const modalRefsCount = document.getElementById('modal-refs-count');
 
 const toastContainer = document.getElementById('toast-container');
+const skillChoiceModal = document.getElementById('skill-choice-modal');
+const skillChoiceList = document.getElementById('skill-choice-list');
+const skillChoiceSubtitle = document.getElementById('skill-choice-subtitle');
+const skillChoiceHint = document.getElementById('skill-choice-hint');
+const skillChoiceClose = document.getElementById('skill-choice-close');
+const skillChoiceCancel = document.getElementById('skill-choice-cancel');
 
 // Toast Notification
 function showToast(message, type = 'info') {
@@ -165,6 +172,151 @@ function showToast(message, type = 'info') {
     toast.style.transform = 'translateY(10px)';
     setTimeout(() => toast.remove(), 250);
   }, 3200);
+}
+
+// Skill choice (fail-closed UX)
+function closeSkillChoiceModal() {
+  pendingSkillChoice = null;
+  if (!skillChoiceModal) return;
+  skillChoiceModal.classList.remove('active');
+  skillChoiceModal.hidden = true;
+  skillChoiceModal.setAttribute('aria-hidden', 'true');
+}
+
+function openSkillChoiceModal(payload) {
+  if (!skillChoiceModal || !skillChoiceList) {
+    showToast(payload?.message || 'Multiple skills found — please specify --skill', 'error');
+    return;
+  }
+  pendingSkillChoice = payload;
+  const requested = payload.requested;
+  const where = payload.owner && payload.repo ? `${payload.owner}/${payload.repo}` : 'this source';
+  if (skillChoiceSubtitle) {
+    skillChoiceSubtitle.textContent = requested
+      ? `"${requested}" isn't in ${where} (or the command didn't resolve).`
+      : `${where} has multiple skills — pick which one to extract.`;
+  }
+  if (skillChoiceHint) {
+    skillChoiceHint.textContent = 'Pick one of the skills that were found:';
+  }
+  skillChoiceList.innerHTML = '';
+  const available = payload.available || [];
+  if (available.length === 0) {
+    skillChoiceList.innerHTML = '<p class="skill-choice-hint">No skills were listed by the extractor.</p>';
+  } else {
+    available.forEach((skill, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'skill-choice-item';
+      btn.setAttribute('role', 'option');
+      const meta = [skill.dir, skill.path].filter(Boolean).join(' · ');
+      btn.innerHTML = `
+        <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
+        ${meta ? `<span class="skill-choice-item-meta">${escapeHtml(meta)}</span>` : ''}
+        ${skill.description ? `<span class="skill-choice-item-desc">${escapeHtml(skill.description)}</span>` : ''}
+      `;
+      btn.addEventListener('click', () => {
+        const chosen = skill.name || skill.dir;
+        const ctx = pendingSkillChoice;
+        closeSkillChoiceModal();
+        if (!ctx || !chosen) return;
+        rerunExtractWithSkill(ctx, chosen);
+      });
+      if (idx === 0) btn.autofocus = true;
+      skillChoiceList.appendChild(btn);
+    });
+  }
+  skillChoiceModal.hidden = false;
+  skillChoiceModal.classList.add('active');
+  skillChoiceModal.setAttribute('aria-hidden', 'false');
+  showToast("That skill isn't in this repo (or the command didn't resolve). Pick one of the skills that were found.", 'info');
+}
+
+async function rerunExtractWithSkill(ctx, skillKey) {
+  if (ctx.mode === 'github') {
+    await runGithubExtract(ctx.input, skillKey);
+    return;
+  }
+  if (ctx.mode === 'zip' && ctx.zipFile) {
+    await handleZipFile(ctx.zipFile, skillKey);
+    return;
+  }
+  if (ctx.mode === 'folder' && ctx.files) {
+    await runFolderExtract(ctx.files, skillKey);
+  }
+}
+
+function handleSkillNotFoundError(err, ctx) {
+  if (!(err instanceof SkillNotFoundError) && err?.code !== 'SKILL_NOT_FOUND') return false;
+  openSkillChoiceModal({
+    ...ctx,
+    requested: err.requested ?? null,
+    owner: err.owner || ctx.owner || '',
+    repo: err.repo || ctx.repo || '',
+    available: err.available || []
+  });
+  appendLog(`Skill choice required: ${err.message}`, 'info');
+  return true;
+}
+
+async function runGithubExtract(input, subdirOverride = '') {
+  btnExtractGithub.disabled = true;
+  appendLog(`Starting extraction for: ${input}${subdirOverride ? ` (skill: ${subdirOverride})` : ''}`, 'info');
+  try {
+    const skill = await extractor.extractFromGitHub({
+      input,
+      subdirOverride,
+      onProgress: (status, pct) => {
+        appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
+      }
+    });
+    showToast(`Successfully extracted "${skill.name}"!`, 'success');
+    await loadGallery();
+    openPreviewModal(skill);
+  } catch (err) {
+    if (!handleSkillNotFoundError(err, { mode: 'github', input })) {
+      appendLog(`Error: ${err.message}`, 'error');
+      showToast(`Extraction failed: ${err.message}`, 'error');
+    }
+  } finally {
+    btnExtractGithub.disabled = false;
+  }
+}
+
+async function runFolderExtract(files, subdirOverride = '') {
+  btnExtractFolder.disabled = true;
+  appendLog(`Starting local folder extraction${subdirOverride ? ` (skill: ${subdirOverride})` : ''}...`, 'info');
+  try {
+    const skill = await extractor.extractFromFolder(files, {
+      subdirOverride,
+      onProgress: (status, pct) => {
+        appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
+      }
+    });
+    showToast(`Successfully compiled "${skill.name}" from local folder!`, 'success');
+    await loadGallery();
+    openPreviewModal(skill);
+  } catch (err) {
+    if (!handleSkillNotFoundError(err, { mode: 'folder', files })) {
+      appendLog(`Error: ${err.message}`, 'error');
+      showToast(`Extraction failed: ${err.message}`, 'error');
+    }
+  } finally {
+    btnExtractFolder.disabled = false;
+  }
+}
+
+function setupSkillChoiceUi() {
+  if (!skillChoiceModal) return;
+  const dismiss = () => closeSkillChoiceModal();
+  skillChoiceClose?.addEventListener('click', dismiss);
+  skillChoiceCancel?.addEventListener('click', dismiss);
+  skillChoiceModal.addEventListener('click', (e) => {
+    if (e.target === skillChoiceModal) dismiss();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && skillChoiceModal.classList.contains('active')) dismiss();
+  });
 }
 
 // Terminal Logger
@@ -242,27 +394,7 @@ function setupExtraction() {
       showToast('Please enter a GitHub URL or NPX command', 'error');
       return;
     }
-
-    btnExtractGithub.disabled = true;
-    appendLog(`Starting extraction for: ${input}`, 'info');
-
-    try {
-      const skill = await extractor.extractFromGitHub({
-        input,
-        onProgress: (status, pct) => {
-          appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
-        }
-      });
-
-      showToast(`Successfully extracted "${skill.name}"!`, 'success');
-      await loadGallery();
-      openPreviewModal(skill);
-    } catch (err) {
-      appendLog(`Error: ${err.message}`, 'error');
-      showToast(`Extraction failed: ${err.message}`, 'error');
-    } finally {
-      btnExtractGithub.disabled = false;
-    }
+    await runGithubExtract(input);
   });
 
   btnSelectFolder.addEventListener('click', async () => {
@@ -311,26 +443,7 @@ function setupExtraction() {
       showToast('Please select a local directory first', 'error');
       return;
     }
-
-    btnExtractFolder.disabled = true;
-    appendLog('Starting local folder extraction...', 'info');
-
-    try {
-      const skill = await extractor.extractFromFolder(selectedFolderFiles, {
-        onProgress: (status, pct) => {
-          appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
-        }
-      });
-
-      showToast(`Successfully compiled "${skill.name}" from local folder!`, 'success');
-      await loadGallery();
-      openPreviewModal(skill);
-    } catch (err) {
-      appendLog(`Error: ${err.message}`, 'error');
-      showToast(`Extraction failed: ${err.message}`, 'error');
-    } finally {
-      btnExtractFolder.disabled = false;
-    }
+    await runFolderExtract(selectedFolderFiles);
   });
 
   zipDropzone.addEventListener('click', () => inputZipFile.click());
@@ -366,10 +479,11 @@ function setupExtraction() {
   });
 }
 
-async function handleZipFile(file) {
-  appendLog(`Unpacking zip archive: ${file.name}...`, 'info');
+async function handleZipFile(file, subdirOverride = '') {
+  appendLog(`Unpacking zip archive: ${file.name}${subdirOverride ? ` (skill: ${subdirOverride})` : ''}...`, 'info');
   try {
     const skill = await extractor.extractFromZip(file, {
+      subdirOverride,
       onProgress: (status, pct) => {
         appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
       }
@@ -379,8 +493,10 @@ async function handleZipFile(file) {
     await loadGallery();
     openPreviewModal(skill);
   } catch (err) {
-    appendLog(`Zip extraction error: ${err.message}`, 'error');
-    showToast(`Failed to extract ZIP: ${err.message}`, 'error');
+    if (!handleSkillNotFoundError(err, { mode: 'zip', zipFile: file })) {
+      appendLog(`Zip extraction error: ${err.message}`, 'error');
+      showToast(`Failed to extract ZIP: ${err.message}`, 'error');
+    }
   }
 }
 
@@ -1127,6 +1243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   setupInputTabs();
   setupExtraction();
+  setupSkillChoiceUi();
   setupGalleryDelegation();
   setupModal();
   setupWasmDiagnostics();
