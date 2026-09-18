@@ -148,6 +148,7 @@ const toastContainer = document.getElementById('toast-container');
 const skillChoiceModal = document.getElementById('skill-choice-modal');
 const skillChoiceList = document.getElementById('skill-choice-list');
 const skillChoiceSubtitle = document.getElementById('skill-choice-subtitle');
+const skillChoiceStatus = document.getElementById('skill-choice-status');
 const skillChoiceHint = document.getElementById('skill-choice-hint');
 const skillChoiceClose = document.getElementById('skill-choice-close');
 const skillChoiceCancel = document.getElementById('skill-choice-cancel');
@@ -183,6 +184,13 @@ function closeSkillChoiceModal() {
   skillChoiceModal.setAttribute('aria-hidden', 'true');
 }
 
+function truncateSkillDesc(text, max = 160) {
+  if (!text) return '';
+  const t = String(text).trim();
+  if (t.length <= max) return t;
+  return `${t.slice(0, max - 1).trimEnd()}…`;
+}
+
 function openSkillChoiceModal(payload) {
   if (!skillChoiceModal || !skillChoiceList) {
     showToast(payload?.message || 'Multiple skills found — please specify --skill', 'error');
@@ -195,6 +203,16 @@ function openSkillChoiceModal(payload) {
     skillChoiceSubtitle.textContent = requested
       ? `"${requested}" isn't in ${where} (or the command didn't resolve).`
       : `${where} has multiple skills — pick which one to extract.`;
+  }
+  if (skillChoiceStatus) {
+    skillChoiceStatus.hidden = false;
+    if (requested) {
+      skillChoiceStatus.textContent = 'Not found';
+      skillChoiceStatus.className = 'skill-choice-status is-miss';
+    } else {
+      skillChoiceStatus.textContent = 'Multiple skills';
+      skillChoiceStatus.className = 'skill-choice-status is-multi';
+    }
   }
   if (skillChoiceHint) {
     skillChoiceHint.textContent = 'Pick one of the skills that were found:';
@@ -209,11 +227,14 @@ function openSkillChoiceModal(payload) {
       btn.type = 'button';
       btn.className = 'skill-choice-item';
       btn.setAttribute('role', 'option');
-      const meta = [skill.dir, skill.path].filter(Boolean).join(' · ');
+      const tag = skill.dir || skill.path || '';
+      const desc = truncateSkillDesc(skill.description);
       btn.innerHTML = `
-        <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
-        ${meta ? `<span class="skill-choice-item-meta">${escapeHtml(meta)}</span>` : ''}
-        ${skill.description ? `<span class="skill-choice-item-desc">${escapeHtml(skill.description)}</span>` : ''}
+        <span class="skill-choice-item-header">
+          <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
+          ${tag ? `<span class="skill-choice-item-meta">${escapeHtml(tag)}</span>` : ''}
+        </span>
+        ${desc ? `<span class="skill-choice-item-desc">${escapeHtml(desc)}</span>` : ''}
       `;
       btn.addEventListener('click', () => {
         const chosen = skill.name || skill.dir;
