@@ -6,7 +6,59 @@ import yaml from 'js-yaml';
 import { CURATED_SKILLS } from './curatedSkills.js';
 import { SKILL_PROMPTS } from './curatedPrompts.js';
 
+export class SkillNotFoundError extends Error {
+  constructor({ requested = null, owner = '', repo = '', available = [] } = {}) {
+    const label = requested ? `"${requested}"` : 'a skill';
+    const where = owner && repo ? ` in ${owner}/${repo}` : '';
+    super(`Skill ${label} not found${where}. Pick one of the available skills.`);
+    this.name = 'SkillNotFoundError';
+    this.code = 'SKILL_NOT_FOUND';
+    this.requested = requested ?? null;
+    this.owner = owner || '';
+    this.repo = repo || '';
+    this.available = Array.isArray(available) ? available : [];
+  }
+}
+
+export function formatAvailableSkills(skills = []) {
+  return skills.map(s => ({
+    name: s.name || (s.dir ? s.dir.split('/').filter(Boolean).pop() : '') || 'unnamed',
+    dir: s.dir || '',
+    path: s.path || ''
+  }));
+}
+
+/** Exact match only: normalized dir/name equality or endsWith (no fuzzy). */
+export function isExactSkillMatch(skill, target, normalizeFn) {
+  if (!target || !skill || typeof normalizeFn !== 'function') return false;
+  const normTarget = normalizeFn(target);
+  if (!normTarget) return false;
+  const normDir = normalizeFn(skill.dir || '');
+  const normName = normalizeFn(skill.name || '');
+  if (normName === normTarget || normDir === normTarget) return true;
+  if (normDir && (normDir.endsWith(normTarget) || normName.endsWith(normTarget))) return true;
+  return false;
+}
+
+export function resolveTargetSkill(allSkills, targetSubdir, { owner = '', repo = '', normalizeFn } = {}) {
+  const skills = Array.isArray(allSkills) ? allSkills : [];
+  const available = formatAvailableSkills(skills);
+
+  if (targetSubdir) {
+    const exact = skills.find(s => isExactSkillMatch(s, targetSubdir, normalizeFn));
+    if (exact) return exact;
+    throw new SkillNotFoundError({ requested: targetSubdir, owner, repo, available });
+  }
+
+  if (skills.length === 1) return skills[0];
+  if (skills.length === 0) {
+    throw new Error(owner && repo ? `No SKILL.md file found in ${owner}/${repo}` : 'No SKILL.md found');
+  }
+  throw new SkillNotFoundError({ requested: null, owner, repo, available });
+}
+
 export function dumpFrontmatterYaml(obj) {
+
   return yaml.dump(obj, {
     lineWidth: -1,
     noRefs: true,
@@ -489,36 +541,12 @@ export class SkillExtractor {
       throw new Error(`No SKILL.md file found in ${owner}/${repo}`);
     }
 
-    // Resolve target skill using WASM fuzzy search
-    let targetSkillFile = null;
-    if (targetSubdir) {
-      const normTarget = this.wasm.normalize(targetSubdir);
-      
-      // Try exact folder match first
-      targetSkillFile = allSkills.find(s => {
-        const normDir = this.wasm.normalize(s.dir);
-        return normDir === normTarget || normDir.endsWith(normTarget);
-      });
-
-      // Fuzzy matching via WASM
-      if (!targetSkillFile) {
-        let bestScore = -1;
-        for (const s of allSkills) {
-          const score = this.wasm.fuzzyMatch(targetSubdir, s.dir || s.name);
-          if (score > bestScore && score > 300) {
-            bestScore = score;
-            targetSkillFile = s;
-          }
-        }
-      }
-
-      if (!targetSkillFile) {
-        onProgress(`Target "${targetSubdir}" not matched, using first detected skill (${allSkills[0].name})...`, 40);
-        targetSkillFile = allSkills[0];
-      }
-    } else {
-      targetSkillFile = allSkills[0];
-    }
+    // Fail-closed: exact match only — never fuzzy-auto-select or silently take [0]
+    const targetSkillFile = resolveTargetSkill(allSkills, targetSubdir, {
+      owner,
+      repo,
+      normalizeFn: (v) => this.wasm.normalize(v)
+    });
 
     onProgress(`Selected skill: ${targetSkillFile.name} (at ${targetSkillFile.dir || 'root'})`, 45);
     const skillBaseDir = targetSkillFile.dir;
@@ -662,12 +690,12 @@ export class SkillExtractor {
       throw new Error('No SKILL.md found in the provided ZIP archive');
     }
 
-    // Resolve target
-    let targetEntry = skillEntries[0];
-    if (subdirOverride) {
-      const normTarget = this.wasm.normalize(subdirOverride);
-      targetEntry = skillEntries.find(s => this.wasm.normalize(s.dir).includes(normTarget)) || skillEntries[0];
-    }
+    // Fail-closed: exact match only — never fuzzy or silent [0] when ambiguous
+    const targetEntry = resolveTargetSkill(skillEntries, subdirOverride, {
+      owner: 'local',
+      repo: 'zip',
+      normalizeFn: (v) => this.wasm.normalize(v)
+    });
 
     onProgress(`Found target skill at ${targetEntry.path}`, 60);
     const skillMdRaw = await zip.files[targetEntry.path].async('text');
@@ -755,30 +783,39 @@ export class SkillExtractor {
   }
 
   // 3. Extract from Local Folder (Files list from webkitdirectory or File System API)
-  async extractFromFolder(files, { onProgress = () => {} } = {}) {
+  async extractFromFolder(files, { subdirOverride = '', onProgress = () => {} } = {}) {
     await this.wasm.ready();
     const settings = await storage.getSettings();
 
     onProgress(`Scanning ${files.length} files in local folder...`, 20);
-    
-    // Find SKILL.md
-    let skillFile = null;
+
+    // Discover all SKILL.md files
+    const skillFiles = [];
     for (const file of files) {
       const relPath = file.webkitRelativePath || file.name;
       const baseName = relPath.split('/').pop() || file.name;
       if (baseName.toLowerCase() === 'skill.md') {
-        skillFile = file;
-        break;
+        const parts = relPath.split('/');
+        const dir = parts.slice(0, -1).join('/');
+        const name = parts.length > 1 ? parts[parts.length - 2] : '';
+        skillFiles.push({ file, path: relPath, dir, name });
       }
     }
 
-    if (!skillFile) {
+    if (skillFiles.length === 0) {
       throw new Error('Could not find SKILL.md in the selected local folder');
     }
 
+    const targetSkill = resolveTargetSkill(skillFiles, subdirOverride, {
+      owner: 'local',
+      repo: 'folder',
+      normalizeFn: (v) => this.wasm.normalize(v)
+    });
+
+    const skillFile = targetSkill.file;
     const skillMdRaw = await skillFile.text();
-    const relPath = skillFile.webkitRelativePath || skillFile.name;
-    const baseDir = relPath.includes('/') ? relPath.substring(0, relPath.lastIndexOf('/')) : '';
+    const relPath = targetSkill.path;
+    const baseDir = targetSkill.dir || '';
 
     const scriptsPrefix = baseDir ? `${baseDir}/scripts/` : 'scripts/';
     const refsPrefix = baseDir ? `${baseDir}/references/` : 'references/';

@@ -1494,3 +1494,69 @@ select.input-styled {
     border-bottom: 1px solid var(--border);
   }
 }
+
+
+/* Skill choice (fail-closed picker) */
+.skill-choice-window {
+  max-width: 560px;
+  height: auto;
+  max-height: 80vh;
+}
+
+.skill-choice-body {
+  display: block;
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.skill-choice-hint {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  margin: 0 0 12px;
+}
+
+.skill-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-choice-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+  font: inherit;
+}
+
+.skill-choice-item:hover,
+.skill-choice-item:focus-visible {
+  border-color: var(--primary, #6366f1);
+  outline: none;
+  background: var(--secondary, #1a1a22);
+}
+
+.skill-choice-item-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.skill-choice-item-meta {
+  font-size: 11.5px;
+  color: var(--muted-subtle, #888);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.skill-choice-item-desc {
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+}

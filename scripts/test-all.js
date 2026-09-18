@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import yaml from 'js-yaml';
 import wasmEngine from '../src/services/wasmEngine.js';
 import storage from '../src/services/storage.js';
-import extractor, { parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml, parseFrontmatter, extractFallbackDescription } from '../src/services/extractor.js';
+import extractor, { SkillNotFoundError, isExactSkillMatch, resolveTargetSkill, formatAvailableSkills, parseSkillMarkdown, compileSkillContent, sanitizeSlug, detectLanguage, isTextFile, dumpFrontmatterYaml, parseFrontmatter, extractFallbackDescription } from '../src/services/extractor.js';
 import { parseCommandOrUrl, parseGitHubUrl, GitHubFetcher } from '../src/services/github.js';
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
 import { SKILL_PROMPTS } from '../src/services/curatedPrompts.js';
@@ -511,6 +511,185 @@ Keep what it says. Do not make anything up.`, 'text');
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+
+  // Group 3b: Fail-closed skill resolution
+  console.log('\n--- 3b. Fail-Closed Skill Resolution ---');
+  test('isExactSkillMatch: hits on dir/name equality and endsWith', () => {
+    const norm = (v) => wasmEngine.normalize(v);
+    assert.strictEqual(isExactSkillMatch({ dir: 'skills/ai-sdk', name: 'ai-sdk' }, 'ai-sdk', norm), true);
+    assert.strictEqual(isExactSkillMatch({ dir: 'skills/use-ai-sdk', name: 'use-ai-sdk' }, 'ai-sdk', norm), true);
+    assert.strictEqual(isExactSkillMatch({ dir: 'skills/shadcn', name: 'shadcn' }, 'shadcn', norm), true);
+    assert.strictEqual(isExactSkillMatch({ dir: 'skills/island-rescue', name: 'island-rescue' }, 'typescript-strict', norm), false);
+  });
+
+  test('resolveTargetSkill: miss throws SkillNotFoundError with available list (no silent fuzzy)', () => {
+    const skills = [
+      { name: 'island-rescue', dir: 'examples/island-rescue', path: 'examples/island-rescue/SKILL.md' },
+      { name: 'ai-sdk', dir: 'skills/use-ai-sdk', path: 'skills/use-ai-sdk/SKILL.md' },
+      { name: 'migrate-ai-sdk-v6-to-v7', dir: 'skills/migrate-ai-sdk-v6-to-v7', path: 'skills/migrate-ai-sdk-v6-to-v7/SKILL.md' }
+    ];
+    let threw = null;
+    try {
+      resolveTargetSkill(skills, 'typescript-strict', {
+        owner: 'vercel', repo: 'ai', normalizeFn: (v) => wasmEngine.normalize(v)
+      });
+    } catch (e) {
+      threw = e;
+    }
+    assert(threw instanceof SkillNotFoundError, 'Expected SkillNotFoundError');
+    assert.strictEqual(threw.code, 'SKILL_NOT_FOUND');
+    assert.strictEqual(threw.requested, 'typescript-strict');
+    assert.strictEqual(threw.owner, 'vercel');
+    assert.strictEqual(threw.repo, 'ai');
+    assert.strictEqual(threw.available.length, 3);
+    assert.strictEqual(threw.available[0].name, 'island-rescue');
+    // Must not silently return island-rescue / [0]
+    assert.notStrictEqual(threw.available[0].name, undefined);
+  });
+
+  test('resolveTargetSkill: exact hit returns matching skill', () => {
+    const skills = [
+      { name: 'island-rescue', dir: 'examples/island-rescue', path: 'examples/island-rescue/SKILL.md' },
+      { name: 'use-ai-sdk', dir: 'skills/use-ai-sdk', path: 'skills/use-ai-sdk/SKILL.md' }
+    ];
+    const hit = resolveTargetSkill(skills, 'ai-sdk', {
+      owner: 'vercel', repo: 'ai', normalizeFn: (v) => wasmEngine.normalize(v)
+    });
+    assert.strictEqual(hit.name, 'use-ai-sdk');
+    assert.strictEqual(hit.dir, 'skills/use-ai-sdk');
+  });
+
+  test('resolveTargetSkill: single-skill no-target is OK', () => {
+    const skills = [
+      { name: 'only-one', dir: 'skills/only-one', path: 'skills/only-one/SKILL.md' }
+    ];
+    const hit = resolveTargetSkill(skills, '', {
+      owner: 'acme', repo: 'example', normalizeFn: (v) => wasmEngine.normalize(v)
+    });
+    assert.strictEqual(hit.name, 'only-one');
+  });
+
+  test('resolveTargetSkill: multi-skill no-target needs choice', () => {
+    const skills = [
+      { name: 'alpha', dir: 'skills/alpha', path: 'skills/alpha/SKILL.md' },
+      { name: 'beta', dir: 'skills/beta', path: 'skills/beta/SKILL.md' }
+    ];
+    let threw = null;
+    try {
+      resolveTargetSkill(skills, '', {
+        owner: 'acme', repo: 'multi', normalizeFn: (v) => wasmEngine.normalize(v)
+      });
+    } catch (e) {
+      threw = e;
+    }
+    assert(threw instanceof SkillNotFoundError);
+    assert.strictEqual(threw.requested, null);
+    assert.strictEqual(threw.available.length, 2);
+  });
+
+  await asyncTest('extractor: bad --skill against multi-skill repo throws choice error (not silent first)', async () => {
+    await storage.clearAll();
+    const originalFetch = globalThis.fetch;
+    const mockResponse = (body, type = 'json') => ({
+      ok: true,
+      status: 200,
+      json: async () => type === 'json' ? body : JSON.parse(body),
+      text: async () => type === 'text' ? body : JSON.stringify(body)
+    });
+
+    globalThis.fetch = async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes('/git/trees/')) {
+        return mockResponse({
+          tree: [
+            { type: 'blob', path: 'examples/island-rescue/SKILL.md' },
+            { type: 'blob', path: 'skills/use-ai-sdk/SKILL.md' }
+          ]
+        });
+      }
+      if (requestUrl.includes('/repos/vercel/ai')) {
+        return mockResponse({ default_branch: 'main' });
+      }
+      // If extractor wrongly auto-selects, it would fetch a SKILL.md — fail the test if so
+      if (requestUrl.includes('SKILL.md')) {
+        throw new Error(`Should not fetch SKILL.md on miss, got ${requestUrl}`);
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    };
+
+    try {
+      let threw = null;
+      try {
+        await extractor.extractFromGitHub({
+          input: 'npx skills add https://github.com/vercel/ai --skill typescript-strict'
+        });
+      } catch (e) {
+        threw = e;
+      }
+      assert(threw instanceof SkillNotFoundError, `Expected SkillNotFoundError, got ${threw && threw.name}: ${threw && threw.message}`);
+      assert.strictEqual(threw.code, 'SKILL_NOT_FOUND');
+      assert.strictEqual(threw.requested, 'typescript-strict');
+      assert(threw.available.some(s => s.name === 'island-rescue'));
+      assert(threw.available.some(s => s.name === 'use-ai-sdk'));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await asyncTest('extractor: exact --skill ai-sdk selects use-ai-sdk (not island-rescue)', async () => {
+    await storage.clearAll();
+    const originalFetch = globalThis.fetch;
+    const mockResponse = (body, type = 'json') => ({
+      ok: true,
+      status: 200,
+      json: async () => type === 'json' ? body : JSON.parse(body),
+      text: async () => type === 'text' ? body : JSON.stringify(body)
+    });
+
+    globalThis.fetch = async (url) => {
+      const requestUrl = String(url);
+      if (requestUrl.includes('/git/trees/')) {
+        return mockResponse({
+          tree: [
+            { type: 'blob', path: 'examples/island-rescue/SKILL.md' },
+            { type: 'blob', path: 'skills/use-ai-sdk/SKILL.md' }
+          ]
+        });
+      }
+      if (requestUrl.includes('/repos/vercel/ai')) {
+        return mockResponse({ default_branch: 'main' });
+      }
+      if (requestUrl.endsWith('/skills/use-ai-sdk/SKILL.md')) {
+        return mockResponse('---\nname: ai-sdk\ndescription: Answer questions about the AI SDK\n---\n# AI SDK\nHelp build AI features.', 'text');
+      }
+      if (requestUrl.includes('island-rescue')) {
+        throw new Error('Must not fetch island-rescue when ai-sdk was requested');
+      }
+      throw new Error(`Unexpected request: ${requestUrl}`);
+    };
+
+    try {
+      const saved = await extractor.extractFromGitHub({
+        input: 'npx skills add https://github.com/vercel/ai --skill ai-sdk'
+      });
+      assert.strictEqual(saved.name, 'ai-sdk');
+      assert(saved.description.includes('AI SDK'));
+      assert.notStrictEqual(saved.name, 'island-rescue');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test('curated eng cards use real skills.sh skill names', () => {
+    const eng = CURATED_SKILLS.filter(s => s.category === 'Engineering & Code');
+    const slugs = eng.map(s => s.slug).sort();
+    assert.deepStrictEqual(slugs, ['ai-sdk', 'next-dev-loop', 'playwright-dev', 'shadcn']);
+    for (const forbidden of ['typescript-strict', 'shadcn-ui', 'code-review-security', 'nextjs-app-router', 'playwright-vitest-qa']) {
+      assert(!CURATED_SKILLS.some(s => s.slug === forbidden), `Forbidden stub slug still present: ${forbidden}`);
+    }
+    assert(eng.every(s => s.command.includes(`--skill ${s.slug}`) || s.command.includes(`--skill '${s.slug}'`)));
   });
 
   // Group 4: GitHub Command Parsing
