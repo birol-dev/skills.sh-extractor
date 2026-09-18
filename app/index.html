@@ -547,7 +547,12 @@
             <option value="windsurfrules">Windsurf Rules (.windsurfrules)</option>
           </select>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div class="preview-multi-nav" id="preview-multi-nav" hidden>
+            <button class="btn btn-outline" type="button" id="preview-multi-prev" title="Previous selected">Prev</button>
+            <span class="preview-multi-label" id="preview-multi-label">1 / 1</span>
+            <button class="btn btn-outline" type="button" id="preview-multi-next" title="Next selected">Next</button>
+          </div>
           <button class="btn btn-outline" id="modal-btn-download">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Download
@@ -562,13 +567,13 @@
     </div>
   </div>
 
-  <!-- Skill Choice Modal (fail-closed resolution) -->
+  <!-- Skill Choice Modal (multi-select + bulk actions) -->
   <div class="modal-overlay" id="skill-choice-modal" role="dialog" aria-modal="true" aria-labelledby="skill-choice-title" hidden>
     <div class="modal-window skill-choice-window">
       <div class="modal-head">
         <div class="modal-title-box">
           <div class="skill-choice-title-row">
-            <h2 id="skill-choice-title">Pick a skill</h2>
+            <h2 id="skill-choice-title">Choose skills</h2>
             <span class="skill-choice-status is-miss" id="skill-choice-status" hidden>Not found</span>
           </div>
           <p class="skill-choice-subtitle" id="skill-choice-subtitle">That skill isn&apos;t in this repo (or the command didn&apos;t resolve).</p>
@@ -576,11 +581,28 @@
         <button class="modal-close-btn" id="skill-choice-close" type="button" aria-label="Close skill picker">&times;</button>
       </div>
       <div class="modal-main skill-choice-body">
-        <p class="skill-choice-hint" id="skill-choice-hint">Pick one of the skills that were found:</p>
-        <div class="skill-choice-list" id="skill-choice-list" role="listbox" aria-label="Available skills"></div>
+        <p class="skill-choice-hint" id="skill-choice-hint">Multi-select skills to add, preview, or download. Click a row to toggle; double-click to extract one.</p>
+        <div class="skill-choice-toolbar">
+          <input type="search" class="input-styled skill-choice-search" id="skill-choice-search" placeholder="Filter skills…" aria-label="Filter skills" autocomplete="off" />
+          <div class="skill-choice-toolbar-actions">
+            <button class="btn btn-outline skill-choice-tool-btn" type="button" id="skill-choice-select-all">Select all</button>
+            <button class="btn btn-outline skill-choice-tool-btn" type="button" id="skill-choice-clear">Clear</button>
+            <span class="skill-choice-count" id="skill-choice-count" aria-live="polite">0 selected</span>
+          </div>
+        </div>
+        <div class="skill-choice-list" id="skill-choice-list" role="listbox" aria-multiselectable="true" aria-label="Available skills" tabindex="0"></div>
       </div>
       <div class="modal-foot skill-choice-foot">
-        <button class="btn btn-outline" type="button" id="skill-choice-cancel">Cancel</button>
+        <div class="skill-choice-foot-bulk">
+          <button class="btn btn-secondary" type="button" id="skill-choice-add-gallery" disabled>Add to gallery</button>
+          <button class="btn btn-outline" type="button" id="skill-choice-preview" disabled>Preview</button>
+          <button class="btn btn-outline" type="button" id="skill-choice-download-md" disabled>Download .md</button>
+          <button class="btn btn-outline" type="button" id="skill-choice-download-zip" disabled>Download ZIP</button>
+        </div>
+        <div class="skill-choice-foot-end">
+          <button class="btn btn-primary" type="button" id="skill-choice-extract-one" hidden>Extract</button>
+          <button class="btn btn-outline" type="button" id="skill-choice-cancel">Cancel</button>
+        </div>
       </div>
     </div>
   </div>

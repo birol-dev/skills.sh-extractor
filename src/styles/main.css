@@ -1496,11 +1496,11 @@ select.input-styled {
 }
 
 
-/* Skill choice (fail-closed picker) — mirrors curated cards */
+/* Skill choice (multi-select picker) — mirrors curated cards */
 .skill-choice-window {
-  max-width: 560px;
+  max-width: 640px;
   height: auto;
-  max-height: 80vh;
+  max-height: 85vh;
 }
 
 .skill-choice-body {
@@ -1556,17 +1556,49 @@ select.input-styled {
   margin: 0 0 12px;
 }
 
+.skill-choice-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.skill-choice-search {
+  width: 100%;
+  flex: none;
+}
+
+.skill-choice-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.skill-choice-tool-btn {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.skill-choice-count {
+  margin-left: auto;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted-foreground);
+}
+
 .skill-choice-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  outline: none;
 }
 
 .skill-choice-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
   text-align: left;
   padding: 14px 16px;
@@ -1585,11 +1617,61 @@ select.input-styled {
   transform: translateY(-1px);
 }
 
+.skill-choice-item.is-focused,
 .skill-choice-item:focus-visible {
   border-color: var(--border-focus);
   background: var(--card-hover);
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+.skill-choice-item.is-selected {
+  border-color: var(--border-focus);
+  background: var(--card-hover);
+}
+
+.skill-choice-item.is-selected.is-focused {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.skill-choice-check {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 1.5px solid var(--border-hover);
+  border-radius: 2px;
+  background: var(--secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.skill-choice-item.is-selected .skill-choice-check {
+  border-color: var(--border-focus);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.skill-choice-check svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+}
+
+.skill-choice-item.is-selected .skill-choice-check svg {
+  opacity: 1;
+}
+
+.skill-choice-item-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .skill-choice-item-header {
@@ -1627,5 +1709,48 @@ select.input-styled {
 }
 
 .skill-choice-foot {
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-choice-foot-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.skill-choice-foot-end {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.skill-choice-foot-bulk .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.preview-multi-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 4px;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
+}
+
+.preview-multi-nav[hidden] {
+  display: none !important;
+}
+
+.preview-multi-label {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted-foreground);
+  min-width: 3.5em;
+  text-align: center;
 }

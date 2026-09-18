@@ -3,6 +3,14 @@ import wasmEngine from './services/wasmEngine.js';
 import storage from './services/storage.js';
 import extractor, { SkillNotFoundError, parseSkillMarkdown, compileSkillContent, sanitizeSlug, parseFrontmatter, extractFallbackDescription } from './services/extractor.js';
 import { CURATED_SKILLS } from './services/curatedSkills.js';
+import {
+  skillChoiceKey,
+  filterAvailableSkills,
+  toggleSelectionKey,
+  selectAllFilteredKeys,
+  findGalleryDuplicate,
+  formatSelectedCount
+} from './services/skillChoiceHelpers.js';
 
 // Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
 const CURATED_SEARCH_INDEX = CURATED_SKILLS.map(s => ({
@@ -21,6 +29,11 @@ let selectedSkill = null;
 let currentModalFormat = 'skill.md';
 let selectedFolderFiles = [];
 let pendingSkillChoice = null; // { mode, input?, zipFile?, files?, available, owner, repo, requested }
+let skillChoiceSelectedKeys = [];
+let skillChoiceFocusIndex = 0;
+let skillChoiceFilterQuery = '';
+let skillChoiceBusy = false;
+let multiPreviewContext = null; // { keys: string[], index: number, ctx: object }
 
 // Lazy-loaded dependencies
 let _marked = null;
@@ -152,6 +165,19 @@ const skillChoiceStatus = document.getElementById('skill-choice-status');
 const skillChoiceHint = document.getElementById('skill-choice-hint');
 const skillChoiceClose = document.getElementById('skill-choice-close');
 const skillChoiceCancel = document.getElementById('skill-choice-cancel');
+const skillChoiceSearch = document.getElementById('skill-choice-search');
+const skillChoiceSelectAll = document.getElementById('skill-choice-select-all');
+const skillChoiceClear = document.getElementById('skill-choice-clear');
+const skillChoiceCount = document.getElementById('skill-choice-count');
+const skillChoiceAddGallery = document.getElementById('skill-choice-add-gallery');
+const skillChoicePreviewBtn = document.getElementById('skill-choice-preview');
+const skillChoiceDownloadMd = document.getElementById('skill-choice-download-md');
+const skillChoiceDownloadZip = document.getElementById('skill-choice-download-zip');
+const skillChoiceExtractOne = document.getElementById('skill-choice-extract-one');
+const previewMultiNav = document.getElementById('preview-multi-nav');
+const previewMultiPrev = document.getElementById('preview-multi-prev');
+const previewMultiNext = document.getElementById('preview-multi-next');
+const previewMultiLabel = document.getElementById('preview-multi-label');
 
 // Toast Notification
 function showToast(message, type = 'info') {
@@ -175,9 +201,14 @@ function showToast(message, type = 'info') {
   }, 3200);
 }
 
-// Skill choice (fail-closed UX)
+// Skill choice (multi-select + bulk QOL)
 function closeSkillChoiceModal() {
   pendingSkillChoice = null;
+  skillChoiceSelectedKeys = [];
+  skillChoiceFocusIndex = 0;
+  skillChoiceFilterQuery = '';
+  skillChoiceBusy = false;
+  if (skillChoiceSearch) skillChoiceSearch.value = '';
   if (!skillChoiceModal) return;
   skillChoiceModal.classList.remove('active');
   skillChoiceModal.hidden = true;
@@ -191,18 +222,106 @@ function truncateSkillDesc(text, max = 160) {
   return `${t.slice(0, max - 1).trimEnd()}…`;
 }
 
+function getFilteredAvailableSkills() {
+  const available = pendingSkillChoice?.available || [];
+  return filterAvailableSkills(available, skillChoiceFilterQuery);
+}
+
+function findAvailableByKey(key) {
+  const available = pendingSkillChoice?.available || [];
+  return available.find((s) => skillChoiceKey(s) === key) || null;
+}
+
+function updateSkillChoiceBulkEnabled() {
+  const n = skillChoiceSelectedKeys.length;
+  const enable = n >= 1 && !skillChoiceBusy;
+  [skillChoiceAddGallery, skillChoicePreviewBtn, skillChoiceDownloadMd, skillChoiceDownloadZip].forEach((btn) => {
+    if (btn) btn.disabled = !enable;
+  });
+  if (skillChoiceCount) skillChoiceCount.textContent = formatSelectedCount(n);
+  if (skillChoiceExtractOne) {
+    const single = (pendingSkillChoice?.available || []).length === 1;
+    skillChoiceExtractOne.hidden = !single;
+    skillChoiceExtractOne.disabled = skillChoiceBusy;
+  }
+}
+
+function renderSkillChoiceList() {
+  if (!skillChoiceList || !pendingSkillChoice) return;
+  const filtered = getFilteredAvailableSkills();
+  skillChoiceList.innerHTML = '';
+
+  if (filtered.length === 0) {
+    skillChoiceList.innerHTML = '<p class="skill-choice-hint">No skills match this filter.</p>';
+    updateSkillChoiceBulkEnabled();
+    return;
+  }
+
+  if (skillChoiceFocusIndex >= filtered.length) skillChoiceFocusIndex = filtered.length - 1;
+  if (skillChoiceFocusIndex < 0) skillChoiceFocusIndex = 0;
+
+  const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+  filtered.forEach((skill, idx) => {
+    const key = skillChoiceKey(skill);
+    const row = document.createElement('div');
+    row.className = 'skill-choice-item';
+    row.setAttribute('role', 'option');
+    row.setAttribute('data-skill-key', key);
+    row.setAttribute('aria-selected', skillChoiceSelectedKeys.includes(key) ? 'true' : 'false');
+    row.tabIndex = -1;
+    if (skillChoiceSelectedKeys.includes(key)) row.classList.add('is-selected');
+    if (idx === skillChoiceFocusIndex) row.classList.add('is-focused');
+
+    const tag = skill.dir || skill.path || '';
+    const desc = truncateSkillDesc(skill.description);
+    row.innerHTML = `
+      <span class="skill-choice-check" aria-hidden="true">${checkSvg}</span>
+      <span class="skill-choice-item-body">
+        <span class="skill-choice-item-header">
+          <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
+          ${tag ? `<span class="skill-choice-item-meta">${escapeHtml(tag)}</span>` : ''}
+        </span>
+        ${desc ? `<span class="skill-choice-item-desc">${escapeHtml(desc)}</span>` : ''}
+      </span>
+    `;
+
+    row.addEventListener('click', (e) => {
+      e.preventDefault();
+      skillChoiceFocusIndex = idx;
+      skillChoiceSelectedKeys = toggleSelectionKey(skillChoiceSelectedKeys, key);
+      renderSkillChoiceList();
+      skillChoiceList?.focus();
+    });
+
+    row.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      extractSingleFromChoice(key);
+    });
+
+    skillChoiceList.appendChild(row);
+  });
+
+  updateSkillChoiceBulkEnabled();
+}
+
 function openSkillChoiceModal(payload) {
   if (!skillChoiceModal || !skillChoiceList) {
     showToast(payload?.message || 'Multiple skills found — please specify --skill', 'error');
     return;
   }
   pendingSkillChoice = payload;
+  skillChoiceSelectedKeys = [];
+  skillChoiceFocusIndex = 0;
+  skillChoiceFilterQuery = '';
+  if (skillChoiceSearch) skillChoiceSearch.value = '';
+
   const requested = payload.requested;
   const where = payload.owner && payload.repo ? `${payload.owner}/${payload.repo}` : 'this source';
   if (skillChoiceSubtitle) {
     skillChoiceSubtitle.textContent = requested
       ? `"${requested}" isn't in ${where} (or the command didn't resolve).`
-      : `${where} has multiple skills — pick which one to extract.`;
+      : `${where} has multiple skills — choose which to extract.`;
   }
   if (skillChoiceStatus) {
     skillChoiceStatus.hidden = false;
@@ -215,56 +334,95 @@ function openSkillChoiceModal(payload) {
     }
   }
   if (skillChoiceHint) {
-    skillChoiceHint.textContent = 'Pick one of the skills that were found:';
+    skillChoiceHint.textContent = 'Multi-select skills to add, preview, or download. Click a row to toggle; double-click to extract one.';
   }
-  skillChoiceList.innerHTML = '';
+
   const available = payload.available || [];
   if (available.length === 0) {
     skillChoiceList.innerHTML = '<p class="skill-choice-hint">No skills were listed by the extractor.</p>';
+    updateSkillChoiceBulkEnabled();
   } else {
-    available.forEach((skill, idx) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'skill-choice-item';
-      btn.setAttribute('role', 'option');
-      const tag = skill.dir || skill.path || '';
-      const desc = truncateSkillDesc(skill.description);
-      btn.innerHTML = `
-        <span class="skill-choice-item-header">
-          <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
-          ${tag ? `<span class="skill-choice-item-meta">${escapeHtml(tag)}</span>` : ''}
-        </span>
-        ${desc ? `<span class="skill-choice-item-desc">${escapeHtml(desc)}</span>` : ''}
-      `;
-      btn.addEventListener('click', () => {
-        const chosen = skill.name || skill.dir;
-        const ctx = pendingSkillChoice;
-        closeSkillChoiceModal();
-        if (!ctx || !chosen) return;
-        rerunExtractWithSkill(ctx, chosen);
-      });
-      if (idx === 0) btn.autofocus = true;
-      skillChoiceList.appendChild(btn);
-    });
+    if (available.length === 1) {
+      skillChoiceSelectedKeys = [skillChoiceKey(available[0])].filter(Boolean);
+    }
+    renderSkillChoiceList();
   }
+
   skillChoiceModal.hidden = false;
   skillChoiceModal.classList.add('active');
   skillChoiceModal.setAttribute('aria-hidden', 'false');
-  showToast("That skill isn't in this repo (or the command didn't resolve). Pick one of the skills that were found.", 'info');
+  showToast(
+    available.length === 1
+      ? 'One skill found — use Extract, or multi-select actions.'
+      : "Choose one or more skills. Click rows to select; use footer actions for bulk.",
+    'info'
+  );
+  setTimeout(() => skillChoiceSearch?.focus() || skillChoiceList?.focus(), 30);
+}
+
+async function extractSkillQuiet(ctx, skillKey) {
+  if (ctx.mode === 'github') {
+    return extractor.extractFromGitHub({
+      input: ctx.input,
+      subdirOverride: skillKey,
+      onProgress: (status, pct) => {
+        appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
+      }
+    });
+  }
+  if (ctx.mode === 'zip' && ctx.zipFile) {
+    return extractor.extractFromZip(ctx.zipFile, {
+      subdirOverride: skillKey,
+      onProgress: (status, pct) => {
+        appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
+      }
+    });
+  }
+  if (ctx.mode === 'folder' && ctx.files) {
+    return extractor.extractFromFolder(ctx.files, {
+      subdirOverride: skillKey,
+      onProgress: (status, pct) => {
+        appendLog(`${status} (${pct}%)`, pct === 100 ? 'success' : 'progress');
+      }
+    });
+  }
+  throw new Error('Unknown extract mode for skill choice');
+}
+
+async function ensureSkillExtracted(ctx, skillKey, availableSkill) {
+  const existing = findGalleryDuplicate(currentSkills, availableSkill || { name: skillKey }, ctx);
+  if (existing?.compiledMarkdown) {
+    appendLog(`Using gallery copy for "${skillKey}"`, 'info');
+    return existing;
+  }
+  appendLog(`Extracting skill: ${skillKey}`, 'info');
+  const skill = await extractSkillQuiet(ctx, skillKey);
+  await loadGallery();
+  return skill;
+}
+
+async function extractSingleFromChoice(skillKey) {
+  const ctx = pendingSkillChoice;
+  if (!ctx || !skillKey || skillChoiceBusy) return;
+  skillChoiceBusy = true;
+  updateSkillChoiceBulkEnabled();
+  closeSkillChoiceModal();
+  clearMultiPreviewNav();
+  try {
+    const skill = await extractSkillQuiet(ctx, skillKey);
+    showToast(`Successfully extracted "${skill.name}"!`, 'success');
+    await loadGallery();
+    openPreviewModal(skill);
+  } catch (err) {
+    appendLog(`Error: ${err.message}`, 'error');
+    showToast(`Extraction failed: ${err.message}`, 'error');
+  } finally {
+    skillChoiceBusy = false;
+  }
 }
 
 async function rerunExtractWithSkill(ctx, skillKey) {
-  if (ctx.mode === 'github') {
-    await runGithubExtract(ctx.input, skillKey);
-    return;
-  }
-  if (ctx.mode === 'zip' && ctx.zipFile) {
-    await handleZipFile(ctx.zipFile, skillKey);
-    return;
-  }
-  if (ctx.mode === 'folder' && ctx.files) {
-    await runFolderExtract(ctx.files, skillKey);
-  }
+  await extractSingleFromChoice(skillKey);
 }
 
 function handleSkillNotFoundError(err, ctx) {
@@ -293,6 +451,7 @@ async function runGithubExtract(input, subdirOverride = '') {
     });
     showToast(`Successfully extracted "${skill.name}"!`, 'success');
     await loadGallery();
+    clearMultiPreviewNav();
     openPreviewModal(skill);
   } catch (err) {
     if (!handleSkillNotFoundError(err, { mode: 'github', input })) {
@@ -316,6 +475,7 @@ async function runFolderExtract(files, subdirOverride = '') {
     });
     showToast(`Successfully compiled "${skill.name}" from local folder!`, 'success');
     await loadGallery();
+    clearMultiPreviewNav();
     openPreviewModal(skill);
   } catch (err) {
     if (!handleSkillNotFoundError(err, { mode: 'folder', files })) {
@@ -327,6 +487,219 @@ async function runFolderExtract(files, subdirOverride = '') {
   }
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function bulkAddSelectedToGallery() {
+  const ctx = pendingSkillChoice;
+  if (!ctx || skillChoiceSelectedKeys.length === 0 || skillChoiceBusy) return;
+  skillChoiceBusy = true;
+  updateSkillChoiceBulkEnabled();
+  const keys = skillChoiceSelectedKeys.slice();
+  let added = 0;
+  let skipped = 0;
+  let failed = 0;
+  try {
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const avail = findAvailableByKey(key);
+      showToast(`${i + 1}/${keys.length}…`, 'info');
+      appendLog(`Bulk add ${i + 1}/${keys.length}: ${key}`, 'progress');
+      const dup = findGalleryDuplicate(currentSkills, avail || { name: key }, ctx);
+      if (dup) {
+        skipped += 1;
+        appendLog(`Skip duplicate: ${key} (already in gallery)`, 'info');
+        continue;
+      }
+      try {
+        await extractSkillQuiet(ctx, key);
+        added += 1;
+        await loadGallery();
+      } catch (err) {
+        failed += 1;
+        appendLog(`Failed ${key}: ${err.message}`, 'error');
+      }
+    }
+    await loadGallery();
+    const parts = [`Added ${added}`];
+    if (skipped) parts.push(`skipped ${skipped} duplicate${skipped === 1 ? '' : 's'}`);
+    if (failed) parts.push(`${failed} failed`);
+    showToast(parts.join(', '), failed ? 'error' : 'success');
+  } finally {
+    skillChoiceBusy = false;
+    updateSkillChoiceBulkEnabled();
+  }
+}
+
+function clearMultiPreviewNav() {
+  multiPreviewContext = null;
+  if (previewMultiNav) previewMultiNav.hidden = true;
+}
+
+function updateMultiPreviewNav() {
+  if (!previewMultiNav || !multiPreviewContext) {
+    if (previewMultiNav) previewMultiNav.hidden = true;
+    return;
+  }
+  const { keys, index } = multiPreviewContext;
+  previewMultiNav.hidden = keys.length < 2;
+  if (previewMultiLabel) previewMultiLabel.textContent = `${index + 1} / ${keys.length}`;
+  if (previewMultiPrev) previewMultiPrev.disabled = index <= 0 || skillChoiceBusy;
+  if (previewMultiNext) previewMultiNext.disabled = index >= keys.length - 1 || skillChoiceBusy;
+}
+
+async function openMultiPreviewAt(index) {
+  if (!multiPreviewContext) return;
+  const ctx = multiPreviewContext.ctx || pendingSkillChoice;
+  if (!ctx) return;
+  const keys = multiPreviewContext.keys;
+  if (index < 0 || index >= keys.length) return;
+  const key = keys[index];
+  const avail = (ctx.available || pendingSkillChoice?.available || []).find((s) => skillChoiceKey(s) === key)
+    || findAvailableByKey(key);
+  skillChoiceBusy = true;
+  updateMultiPreviewNav();
+  try {
+    const skill = await ensureSkillExtracted(ctx, key, avail);
+    multiPreviewContext = { keys, index, ctx };
+    openPreviewModal(skill);
+    updateMultiPreviewNav();
+  } catch (err) {
+    appendLog(`Preview failed for ${key}: ${err.message}`, 'error');
+    showToast(`Preview failed: ${err.message}`, 'error');
+  } finally {
+    skillChoiceBusy = false;
+    updateMultiPreviewNav();
+  }
+}
+
+async function bulkPreviewSelected() {
+  const ctx = pendingSkillChoice;
+  if (!ctx || skillChoiceSelectedKeys.length === 0 || skillChoiceBusy) return;
+  multiPreviewContext = { keys: skillChoiceSelectedKeys.slice(), index: 0, ctx };
+  await openMultiPreviewAt(0);
+}
+
+async function bulkDownloadSelectedMd() {
+  const ctx = pendingSkillChoice;
+  if (!ctx || skillChoiceSelectedKeys.length === 0 || skillChoiceBusy) return;
+  skillChoiceBusy = true;
+  updateSkillChoiceBulkEnabled();
+  const keys = skillChoiceSelectedKeys.slice();
+  let ok = 0;
+  try {
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const avail = findAvailableByKey(key);
+      showToast(`Download ${i + 1}/${keys.length}…`, 'info');
+      try {
+        const skill = await ensureSkillExtracted(ctx, key, avail);
+        downloadFile(`${skill.slug || 'skill'}.skill.md`, skill.compiledMarkdown || '');
+        ok += 1;
+        if (i < keys.length - 1) await sleep(280);
+      } catch (err) {
+        appendLog(`Download failed ${key}: ${err.message}`, 'error');
+      }
+    }
+    showToast(`Downloaded ${ok} .skill.md file${ok === 1 ? '' : 's'}`, ok ? 'success' : 'error');
+  } finally {
+    skillChoiceBusy = false;
+    updateSkillChoiceBulkEnabled();
+  }
+}
+
+async function bulkDownloadSelectedZip() {
+  const ctx = pendingSkillChoice;
+  if (!ctx || skillChoiceSelectedKeys.length === 0 || skillChoiceBusy) return;
+  skillChoiceBusy = true;
+  updateSkillChoiceBulkEnabled();
+  const keys = skillChoiceSelectedKeys.slice();
+  try {
+    const { default: JSZip } = await import('jszip');
+    const zip = new JSZip();
+    let packed = 0;
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const avail = findAvailableByKey(key);
+      showToast(`ZIP ${i + 1}/${keys.length}…`, 'info');
+      appendLog(`Packing ${i + 1}/${keys.length}: ${key}`, 'progress');
+      try {
+        const skill = await ensureSkillExtracted(ctx, key, avail);
+        const fileName = `${skill.slug || 'skill'}.skill.md`;
+        zip.file(fileName, skill.compiledMarkdown || '');
+        packed += 1;
+      } catch (err) {
+        appendLog(`ZIP skip ${key}: ${err.message}`, 'error');
+      }
+    }
+    if (packed === 0) {
+      showToast('No skills to pack', 'error');
+      return;
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `skills-selected-${new Date().toISOString().slice(0, 10)}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${packed} playbooks as ZIP!`, 'success');
+  } finally {
+    skillChoiceBusy = false;
+    updateSkillChoiceBulkEnabled();
+  }
+}
+
+function handleSkillChoiceKeydown(e) {
+  if (!skillChoiceModal?.classList.contains('active')) return;
+  if (e.target === skillChoiceSearch && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'Enter') {
+    return;
+  }
+  const filtered = getFilteredAvailableSkills();
+  if (!filtered.length && e.key !== 'Escape') return;
+
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    closeSkillChoiceModal();
+    return;
+  }
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    skillChoiceFocusIndex = Math.min(filtered.length - 1, skillChoiceFocusIndex + 1);
+    renderSkillChoiceList();
+    return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    skillChoiceFocusIndex = Math.max(0, skillChoiceFocusIndex - 1);
+    renderSkillChoiceList();
+    return;
+  }
+  if (e.key === ' ' || e.key === 'Spacebar') {
+    if (e.target === skillChoiceSearch) return;
+    e.preventDefault();
+    const focused = filtered[skillChoiceFocusIndex];
+    if (!focused) return;
+    skillChoiceSelectedKeys = toggleSelectionKey(skillChoiceSelectedKeys, skillChoiceKey(focused));
+    renderSkillChoiceList();
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (skillChoiceSelectedKeys.length > 0) {
+      // Extract/open selection (preview first; Next/Prev for remaining)
+      bulkPreviewSelected();
+      return;
+    }
+    const focused = filtered[skillChoiceFocusIndex];
+    if (focused) extractSingleFromChoice(skillChoiceKey(focused));
+  }
+}
+
 function setupSkillChoiceUi() {
   if (!skillChoiceModal) return;
   const dismiss = () => closeSkillChoiceModal();
@@ -335,8 +708,44 @@ function setupSkillChoiceUi() {
   skillChoiceModal.addEventListener('click', (e) => {
     if (e.target === skillChoiceModal) dismiss();
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && skillChoiceModal.classList.contains('active')) dismiss();
+
+  skillChoiceSearch?.addEventListener('input', () => {
+    skillChoiceFilterQuery = skillChoiceSearch.value || '';
+    skillChoiceFocusIndex = 0;
+    renderSkillChoiceList();
+  });
+
+  skillChoiceSelectAll?.addEventListener('click', () => {
+    skillChoiceSelectedKeys = selectAllFilteredKeys(getFilteredAvailableSkills());
+    renderSkillChoiceList();
+  });
+
+  skillChoiceClear?.addEventListener('click', () => {
+    skillChoiceSelectedKeys = [];
+    renderSkillChoiceList();
+  });
+
+  skillChoiceAddGallery?.addEventListener('click', () => bulkAddSelectedToGallery());
+  skillChoicePreviewBtn?.addEventListener('click', () => bulkPreviewSelected());
+  skillChoiceDownloadMd?.addEventListener('click', () => bulkDownloadSelectedMd());
+  skillChoiceDownloadZip?.addEventListener('click', () => bulkDownloadSelectedZip());
+
+  skillChoiceExtractOne?.addEventListener('click', () => {
+    const available = pendingSkillChoice?.available || [];
+    if (available.length === 1) {
+      extractSingleFromChoice(skillChoiceKey(available[0]));
+    }
+  });
+
+  document.addEventListener('keydown', handleSkillChoiceKeydown);
+
+  previewMultiPrev?.addEventListener('click', () => {
+    if (!multiPreviewContext || multiPreviewContext.index <= 0) return;
+    openMultiPreviewAt(multiPreviewContext.index - 1);
+  });
+  previewMultiNext?.addEventListener('click', () => {
+    if (!multiPreviewContext || multiPreviewContext.index >= multiPreviewContext.keys.length - 1) return;
+    openMultiPreviewAt(multiPreviewContext.index + 1);
   });
 }
 
@@ -512,6 +921,7 @@ async function handleZipFile(file, subdirOverride = '') {
 
     showToast(`Successfully extracted "${skill.name}" from ZIP!`, 'success');
     await loadGallery();
+    clearMultiPreviewNav();
     openPreviewModal(skill);
   } catch (err) {
     if (!handleSkillNotFoundError(err, { mode: 'zip', zipFile: file })) {
@@ -1055,6 +1465,7 @@ async function openPreviewModal(skill) {
 
   switchModalTab('modal-pane-rendered');
   previewModal.classList.add('active');
+  updateMultiPreviewNav();
 }
 
 function switchModalTab(targetPaneId) {
@@ -1082,7 +1493,10 @@ function setupModal() {
     });
   });
 
-  const closeModal = () => previewModal.classList.remove('active');
+  const closeModal = () => {
+    previewModal.classList.remove('active');
+    clearMultiPreviewNav();
+  };
   modalBtnClose.addEventListener('click', closeModal);
   modalBtnDone.addEventListener('click', closeModal);
   previewModal.addEventListener('click', (e) => {
