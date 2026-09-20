@@ -568,6 +568,11 @@ select.input-styled {
   user-select: none;
 }
 
+.btn svg {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
 .btn-primary {
   background-color: var(--primary);
   color: var(--primary-foreground);
@@ -1095,7 +1100,7 @@ select.input-styled {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
 
 .modal-overlay.active {
@@ -1122,6 +1127,7 @@ select.input-styled {
   justify-content: space-between;
   align-items: center;
   background: var(--background);
+  flex-shrink: 0;
 }
 
 .modal-title-box h2 {
@@ -1156,6 +1162,7 @@ select.input-styled {
 
 .modal-main {
   flex: 1;
+  min-height: 0;
   display: flex;
   overflow: hidden;
 }
@@ -1206,6 +1213,7 @@ select.input-styled {
 
 .modal-content-panel {
   flex: 1;
+  min-height: 0;
   padding: 20px 24px;
   overflow-y: auto;
   background: #060608;
@@ -1367,22 +1375,25 @@ select.input-styled {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
 /* Toast Notifications */
 .toast-stack {
   position: fixed;
-  bottom: 20px;
+  top: 20px;
   right: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 2000;
+  z-index: 3000;
   pointer-events: none;
 }
 
 .toast-msg {
-  pointer-events: auto;
+  pointer-events: none;
   background: var(--secondary);
   border: 1px solid var(--border-hover);
   color: var(--foreground);
@@ -1394,7 +1405,7 @@ select.input-styled {
   display: flex;
   align-items: center;
   gap: 10px;
-  animation: toastSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: toastSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast-msg.success {
@@ -1420,8 +1431,8 @@ select.input-styled {
   color: var(--muted-foreground);
 }
 
-@keyframes toastSlideUp {
-  from { opacity: 0; transform: translateY(8px); }
+@keyframes toastSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

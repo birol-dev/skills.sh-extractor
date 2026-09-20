@@ -17,7 +17,7 @@ export function showToast(message, type = 'info', duration = 3000) {
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(8px)';
+    toast.style.transform = 'translateY(-8px)';
     toast.style.transition = 'all 0.25s ease';
     setTimeout(() => {
       if (toast.parentNode) toast.parentNode.removeChild(toast);

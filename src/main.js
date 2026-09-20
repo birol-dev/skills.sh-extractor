@@ -196,7 +196,8 @@ function showToast(message, type = 'info') {
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
+    toast.style.transform = 'translateY(-10px)';
+    toast.style.transition = 'all 0.25s ease';
     setTimeout(() => toast.remove(), 250);
   }, 3200);
 }
@@ -1237,16 +1238,30 @@ function setupAutosuggest() {
     dropdown.style.display = 'flex';
   }
 
+  let isPresetCmd = true;
+
+  function clearPresetCmd() {
+    if (isPresetCmd && (inputGithubCmd.value === "npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'" || CURATED_SKILLS.some(s => s.command === inputGithubCmd.value.trim()))) {
+      inputGithubCmd.value = '';
+      isPresetCmd = false;
+      renderSuggestions('');
+    }
+  }
+
+  inputGithubCmd.addEventListener('click', clearPresetCmd);
+
   dropdown.addEventListener('mousedown', (e) => {
     const item = e.target.closest('.autosuggest-item');
     if (!item) return;
     e.preventDefault();
     inputGithubCmd.value = item.getAttribute('data-cmd') || '';
+    isPresetCmd = true;
     dropdown.style.display = 'none';
     showToast(`Selected "${item.getAttribute('data-name')}"`, 'info');
   });
 
   inputGithubCmd.addEventListener('input', () => {
+    isPresetCmd = false;
     renderSuggestions(inputGithubCmd.value);
   });
 

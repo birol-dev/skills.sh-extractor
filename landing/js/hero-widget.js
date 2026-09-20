@@ -16,6 +16,7 @@ export function initHeroWidget() {
   if (!input || !extractBtn) return;
 
   let activeSlug = 'copywriting';
+  let isPresetValue = true;
 
   async function renderHeroSkill(slug, animate = true) {
     const item = CURATED_SKILLS.find(s => s.slug === slug) || CURATED_SKILLS[0];
@@ -31,6 +32,7 @@ export function initHeroWidget() {
 
     const paint = () => {
       input.value = item.command;
+      isPresetValue = true;
       outputBadge.textContent = item.badge.toUpperCase();
       outputSkillName.textContent = item.name;
       const tok = item.tokenEstimate || Math.round(prompt.length / 4);
@@ -55,6 +57,19 @@ export function initHeroWidget() {
     tab.addEventListener('click', () => {
       renderHeroSkill(tab.dataset.skill, true);
     });
+  });
+
+  function clearPresetInput() {
+    if (isPresetValue || CURATED_SKILLS.some(s => s.command === input.value.trim())) {
+      input.value = '';
+      isPresetValue = false;
+    }
+  }
+
+  input.addEventListener('click', clearPresetInput);
+  input.addEventListener('focus', clearPresetInput);
+  input.addEventListener('input', () => {
+    isPresetValue = false;
   });
 
   function redirectToEngine(val) {
