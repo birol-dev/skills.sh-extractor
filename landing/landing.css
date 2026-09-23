@@ -1695,3 +1695,29 @@ body[data-page="faq"] .nav-link[data-nav="faq"] {
 .footer-meta-sep {
   color: var(--text-faint);
 }
+
+/* --------------------------------------------------------------------------
+   20. Product demo figure
+   -------------------------------------------------------------------------- */
+.demo-figure {
+  margin: 40px 0 0;
+}
+
+.demo-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8);
+}
+
+.demo-figure figcaption {
+  max-width: 760px;
+  margin: 14px auto 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-align: center;
+}
