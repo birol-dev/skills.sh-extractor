@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" prefix="og: https://ogp.me/ns#">
+<html lang="en" class="dark" prefix="og: https://ogp.me/ns#">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,10 +39,10 @@
   <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Prism Code Highlighting Theme -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/app.css">
 
   <!-- Structured Data JSON-LD Schema -->
   <script type="application/ld+json">
@@ -74,7 +74,7 @@
 
   <div class="app-shell">
     <!-- Sidebar Navigation -->
-    <aside class="sidebar">
+    <aside class="app-sidebar">
       <div class="brand-header">
         <div class="brand-title">Skill Extractor</div>
       </div>
@@ -82,16 +82,16 @@
       <div class="nav-section">
         <div class="nav-label">Compiler & Management</div>
         <button class="nav-btn active" id="nav-extract" data-target="view-extract">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <i data-lucide="download" data-size="18"></i>
           Extract Skill
         </button>
         <button class="nav-btn" id="nav-gallery" data-target="view-gallery">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <i data-lucide="layout-grid" data-size="18"></i>
           Skill Gallery
-          <span class="nav-badge" id="badge-skill-count">0</span>
+          <span class="badge nav-badge" data-variant="outline" id="badge-skill-count">0</span>
         </button>
         <button class="nav-btn" id="nav-curated" data-target="view-curated">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <i data-lucide="library" data-size="18"></i>
           Curated Skills (<span id="curated-nav-count">55</span>)
         </button>
       </div>
@@ -99,19 +99,19 @@
       <div class="nav-section">
         <div class="nav-label">System & Tools</div>
         <button class="nav-btn" id="nav-wasm" data-target="view-wasm">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <i data-lucide="zap" data-size="18"></i>
           WASM Diagnostics
         </button>
         <button class="nav-btn" id="nav-settings" data-target="view-settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <i data-lucide="settings" data-size="18"></i>
           Settings & Data
         </button>
-        <a href="/" class="nav-btn" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <a href="/" class="nav-btn">
+          <i data-lucide="house" data-size="18"></i>
           Landing Page & Showcase
         </a>
-        <a href="https://github.com/Birol-dev/skills.sh-extractor" class="nav-btn" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        <a href="https://github.com/Birol-dev/skills.sh-extractor" class="nav-btn" target="_blank" rel="noopener noreferrer">
+          <i data-brand="github" data-size="18"></i>
           GitHub Repository
         </a>
       </div>
@@ -121,7 +121,7 @@
           <span>Storage:</span>
           <strong id="sidebar-storage-stat">Local</strong>
         </div>
-        <div style="font-size: 10.5px; line-height: 1.4; color: var(--text-dim);">Pure WebAssembly SPA &bull; Zero Backend</div>
+        <div class="sidebar-footnote">Pure WebAssembly SPA &bull; Zero Backend</div>
       </div>
     </aside>
 
@@ -138,40 +138,42 @@
         </div>
 
         <div class="card-box">
-          <div class="tab-switcher">
-            <button class="tab-switch-btn active" id="tab-btn-github" data-pane="pane-input-github">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-              GitHub / NPX Command & Quick Pick
-            </button>
-            <button class="tab-switch-btn" id="tab-btn-folder" data-pane="pane-input-folder">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              Local Folder
-            </button>
-            <button class="tab-switch-btn" id="tab-btn-zip" data-pane="pane-input-zip">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-              ZIP Package Dropzone
-            </button>
+          <div class="tabs input-tabs">
+            <nav class="tab-switcher" role="tablist" aria-orientation="horizontal" data-variant="line" aria-label="Extraction source">
+              <button type="button" role="tab" class="tab-switch-btn" id="tab-btn-github" aria-controls="pane-input-github" aria-selected="true" tabindex="0">
+                <i data-brand="github" data-size="15"></i>
+                GitHub / NPX Command & Quick Pick
+              </button>
+              <button type="button" role="tab" class="tab-switch-btn" id="tab-btn-folder" aria-controls="pane-input-folder" aria-selected="false" tabindex="-1">
+                <i data-lucide="folder-open"></i>
+                Local Folder
+              </button>
+              <button type="button" role="tab" class="tab-switch-btn" id="tab-btn-zip" aria-controls="pane-input-zip" aria-selected="false" tabindex="-1">
+                <i data-lucide="file-archive"></i>
+                ZIP Package Dropzone
+              </button>
+            </nav>
           </div>
 
           <!-- GitHub Input Pane -->
-          <div class="input-tab-pane active" id="pane-input-github">
+          <div class="input-tab-pane active" id="pane-input-github" role="tabpanel">
             <div class="form-field" style="position: relative;">
               <label class="form-label" for="input-github-cmd">
                 <span>Repository URL, NPX Command, or Skill Name</span>
                 <span class="form-helper">WASM Real-Time Auto-Suggest Enabled</span>
               </label>
               
-              <div class="input-group">
+              <div class="extract-row">
                 <input 
                   type="text" 
                   id="input-github-cmd" 
-                  class="input-styled" 
+                  class="input" 
                   placeholder="Type a skill name (e.g. Copywriting, SEO, Cold Email) or paste URL..." 
                   value="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'"
                   autocomplete="off"
                 />
-                <button class="btn btn-primary" id="btn-extract-github">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <button class="btn" id="btn-extract-github">
+                  <i data-lucide="play" data-icon="inline-start"></i>
                   <span>Extract Skill</span>
                 </button>
               </div>
@@ -183,15 +185,15 @@
               <div class="quick-preset-bar">
                 <span class="quick-preset-label">Quick Pick:</span>
                 <div class="quick-chips-wrapper" id="quick-chips-wrapper">
-                  <button type="button" class="quick-chip active" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'">Copywriting</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ab-testing'">A/B Testing</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'svg-logo-designer'">SVG Logo</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cold-email'">Cold Email</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ai-seo'">AI SEO</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'pricing'">Pricing & Packaging</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cro'">CRO</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/vercel/ai --skill typescript-strict">TypeScript</button>
-                  <button type="button" class="quick-chip" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'launch'">Product Launch</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="true" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'">Copywriting</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ab-testing'">A/B Testing</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'svg-logo-designer'">SVG Logo</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cold-email'">Cold Email</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ai-seo'">AI SEO</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'pricing'">Pricing & Packaging</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cro'">CRO</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/vercel/ai --skill typescript-strict">TypeScript</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'launch'">Product Launch</button>
                 </div>
               </div>
 
@@ -200,30 +202,30 @@
           </div>
 
           <!-- Local Folder Pane -->
-          <div class="input-tab-pane" id="pane-input-folder">
+          <div class="input-tab-pane" id="pane-input-folder" role="tabpanel" hidden>
             <div class="form-field">
               <label class="form-label">
                 <span>Select Local Directory</span>
                 <span class="form-helper">Scans SKILL.md, scripts/, references/</span>
               </label>
-              <div class="input-group">
-                <input type="text" id="input-folder-display" class="input-styled" placeholder="No folder chosen..." readonly />
-                <input type="file" id="input-folder-file" webkitdirectory directory multiple style="display: none;" />
-                <button class="btn btn-secondary" id="btn-select-folder">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <div class="extract-row">
+                <input type="text" id="input-folder-display" class="input" placeholder="No folder chosen..." readonly />
+                <input type="file" id="input-folder-file" webkitdirectory directory multiple hidden />
+                <button class="btn" data-variant="secondary" id="btn-select-folder">
+                  <i data-lucide="folder-open" data-icon="inline-start"></i>
                   Browse Folder...
                 </button>
-                <button class="btn btn-primary" id="btn-extract-folder" disabled>Extract</button>
+                <button class="btn" id="btn-extract-folder" disabled>Extract</button>
               </div>
             </div>
           </div>
 
           <!-- ZIP Dropzone Pane -->
-          <div class="input-tab-pane" id="pane-input-zip">
+          <div class="input-tab-pane" id="pane-input-zip" role="tabpanel" hidden>
             <div class="dropzone" id="zip-dropzone">
-              <input type="file" id="input-zip-file" accept=".zip" style="display: none;" />
+              <input type="file" id="input-zip-file" accept=".zip" hidden />
               <div class="dropzone-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <i data-lucide="upload" data-size="22"></i>
               </div>
               <div class="dropzone-title">Drop your skill .zip package here or click to browse</div>
               <div class="dropzone-sub">WebAssembly will decompress and compile directives client-side with 0 network transfer.</div>
@@ -242,7 +244,7 @@
               </div>
               <span>client-compiler-stream</span>
             </div>
-            <button class="btn btn-outline" id="btn-clear-term" style="padding: 4px 10px; font-size: 11px;">Clear Logs</button>
+            <button class="btn" data-variant="outline" data-size="xs" id="btn-clear-term">Clear Logs</button>
           </div>
           <div class="terminal-body" id="term-logs">
             <div class="term-line">
@@ -261,12 +263,12 @@
             <p>Manage, inspect, and export your compiled playbooks. Drag cards or export directly in your target IDE agent format.</p>
           </div>
           <div style="display: flex; gap: 10px;">
-            <button class="btn btn-outline" id="btn-export-all-zip">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <button class="btn" data-variant="outline" id="btn-export-all-zip">
+              <i data-lucide="download" data-icon="inline-start"></i>
               Export All ZIP
             </button>
-            <button class="btn btn-primary" id="btn-gallery-new-extract">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <button class="btn" id="btn-gallery-new-extract">
+              <i data-lucide="plus" data-icon="inline-start"></i>
               Extract New
             </button>
           </div>
@@ -274,8 +276,8 @@
 
         <div class="gallery-toolbar">
           <div class="search-wrapper">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="gallery-search-input" class="input-styled search-input" placeholder="Search saved skills by name, description, tags..." />
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="gallery-search-input" class="input search-input" placeholder="Search saved skills by name, description, tags..." />
           </div>
           <div class="tag-filter-bar" id="gallery-tag-bar">
             <!-- Populated via JS -->
@@ -286,13 +288,15 @@
           <!-- Populated dynamically via JS -->
         </div>
 
-        <div class="empty-gallery" id="gallery-empty-state" style="display: none;">
-          <div class="empty-gallery-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-          </div>
-          <h3>No Skills Extracted Yet</h3>
-          <p>Extract a skill from GitHub, browse our 55+ curated skills, or drop a ZIP archive to populate your gallery.</p>
-          <button class="btn btn-primary" id="btn-empty-extract">Extract Your First Skill</button>
+        <div class="empty" id="gallery-empty-state" hidden>
+          <header>
+            <figure><i data-lucide="folder-open" data-size="26"></i></figure>
+            <h3>No Skills Extracted Yet</h3>
+            <p>Extract a skill from GitHub, browse our 55+ curated skills, or drop a ZIP archive to populate your gallery.</p>
+          </header>
+          <footer>
+            <button class="btn" id="btn-empty-extract">Extract Your First Skill</button>
+          </footer>
         </div>
       </section>
 
@@ -307,19 +311,19 @@
 
         <div class="gallery-toolbar" style="margin-bottom: 20px;">
           <div class="search-wrapper">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="curated-search-input" class="input-styled search-input" placeholder="Search 55+ curated skills by keyword, discipline, or tags..." />
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="curated-search-input" class="input search-input" placeholder="Search 55+ curated skills by keyword, discipline, or tags..." />
           </div>
           <div class="tag-filter-bar" id="curated-category-bar">
-            <button class="tag-filter active" data-curated-cat="all">All Disciplines</button>
-            <button class="tag-filter" data-curated-cat="Copywriting">Copywriting</button>
-            <button class="tag-filter" data-curated-cat="Marketing & Growth">Marketing & Growth</button>
-            <button class="tag-filter" data-curated-cat="Design & Visuals">Design</button>
-            <button class="tag-filter" data-curated-cat="Sales & Outbound">Sales</button>
-            <button class="tag-filter" data-curated-cat="AI Search & SEO">SEO & GEO</button>
-            <button class="tag-filter" data-curated-cat="Monetization & Offers">Monetization</button>
-            <button class="tag-filter" data-curated-cat="Engineering & Code">Engineering</button>
-            <button class="tag-filter" data-curated-cat="Strategy & Operations">Strategy</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="true" data-curated-cat="all">All Disciplines</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Copywriting"><i data-lucide="pen-line" data-icon="inline-start"></i>Copywriting</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Marketing & Growth"><i data-lucide="trending-up" data-icon="inline-start"></i>Marketing & Growth</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Design & Visuals"><i data-lucide="palette" data-icon="inline-start"></i>Design</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Sales & Outbound"><i data-lucide="send" data-icon="inline-start"></i>Sales</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="AI Search & SEO"><i data-lucide="search" data-icon="inline-start"></i>SEO & GEO</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Monetization & Offers"><i data-lucide="badge-dollar-sign" data-icon="inline-start"></i>Monetization</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Engineering & Code"><i data-lucide="code-xml" data-icon="inline-start"></i>Engineering</button>
+            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Strategy & Operations"><i data-lucide="compass" data-icon="inline-start"></i>Strategy</button>
           </div>
         </div>
 
@@ -335,8 +339,8 @@
             <h1>WebAssembly Acceleration Diagnostics</h1>
             <p>Real-time performance diagnostics and benchmarks comparing pure JavaScript versus WebAssembly execution.</p>
           </div>
-          <button class="btn btn-primary" id="btn-run-benchmark">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <button class="btn" id="btn-run-benchmark">
+            <i data-lucide="play" data-icon="inline-start"></i>
             Run Benchmark (10k ops)
           </button>
         </div>
@@ -344,7 +348,7 @@
         <div class="wasm-stat-grid">
           <div class="stat-card">
             <span class="stat-card-title">WASM Engine Status</span>
-            <span class="stat-card-value" id="stat-wasm-status" style="color: var(--emerald);">Active</span>
+            <span class="stat-card-value" id="stat-wasm-status">Active</span>
             <span class="stat-card-sub" id="stat-wasm-size">Embedded Bytecode</span>
           </div>
           <div class="stat-card">
@@ -359,7 +363,7 @@
           </div>
           <div class="stat-card">
             <span class="stat-card-title">Curated Skills</span>
-            <span class="stat-card-value" style="color: var(--indigo);">55</span>
+            <span class="stat-card-value">55</span>
             <span class="stat-card-sub">Pre-Loaded Playbooks</span>
           </div>
         </div>
@@ -372,8 +376,8 @@
                 <span>WebAssembly (Linear Memory Engine)</span>
                 <span id="bench-val-wasm">Ready to benchmark</span>
               </div>
-              <div class="bench-progress-track">
-                <div class="bench-progress-fill fill-wasm" id="bench-bar-wasm" style="width: 0%;"></div>
+                <div class="progress bench-progress" id="bench-track-wasm">
+                <span id="bench-bar-wasm" style="width: 0%;"></span>
               </div>
             </div>
             <div class="bench-row">
@@ -381,8 +385,8 @@
                 <span>Pure JavaScript Engine</span>
                 <span id="bench-val-js">Ready to benchmark</span>
               </div>
-              <div class="bench-progress-track">
-                <div class="bench-progress-fill fill-js" id="bench-bar-js" style="width: 0%;"></div>
+              <div class="progress bench-progress bench-progress-js" id="bench-track-js">
+                <span id="bench-bar-js" style="width: 0%;"></span>
               </div>
             </div>
           </div>
@@ -393,16 +397,16 @@
           <h3 style="font-size: 15px; font-weight: 700;">WebAssembly Token Estimator Playground</h3>
           <div class="form-field">
             <label class="form-label" for="wasm-test-input">Enter sample system directives or code</label>
-            <textarea id="wasm-test-input" class="input-styled" style="height: 100px; resize: vertical;" placeholder="Type or paste prompt text here to calculate tokens in WASM..."></textarea>
+            <textarea id="wasm-test-input" class="textarea" placeholder="Type or paste prompt text here to calculate tokens in WASM..."></textarea>
           </div>
           <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
             <div class="stat-pill">
               <span>Estimated LLM Tokens:</span>
-              <strong id="wasm-test-tokens" style="color: var(--emerald); margin-left: 8px;">0</strong>
+              <strong id="wasm-test-tokens" class="stat-value">0</strong>
             </div>
             <div class="stat-pill">
               <span>FNV-1a 32-bit Hash:</span>
-              <strong id="wasm-test-hash" style="color: var(--indigo); font-family: var(--font-mono); margin-left: 8px;">00000000</strong>
+              <strong id="wasm-test-hash" class="stat-value stat-value-mono">00000000</strong>
             </div>
           </div>
         </div>
@@ -421,13 +425,13 @@
           <h3 style="font-size: 15px; font-weight: 700;">Metadata & Export Defaults</h3>
           <div class="form-field">
             <label class="form-label" for="setting-tags">Prefill Extra Tags</label>
-            <input type="text" id="setting-tags" class="input-styled" placeholder="verified, agent-skill, local-copy" />
+            <input type="text" id="setting-tags" class="input" placeholder="verified, agent-skill, local-copy" />
             <span class="form-helper">Comma-separated tags to automatically append to compiled frontmatter.</span>
           </div>
 
           <div class="form-field">
             <label class="form-label" for="setting-export-format">Default Playbook Export Format</label>
-            <select id="setting-export-format" class="input-styled">
+            <select id="setting-export-format" class="select">
               <option value="skill.md">Standard Skill (.skill.md)</option>
               <option value="claude.md">Claude Code (CLAUDE.md)</option>
               <option value="cursorrules">Cursor Rules (.cursorrules)</option>
@@ -440,7 +444,7 @@
           <h3 style="font-size: 15px; font-weight: 700;">GitHub API Rate Limit Bypass (Optional)</h3>
           <div class="form-field">
             <label class="form-label" for="setting-gh-token">Personal Access Token (PAT)</label>
-            <input type="password" id="setting-gh-token" class="input-styled" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+            <input type="password" id="setting-gh-token" class="input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
             <span class="form-helper">Used strictly in your browser for public repository trees (raises rate limit from 60 to 5,000 requests/hour). Stored only in local IndexedDB.</span>
           </div>
         </div>
@@ -448,167 +452,154 @@
         <div class="card-box">
           <h3 style="font-size: 15px; font-weight: 700;">Database & Backups</h3>
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button class="btn btn-secondary" id="btn-export-backup">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <button class="btn" data-variant="secondary" id="btn-export-backup">
+              <i data-lucide="download" data-icon="inline-start"></i>
               Export JSON Backup
             </button>
-            <input type="file" id="input-import-backup" accept=".json" style="display: none;" />
-            <button class="btn btn-secondary" id="btn-import-backup">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <input type="file" id="input-import-backup" accept=".json" hidden />
+            <button class="btn" data-variant="secondary" id="btn-import-backup">
+              <i data-lucide="upload" data-icon="inline-start"></i>
               Import JSON Backup
             </button>
-            <button class="btn btn-danger" id="btn-clear-db">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <button class="btn" data-variant="destructive" id="btn-clear-db">
+              <i data-lucide="trash-2" data-icon="inline-start"></i>
               Clear Storage
             </button>
           </div>
         </div>
 
         <div style="display: flex; justify-content: flex-end;">
-          <button class="btn btn-primary" id="btn-save-settings">Save Settings</button>
+          <button class="btn" id="btn-save-settings">Save Settings</button>
         </div>
       </section>
 
     </main>
   </div>
 
-  <!-- ================= PREVIEW MODAL ================= -->
-  <div class="modal-overlay" id="preview-modal">
-    <div class="modal-window">
-      <div class="modal-head">
-        <div class="modal-title-box">
-          <h2 id="modal-skill-title">Skill Title</h2>
-          <p id="modal-skill-subtitle">slug.skill.md &bull; 0 tokens</p>
-        </div>
-        <button class="modal-close-btn" id="modal-btn-close">&times;</button>
-      </div>
-
-      <div class="modal-main">
-        <aside class="modal-nav">
-          <button class="modal-nav-btn active" data-pane="modal-pane-rendered">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-            Directives (Rendered)
-          </button>
-          <button class="modal-nav-btn" data-pane="modal-pane-meta">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            Frontmatter Meta
-          </button>
-          <button class="modal-nav-btn" id="modal-tab-scripts" data-pane="modal-pane-scripts">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            Helper Scripts (<span id="modal-scripts-count">0</span>)
-          </button>
-          <button class="modal-nav-btn" id="modal-tab-refs" data-pane="modal-pane-refs">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            References (<span id="modal-refs-count">0</span>)
-          </button>
-          <button class="modal-nav-btn" data-pane="modal-pane-raw">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
-            Raw Markdown Source
-          </button>
-        </aside>
-
-        <section class="modal-content-panel">
-          <!-- Rendered Markdown Pane -->
-          <div class="preview-tab-pane active" id="modal-pane-rendered">
+  <!-- ================= PREVIEW DIALOG ================= -->
+  <dialog class="dialog preview-dialog" id="preview-modal" aria-labelledby="modal-skill-title" aria-describedby="modal-skill-subtitle">
+    <div>
+      <header>
+        <h2 id="modal-skill-title">Skill Title</h2>
+        <p id="modal-skill-subtitle">slug.skill.md &bull; 0 tokens</p>
+      </header>
+      <section class="preview-dialog-body">
+        <div class="tabs preview-tabs">
+          <nav class="preview-tablist" role="tablist" aria-orientation="vertical" data-variant="line" aria-label="Skill contents">
+            <button type="button" role="tab" class="preview-tab" id="preview-tab-rendered" aria-controls="modal-pane-rendered" aria-selected="true" tabindex="0">
+              <i data-lucide="file-text" data-icon="inline-start"></i>
+              Directives (Rendered)
+            </button>
+            <button type="button" role="tab" class="preview-tab" id="preview-tab-meta" aria-controls="modal-pane-meta" aria-selected="false" tabindex="-1">
+              <i data-lucide="settings" data-icon="inline-start"></i>
+              Frontmatter Meta
+            </button>
+            <button type="button" role="tab" class="preview-tab" id="modal-tab-scripts" aria-controls="modal-pane-scripts" aria-selected="false" tabindex="-1">
+              <i data-lucide="code-xml" data-icon="inline-start"></i>
+              Helper Scripts (<span id="modal-scripts-count">0</span>)
+            </button>
+            <button type="button" role="tab" class="preview-tab" id="modal-tab-refs" aria-controls="modal-pane-refs" aria-selected="false" tabindex="-1">
+              <i data-lucide="book-open" data-icon="inline-start"></i>
+              References (<span id="modal-refs-count">0</span>)
+            </button>
+            <button type="button" role="tab" class="preview-tab" id="preview-tab-raw" aria-controls="modal-pane-raw" aria-selected="false" tabindex="-1">
+              <i data-lucide="file-code" data-icon="inline-start"></i>
+              Raw Markdown Source
+            </button>
+          </nav>
+          <div class="preview-tab-pane" id="modal-pane-rendered" role="tabpanel">
             <div class="markdown-rendered" id="modal-rendered-content"></div>
           </div>
-
-          <!-- Metadata Grid Pane -->
-          <div class="preview-tab-pane" id="modal-pane-meta">
+          <div class="preview-tab-pane" id="modal-pane-meta" role="tabpanel" hidden>
             <div class="meta-table-grid" id="modal-meta-grid"></div>
           </div>
-
-          <!-- Scripts Pane -->
-          <div class="preview-tab-pane" id="modal-pane-scripts">
+          <div class="preview-tab-pane" id="modal-pane-scripts" role="tabpanel" hidden>
             <div class="script-tabs-strip" id="modal-script-selector"></div>
             <pre class="code-viewer-block" id="modal-script-code">Select a script above to view source...</pre>
           </div>
-
-          <!-- References Pane -->
-          <div class="preview-tab-pane" id="modal-pane-refs">
+          <div class="preview-tab-pane" id="modal-pane-refs" role="tabpanel" hidden>
             <div class="script-tabs-strip" id="modal-ref-selector"></div>
             <div class="markdown-rendered" id="modal-ref-content">Select a reference document above to view...</div>
           </div>
-
-          <!-- Raw Markdown Pane -->
-          <div class="preview-tab-pane" id="modal-pane-raw">
+          <div class="preview-tab-pane" id="modal-pane-raw" role="tabpanel" hidden>
             <pre class="code-viewer-block" id="modal-raw-source"></pre>
           </div>
-        </section>
-      </div>
-
-      <div class="modal-foot">
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <label style="font-size: 12px; color: var(--text-dim);">Format:</label>
-          <select id="modal-format-select" class="input-styled" style="padding: 6px 10px; font-size: 12px;">
+        </div>
+      </section>
+      <footer>
+        <div class="preview-format">
+          <label class="label" for="modal-format-select">Format</label>
+          <select id="modal-format-select" class="select">
             <option value="skill.md">Standard .skill.md</option>
             <option value="claude.md">Claude Code (CLAUDE.md)</option>
             <option value="cursorrules">Cursor Rules (.cursorrules)</option>
             <option value="windsurfrules">Windsurf Rules (.windsurfrules)</option>
           </select>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <div class="preview-foot-actions">
           <div class="preview-multi-nav" id="preview-multi-nav" hidden>
-            <button class="btn btn-outline" type="button" id="preview-multi-prev" title="Previous selected">Prev</button>
+            <button class="btn" data-variant="outline" data-size="sm" type="button" id="preview-multi-prev" title="Previous selected">Prev</button>
             <span class="preview-multi-label" id="preview-multi-label">1 / 1</span>
-            <button class="btn btn-outline" type="button" id="preview-multi-next" title="Next selected">Next</button>
+            <button class="btn" data-variant="outline" data-size="sm" type="button" id="preview-multi-next" title="Next selected">Next</button>
           </div>
-          <button class="btn btn-outline" id="modal-btn-download">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <button class="btn" data-variant="outline" id="modal-btn-download">
+            <i data-lucide="download" data-icon="inline-start"></i>
             Download
           </button>
-          <button class="btn btn-secondary" id="modal-btn-copy">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <button class="btn" data-variant="secondary" id="modal-btn-copy">
+            <i data-lucide="copy" data-icon="inline-start"></i>
             Copy Playbook
           </button>
-          <button class="btn btn-primary" id="modal-btn-done">Done</button>
+          <button class="btn" id="modal-btn-done">Done</button>
         </div>
-      </div>
+      </footer>
+      <button type="button" class="btn" data-variant="ghost" data-size="icon-sm" id="modal-btn-close" aria-label="Close preview">
+        <i data-lucide="x"></i>
+      </button>
     </div>
-  </div>
+  </dialog>
 
-  <!-- Skill Choice Modal (multi-select + bulk actions) -->
-  <div class="modal-overlay" id="skill-choice-modal" role="dialog" aria-modal="true" aria-labelledby="skill-choice-title" hidden>
-    <div class="modal-window skill-choice-window">
-      <div class="modal-head">
-        <div class="modal-title-box">
-          <div class="skill-choice-title-row">
-            <h2 id="skill-choice-title">Choose skills</h2>
-            <span class="skill-choice-status is-miss" id="skill-choice-status" hidden>Not found</span>
-          </div>
-          <p class="skill-choice-subtitle" id="skill-choice-subtitle">That skill isn&apos;t in this repo (or the command didn&apos;t resolve).</p>
+  <!-- Skill Choice Dialog (multi-select + bulk actions) -->
+  <dialog class="dialog skill-choice-dialog" id="skill-choice-modal" aria-labelledby="skill-choice-title" aria-describedby="skill-choice-subtitle">
+    <div>
+      <header>
+        <div class="skill-choice-title-row">
+          <h2 id="skill-choice-title">Choose skills</h2>
+          <span class="badge skill-choice-status is-miss" id="skill-choice-status" data-variant="destructive" hidden>Not found</span>
         </div>
-        <button class="modal-close-btn" id="skill-choice-close" type="button" aria-label="Close skill picker">&times;</button>
-      </div>
-      <div class="modal-main skill-choice-body">
+        <p id="skill-choice-subtitle">That skill isn&apos;t in this repo (or the command didn&apos;t resolve).</p>
+      </header>
+      <section class="skill-choice-body">
         <p class="skill-choice-hint" id="skill-choice-hint">Multi-select skills to add, preview, or download. Click a row to toggle; double-click to extract one.</p>
         <div class="skill-choice-toolbar">
-          <input type="search" class="input-styled skill-choice-search" id="skill-choice-search" placeholder="Filter skills…" aria-label="Filter skills" autocomplete="off" />
+          <input type="search" class="input skill-choice-search" id="skill-choice-search" placeholder="Filter skills…" aria-label="Filter skills" autocomplete="off" />
           <div class="skill-choice-toolbar-actions">
-            <button class="btn btn-outline skill-choice-tool-btn" type="button" id="skill-choice-select-all">Select all</button>
-            <button class="btn btn-outline skill-choice-tool-btn" type="button" id="skill-choice-clear">Clear</button>
+            <button class="btn" data-variant="outline" data-size="sm" type="button" id="skill-choice-select-all">Select all</button>
+            <button class="btn" data-variant="outline" data-size="sm" type="button" id="skill-choice-clear">Clear</button>
             <span class="skill-choice-count" id="skill-choice-count" aria-live="polite">0 selected</span>
           </div>
         </div>
         <div class="skill-choice-list" id="skill-choice-list" role="listbox" aria-multiselectable="true" aria-label="Available skills" tabindex="0"></div>
-      </div>
-      <div class="modal-foot skill-choice-foot">
+      </section>
+      <footer class="skill-choice-foot">
         <div class="skill-choice-foot-bulk">
-          <button class="btn btn-secondary" type="button" id="skill-choice-add-gallery" disabled>Add to gallery</button>
-          <button class="btn btn-outline" type="button" id="skill-choice-preview" disabled>Preview</button>
-          <button class="btn btn-outline" type="button" id="skill-choice-download-md" disabled>Download .md</button>
-          <button class="btn btn-outline" type="button" id="skill-choice-download-zip" disabled>Download ZIP</button>
+          <button class="btn" data-variant="secondary" data-size="sm" type="button" id="skill-choice-add-gallery" disabled>Add to gallery</button>
+          <button class="btn" data-variant="outline" data-size="sm" type="button" id="skill-choice-preview" disabled>Preview</button>
+          <button class="btn" data-variant="outline" data-size="sm" type="button" id="skill-choice-download-md" disabled>Download .md</button>
+          <button class="btn" data-variant="outline" data-size="sm" type="button" id="skill-choice-download-zip" disabled>Download ZIP</button>
         </div>
         <div class="skill-choice-foot-end">
-          <button class="btn btn-primary" type="button" id="skill-choice-extract-one" hidden>Extract</button>
-          <button class="btn btn-outline" type="button" id="skill-choice-cancel">Cancel</button>
+          <button class="btn" data-size="sm" type="button" id="skill-choice-extract-one" hidden>Extract</button>
+          <button class="btn" data-variant="outline" data-size="sm" type="button" id="skill-choice-cancel">Cancel</button>
         </div>
-      </div>
+      </footer>
+      <button type="button" class="btn" data-variant="ghost" data-size="icon-sm" id="skill-choice-close" aria-label="Close skill picker">
+        <i data-lucide="x"></i>
+      </button>
     </div>
-  </div>
+  </dialog>
 
-  <!-- Toast Notification Stack -->
-  <div class="toast-stack" id="toast-container"></div>
+  <div id="toaster" class="toaster"></div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

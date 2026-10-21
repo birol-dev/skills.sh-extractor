@@ -11,12 +11,15 @@ export function initHeroWidget() {
   const outputTokens = document.getElementById('outputTokens');
   const outputCode = document.getElementById('outputCodeSnippet');
   const copyPromptBtn = document.getElementById('widgetCopyPromptBtn');
-  const presetTabs = document.querySelectorAll('.preset-tab');
+  const tabsRoot = document.querySelector('.widget-tabs');
+  const tablist = document.getElementById('presetTabs');
+  const presetTabs = tablist ? tablist.querySelectorAll('[role="tab"]') : [];
 
   if (!input || !extractBtn) return;
 
   let activeSlug = 'copywriting';
   let isPresetValue = true;
+  let copyResetTimer = null;
 
   async function renderHeroSkill(slug, animate = true) {
     const item = CURATED_SKILLS.find(s => s.slug === slug) || CURATED_SKILLS[0];
@@ -41,10 +44,7 @@ export function initHeroWidget() {
 
       extractBtn.classList.remove('loading');
       outputPanel.style.opacity = '1';
-
-      presetTabs.forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.skill === slug);
-      });
+      outputPanel.hidden = false;
     };
 
     if (animate) setTimeout(paint, 200);
@@ -52,12 +52,22 @@ export function initHeroWidget() {
   }
 
   renderHeroSkill('copywriting', false);
+  if (tabsRoot) window.basecoat?.refresh(tabsRoot);
 
-  presetTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      renderHeroSkill(tab.dataset.skill, true);
+  if (tablist) {
+    tablist.addEventListener('click', (e) => {
+      const tab = e.target.closest('[role="tab"]');
+      if (tab?.dataset.skill) renderHeroSkill(tab.dataset.skill, true);
     });
-  });
+    tablist.addEventListener('keydown', () => {
+      requestAnimationFrame(() => {
+        const selected = tablist.querySelector('[role="tab"][aria-selected="true"]');
+        if (selected?.dataset.skill && selected.dataset.skill !== activeSlug) {
+          renderHeroSkill(selected.dataset.skill, true);
+        }
+      });
+    });
+  }
 
   function clearPresetInput() {
     if (isPresetValue || CURATED_SKILLS.some(s => s.command === input.value.trim())) {
@@ -100,6 +110,9 @@ export function initHeroWidget() {
       const prompts = await loadPrompts();
       const promptText = prompts[activeSlug] || outputCode.textContent;
       navigator.clipboard.writeText(promptText).then(() => {
+        copyPromptBtn.classList.add('is-copied');
+        clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(() => copyPromptBtn.classList.remove('is-copied'), 1600);
         showToast('Copied prompt! Ready to paste into Claude, ChatGPT, or Cursor.', 'success');
       }).catch(() => {
         showToast('Copy failed, please select and copy manually.', 'error');

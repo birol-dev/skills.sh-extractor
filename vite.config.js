@@ -1,11 +1,12 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import { htmlIncludesPlugin } from './scripts/htmlIncludesPlugin.js';
 
 export default defineConfig({
   root: './',
   base: './',
-  plugins: [htmlIncludesPlugin()],
+  plugins: [htmlIncludesPlugin(), tailwindcss()],
   server: {
     port: 5173,
     open: false,

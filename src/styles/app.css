@@ -1,0 +1,23 @@
+/* Compiler app. Page CSS sits in the `project` layer, after Basecoat components. */
+@layer theme, base, components, project, utilities;
+
+@import "tailwindcss" source(none);
+@import "basecoat-css/nova";
+@import "./theme.css";
+@import "prismjs/themes/prism-tomorrow.css" layer(project);
+@import "./main.css" layer(project);
+
+@source "../../app/index.html";
+@source "../main.js";
+@source "../ui";
+@source "../../node_modules/basecoat-css/dist/js/toast.js";
+
+@layer project {
+  .app-shell code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+  }
+}

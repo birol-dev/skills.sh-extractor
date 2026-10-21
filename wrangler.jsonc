@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "skill-extractor",
+  "compatibility_date": "2026-09-24",
+  "assets": {
+    "directory": "./dist"
+  }
+}

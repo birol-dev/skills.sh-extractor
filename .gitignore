@@ -17,3 +17,9 @@ agent/skills
 .opencode/
 coverage/
 .env
+
+# local marketing kit (downloaded from ccr-ea3d17be-o3rq5f)
+marketing/
+
+# design recordings (before/after videos)
+recordings/

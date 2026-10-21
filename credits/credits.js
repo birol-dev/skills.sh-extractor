@@ -1,5 +1,7 @@
+import '../src/ui/basecoat.js';
 import { CURATED_SKILLS } from '../src/services/curatedSkills.js';
 import { initNavActive } from '../landing/js/nav.js';
+import { icon } from '../src/ui/icons.js';
 
 initNavActive();
 
@@ -74,9 +76,9 @@ function renderCredits() {
         <div class="credit-card-head">
           <div>
             <span class="credit-author">${info.author}</span>
-            <a class="credit-repo" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${info.repo} ↗</a>
+            <a class="credit-repo" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${info.repo} ${icon('arrow-up-right', { size: 12, className: 'footer-ext-icon' })}</a>
           </div>
-          <span class="credit-count">${skills.length} skill${skills.length === 1 ? '' : 's'}</span>
+          <span class="badge credit-count" data-variant="outline">${skills.length} skill${skills.length === 1 ? '' : 's'}</span>
         </div>
         ${info.blurb ? `<p class="credit-blurb">${info.blurb}</p>` : ''}
         <p class="credit-skill-names">${skillNames}</p>

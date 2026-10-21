@@ -1,0 +1,95 @@
+/* ==========================================================================
+   Basecoat (shadcn/ui for plain HTML, Nova style) themed for Skill Extractor.
+   Monochrome zinc, dark only, crisp corners: radius scale 2 / 4 / 6 / 10px.
+   ========================================================================== */
+
+:root {
+  --radius: 0.375rem;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0e0e11;
+  --card-foreground: #fafafa;
+  --popover: #111114;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --secondary: #1c1c20;
+  --secondary-foreground: #fafafa;
+  --muted: #17171a;
+  --muted-foreground: #a1a1aa;
+  --accent: #232327;
+  --accent-foreground: #fafafa;
+  --destructive: #f87171;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.14);
+  --ring: #a1a1aa;
+}
+
+@layer project {
+  /* Crisp geometry: Nova ships pill badges, toasts and progress bars. */
+  .badge {
+    @apply rounded-md;
+  }
+
+  .toaster .toast .toast-content {
+    @apply rounded-lg;
+  }
+
+  .toaster {
+    @apply bottom-auto top-16 sm:max-w-sm;
+  }
+
+  .toaster .toast {
+    animation-name: toast-down;
+  }
+
+  @keyframes toast-down {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+  }
+
+  .progress,
+  .progress > span {
+    @apply rounded-xs;
+  }
+
+  .dialog::backdrop {
+    @apply bg-black/75 backdrop-blur-sm;
+  }
+
+  .dialog > * > footer {
+    @apply flex-row flex-wrap items-center justify-end;
+  }
+
+  .btn,
+  .tabs > [role='tablist'] > [role='tab'],
+  .accordion > details > summary {
+    @apply cursor-pointer;
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  /* Toggle buttons used as filters (aria-pressed). */
+  .btn[aria-pressed='true'] {
+    @apply border-primary bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .badge > .lucide {
+    @apply size-3;
+  }
+
+  .progress {
+    @apply h-2.5;
+  }
+
+  .brand-icon {
+    @apply shrink-0;
+  }
+}

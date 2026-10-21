@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" prefix="og: https://ogp.me/ns#">
+<html lang="en" class="dark" prefix="og: https://ogp.me/ns#">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -190,79 +190,79 @@
             </h2>
           </div>
 
-          <div class="faq-accordion" id="faqAccordionExtra">
-            <div class="faq-item">
-              <button type="button" class="faq-question">
+          <section class="accordion faq-accordion" id="faqAccordionExtra">
+            <details>
+              <summary>
                 <span>Does this work with Cursor and Antigravity?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
+                <i data-lucide="chevron-down"></i>
+              </summary>
+              <section>
                 <p>
                   Yes. Copy the compiled prompt into Cursor, Windsurf, Antigravity, or GitHub Copilot the same way you would paste it into ChatGPT or Claude. The <a href="/app/">compiler app</a> can also export markdown for local agent folders.
                 </p>
-              </div>
-            </div>
+              </section>
+            </details>
 
-            <div class="faq-item">
-              <button type="button" class="faq-question">
+            <details>
+              <summary>
                 <span>Can I extract a custom GitHub repo, not just the curated list?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
+                <i data-lucide="chevron-down"></i>
+              </summary>
+              <section>
                 <p>
                   Yes. Open the <a href="/app/">compiler workstation</a>, paste any public GitHub skill repository URL or <code>npx skills add</code> command, and extract it. The <a href="/skills/">55+ library</a> is a starting catalog, not a limit.
                 </p>
-              </div>
-            </div>
+              </section>
+            </details>
 
-            <div class="faq-item">
-              <button type="button" class="faq-question">
+            <details>
+              <summary>
                 <span>Does Skill Extractor work offline?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
+                <i data-lucide="chevron-down"></i>
+              </summary>
+              <section>
                 <p>
                   After the page and WASM engine load, curated prompts and IndexedDB playbooks work without a network. Fetching a new GitHub repository still needs connectivity to GitHub.
                 </p>
-              </div>
-            </div>
+              </section>
+            </details>
 
-            <div class="faq-item">
-              <button type="button" class="faq-question">
+            <details>
+              <summary>
                 <span>Who writes the skills in the library?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
+                <i data-lucide="chevron-down"></i>
+              </summary>
+              <section>
                 <p>
                   Skill Extractor is a compiler, not an author. Each curated skill is sourced from a public repository. See <a href="/credits/">Credits &amp; Sources</a> for authors and original repo links.
                 </p>
-              </div>
-            </div>
+              </section>
+            </details>
 
-            <div class="faq-item">
-              <button type="button" class="faq-question">
+            <details>
+              <summary>
                 <span>Is Skill Extractor free?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
+                <i data-lucide="chevron-down"></i>
+              </summary>
+              <section>
                 <p>
                   Yes. It is open source under the MIT license. There is no paid tier and no telemetry backend. The source is on <a href="https://github.com/Birol-dev/skills.sh-extractor" target="_blank" rel="noopener noreferrer">GitHub</a>.
                 </p>
-              </div>
-            </div>
+              </section>
+            </details>
 
-            <div class="faq-item">
-              <button type="button" class="faq-question">
+            <details>
+              <summary>
                 <span>How is this different from running npx skills add?</span>
-                <span class="faq-icon">+</span>
-              </button>
-              <div class="faq-answer">
+                <i data-lucide="chevron-down"></i>
+              </summary>
+              <section>
                 <p>
                   <code>npx skills add</code> installs a skill through Node.js on your machine. Skill Extractor performs the unpack and compile step in the browser so you can read and copy the playbook without a CLI toolchain. That is the <a href="/mission/">problem we started from</a>.
                 </p>
-              </div>
-            </div>
-          </div>
+              </section>
+            </details>
+          </section>
 
           <p class="seo-crosslinks">
             Walk through the <a href="/how-it-works/">extraction steps</a> or

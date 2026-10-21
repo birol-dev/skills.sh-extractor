@@ -14,6 +14,23 @@ export function getCategoryKey(cat) {
   return 'other';
 }
 
+/** Lucide icon name for each category key. */
+export const CATEGORY_ICONS = {
+  copywriting: 'pen-line',
+  marketing: 'trending-up',
+  design: 'palette',
+  sales: 'send',
+  seo: 'search',
+  monetization: 'badge-dollar-sign',
+  strategy: 'compass',
+  dev: 'code-xml',
+  other: 'sparkles'
+};
+
+export function getCategoryIcon(cat) {
+  return CATEGORY_ICONS[getCategoryKey(cat)];
+}
+
 export function escapeHtml(str) {
   if (!str) return '';
   return String(str)

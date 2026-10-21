@@ -11,6 +11,10 @@ import {
   findGalleryDuplicate,
   formatSelectedCount
 } from './services/skillChoiceHelpers.js';
+import './ui/basecoat.js';
+import { showToast } from './ui/toast.js';
+import { icon, hydrateIcons } from './ui/icons.js';
+import { getCategoryIcon } from './services/skillCategories.js';
 
 // Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
 const CURATED_SEARCH_INDEX = CURATED_SKILLS.map(s => ({
@@ -138,15 +142,6 @@ const modalBtnCopy = document.getElementById('modal-btn-copy');
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalFormatSelect = document.getElementById('modal-format-select');
 
-const modalNavButtons = document.querySelectorAll('.modal-nav-btn');
-const modalPanes = {
-  rendered: document.getElementById('modal-pane-rendered'),
-  meta: document.getElementById('modal-pane-meta'),
-  scripts: document.getElementById('modal-pane-scripts'),
-  refs: document.getElementById('modal-pane-refs'),
-  raw: document.getElementById('modal-pane-raw')
-};
-
 const modalRenderedContent = document.getElementById('modal-rendered-content');
 const modalMetaGrid = document.getElementById('modal-meta-grid');
 const modalScriptSelector = document.getElementById('modal-script-selector');
@@ -157,7 +152,6 @@ const modalRawSource = document.getElementById('modal-raw-source');
 const modalScriptsCount = document.getElementById('modal-scripts-count');
 const modalRefsCount = document.getElementById('modal-refs-count');
 
-const toastContainer = document.getElementById('toast-container');
 const skillChoiceModal = document.getElementById('skill-choice-modal');
 const skillChoiceList = document.getElementById('skill-choice-list');
 const skillChoiceSubtitle = document.getElementById('skill-choice-subtitle');
@@ -179,29 +173,6 @@ const previewMultiPrev = document.getElementById('preview-multi-prev');
 const previewMultiNext = document.getElementById('preview-multi-next');
 const previewMultiLabel = document.getElementById('preview-multi-label');
 
-// Toast Notification
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast-msg ${type}`;
-
-  let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
-  if (type === 'success') {
-    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-  } else if (type === 'error') {
-    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-  }
-
-  toast.innerHTML = `<span class="toast-icon">${iconSvg}</span><span class="toast-text">${escapeHtml(message)}</span>`;
-  toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-10px)';
-    toast.style.transition = 'all 0.25s ease';
-    setTimeout(() => toast.remove(), 250);
-  }, 3200);
-}
-
 // Skill choice (multi-select + bulk QOL)
 function closeSkillChoiceModal() {
   pendingSkillChoice = null;
@@ -211,9 +182,7 @@ function closeSkillChoiceModal() {
   skillChoiceBusy = false;
   if (skillChoiceSearch) skillChoiceSearch.value = '';
   if (!skillChoiceModal) return;
-  skillChoiceModal.classList.remove('active');
-  skillChoiceModal.hidden = true;
-  skillChoiceModal.setAttribute('aria-hidden', 'true');
+  if (skillChoiceModal.open) skillChoiceModal.close();
 }
 
 function truncateSkillDesc(text, max = 160) {
@@ -261,7 +230,7 @@ function renderSkillChoiceList() {
   if (skillChoiceFocusIndex >= filtered.length) skillChoiceFocusIndex = filtered.length - 1;
   if (skillChoiceFocusIndex < 0) skillChoiceFocusIndex = 0;
 
-  const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  const checkSvg = icon('check', { size: 12, strokeWidth: 3 });
 
   filtered.forEach((skill, idx) => {
     const key = skillChoiceKey(skill);
@@ -281,7 +250,7 @@ function renderSkillChoiceList() {
       <span class="skill-choice-item-body">
         <span class="skill-choice-item-header">
           <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
-          ${tag ? `<span class="skill-choice-item-meta">${escapeHtml(tag)}</span>` : ''}
+          ${tag ? `<span class="badge skill-choice-item-meta" data-variant="outline">${escapeHtml(tag)}</span>` : ''}
         </span>
         ${desc ? `<span class="skill-choice-item-desc">${escapeHtml(desc)}</span>` : ''}
       </span>
@@ -328,10 +297,12 @@ function openSkillChoiceModal(payload) {
     skillChoiceStatus.hidden = false;
     if (requested) {
       skillChoiceStatus.textContent = 'Not found';
-      skillChoiceStatus.className = 'skill-choice-status is-miss';
+      skillChoiceStatus.className = 'badge skill-choice-status is-miss';
+      skillChoiceStatus.dataset.variant = 'destructive';
     } else {
       skillChoiceStatus.textContent = 'Multiple skills';
-      skillChoiceStatus.className = 'skill-choice-status is-multi';
+      skillChoiceStatus.className = 'badge skill-choice-status is-multi';
+      skillChoiceStatus.dataset.variant = 'outline';
     }
   }
   if (skillChoiceHint) {
@@ -349,9 +320,7 @@ function openSkillChoiceModal(payload) {
     renderSkillChoiceList();
   }
 
-  skillChoiceModal.hidden = false;
-  skillChoiceModal.classList.add('active');
-  skillChoiceModal.setAttribute('aria-hidden', 'false');
+  if (!skillChoiceModal.open) skillChoiceModal.showModal();
   showToast(
     available.length === 1
       ? 'One skill found — use Extract, or multi-select actions.'
@@ -655,7 +624,7 @@ async function bulkDownloadSelectedZip() {
 }
 
 function handleSkillChoiceKeydown(e) {
-  if (!skillChoiceModal?.classList.contains('active')) return;
+  if (!skillChoiceModal?.open) return;
   if (e.target === skillChoiceSearch && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'Enter') {
     return;
   }
@@ -795,23 +764,8 @@ function switchView(viewName) {
 
 // Tab Switcher for Extraction Input
 function setupInputTabs() {
-  const tabs = [
-    { btn: document.getElementById('tab-btn-github'), pane: document.getElementById('pane-input-github') },
-    { btn: document.getElementById('tab-btn-folder'), pane: document.getElementById('pane-input-folder') },
-    { btn: document.getElementById('tab-btn-zip'), pane: document.getElementById('pane-input-zip') }
-  ];
-
-  tabs.forEach(tab => {
-    if (!tab.btn) return;
-    tab.btn.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.btn.classList.remove('active');
-        t.pane.classList.remove('active');
-      });
-      tab.btn.classList.add('active');
-      tab.pane.classList.add('active');
-    });
-  });
+  const root = document.querySelector('.input-tabs');
+  if (root) window.basecoat?.refresh(root);
 }
 
 // Setup Extraction Logic
@@ -1015,13 +969,16 @@ function renderTagFilterBar() {
   });
 
   galleryTagBar.innerHTML = `
-    <button class="tag-pill ${activeFilterTag === 'all' ? 'active' : ''}" data-tag="all">All (${currentSkills.length})</button>
+    <button class="btn" data-variant="outline" data-size="sm" aria-pressed="${activeFilterTag === 'all'}" data-tag="all">All (${currentSkills.length})</button>
   `;
 
   Array.from(allTags).sort().forEach(tag => {
     const count = currentSkills.filter(s => s.tags?.includes(tag)).length;
     const pill = document.createElement('button');
-    pill.className = `tag-pill ${activeFilterTag === tag ? 'active' : ''}`;
+    pill.className = 'btn';
+    pill.dataset.variant = 'outline';
+    pill.dataset.size = 'sm';
+    pill.setAttribute('aria-pressed', String(activeFilterTag === tag));
     pill.setAttribute('data-tag', tag);
     pill.innerText = `${tag} (${count})`;
     galleryTagBar.appendChild(pill);
@@ -1034,11 +991,11 @@ function setupGalleryDelegation() {
   galleryCardsGrid.dataset.delegated = 'true';
 
   galleryTagBar.addEventListener('click', (e) => {
-    const pill = e.target.closest('.tag-pill');
+    const pill = e.target.closest('[data-tag]');
     if (!pill) return;
     activeFilterTag = pill.getAttribute('data-tag') || 'all';
-    galleryTagBar.querySelectorAll('.tag-pill').forEach(p => {
-      p.classList.toggle('active', p.getAttribute('data-tag') === activeFilterTag);
+    galleryTagBar.querySelectorAll('[data-tag]').forEach(p => {
+      p.setAttribute('aria-pressed', String(p.getAttribute('data-tag') === activeFilterTag));
     });
     renderGalleryCards();
   });
@@ -1112,11 +1069,11 @@ function renderGalleryCards() {
   }
 
   if (filtered.length === 0) {
-    galleryEmptyState.style.display = 'flex';
+    galleryEmptyState.hidden = false;
     return;
   }
 
-  galleryEmptyState.style.display = 'none';
+  galleryEmptyState.hidden = true;
 
   const fragment = document.createDocumentFragment();
 
@@ -1133,46 +1090,38 @@ function renderGalleryCards() {
     card.innerHTML = `
       <div class="card-head">
         <div class="card-title-group">
-          <div class="card-badge">${escapeHtml(skill.sourceType || 'skill')}</div>
+          <span class="badge card-badge" data-variant="outline">${escapeHtml(skill.sourceType || 'skill')}</span>
           <h3 class="card-title" title="${escapeHtml(skill.name)}">${escapeHtml(skill.name)}</h3>
         </div>
         <div class="drag-export-handle" title="Drag to export .skill.md directly to desktop / editor" draggable="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+          ${icon('grip-vertical', { size: 14 })}
         </div>
       </div>
-      
+
       <p class="card-desc">${escapeHtml(skill.description)}</p>
 
       <div class="card-meta-row">
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-          ~${tokenEst} tokens
-        </span>
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-          ${sizeKb} KB
-        </span>
-        ${scriptsCount > 0 ? `
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-          ${scriptsCount} scripts
-        </span>` : ''}
-        ${refsCount > 0 ? `
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-          ${refsCount} refs
-        </span>` : ''}
-        <span class="meta-chip" style="margin-left: auto;">${dateStr}</span>
+        <span class="meta-chip">${icon('zap', { size: 12 })} ~${tokenEst} tokens</span>
+        <span class="meta-chip">${icon('package', { size: 12 })} ${sizeKb} KB</span>
+        ${scriptsCount > 0 ? `<span class="meta-chip">${icon('wrench', { size: 12 })} ${scriptsCount} scripts</span>` : ''}
+        ${refsCount > 0 ? `<span class="meta-chip">${icon('book-open', { size: 12 })} ${refsCount} refs</span>` : ''}
+        <span class="meta-chip meta-chip-date">${icon('calendar', { size: 12 })} ${dateStr}</span>
       </div>
 
       <div class="card-footer-actions">
-        <button class="btn btn-secondary btn-card-preview">Preview</button>
-        <button class="btn btn-outline btn-card-copy">Copy</button>
-        <button class="btn btn-outline btn-card-download" title="Download .skill.md">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <button class="btn btn-card-preview" data-variant="secondary" data-size="sm">
+          ${icon('eye', { size: 13, attrs: { 'data-icon': 'inline-start' } })}
+          <span>Preview</span>
         </button>
-        <button class="btn btn-danger btn-card-delete" title="Delete skill">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <button class="btn btn-card-copy" data-variant="outline" data-size="sm">
+          ${icon('copy', { size: 13, attrs: { 'data-icon': 'inline-start' } })}
+          <span>Copy</span>
+        </button>
+        <button class="btn btn-card-download" data-variant="outline" data-size="icon-sm" title="Download .skill.md">
+          ${icon('download', { size: 13 })}
+        </button>
+        <button class="btn btn-card-delete" data-variant="destructive" data-size="icon-sm" title="Delete skill">
+          ${icon('trash-2', { size: 13 })}
         </button>
       </div>
     `;
@@ -1228,7 +1177,7 @@ function setupAutosuggest() {
           <div class="autosuggest-name">${escapeHtml(item.name)}</div>
           <div class="autosuggest-sub">${escapeHtml(item.description)}</div>
         </div>
-        <span class="autosuggest-badge">${escapeHtml(item.badge)}</span>
+        <span class="badge autosuggest-badge" data-variant="outline">${escapeHtml(item.badge)}</span>
       `;
       fragment.appendChild(div);
     });
@@ -1283,8 +1232,8 @@ function setupQuickChips() {
   const chips = document.querySelectorAll('.quick-chip');
   chips.forEach(chip => {
     chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
+      chips.forEach(c => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
       const cmd = chip.dataset.skillCmd;
       if (cmd && inputGithubCmd) {
         inputGithubCmd.value = cmd;
@@ -1301,11 +1250,11 @@ let curatedSearchQuery = '';
 function renderCuratedHub() {
   if (!curatedCardsGrid) return;
 
-  const catButtons = document.querySelectorAll('#curated-category-bar .tag-filter');
+  const catButtons = document.querySelectorAll('#curated-category-bar [data-curated-cat]');
   catButtons.forEach(btn => {
     btn.onclick = () => {
-      catButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      catButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
       activeCuratedCat = btn.dataset.curatedCat || 'all';
       filterAndRenderCurated();
     };
@@ -1355,8 +1304,12 @@ function filterAndRenderCurated() {
 
   if (filtered.length === 0) {
     curatedCardsGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--muted-foreground);">
-        <p>No curated skills matching your search criteria.</p>
+      <div class="empty curated-empty">
+        <header>
+          <figure>${icon('search-x', { size: 26 })}</figure>
+          <h3>No matches</h3>
+          <p>No curated skills match your search criteria.</p>
+        </header>
       </div>
     `;
     return;
@@ -1369,19 +1322,17 @@ function filterAndRenderCurated() {
     card.className = 'curated-card';
     card.innerHTML = `
       <div class="curated-header">
-        <div class="curated-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <span class="card-badge">${escapeHtml(item.badge)}</span>
+        <div class="curated-icon">${icon(getCategoryIcon(item.category), { size: 18 })}</div>
+        <span class="badge card-badge" data-variant="outline">${escapeHtml(item.badge)}</span>
       </div>
       <h3 class="curated-title">${escapeHtml(item.name)}</h3>
       <p class="curated-desc">${escapeHtml(item.description)}</p>
       <div class="curated-tags">
-        ${(item.tags || []).map(t => `<span class="curated-tag">${escapeHtml(t)}</span>`).join('')}
+        ${(item.tags || []).map(t => `<span class="badge curated-tag" data-variant="secondary">${escapeHtml(t)}</span>`).join('')}
       </div>
-      <div style="margin-top: auto; display: flex; gap: 8px;">
-        <button class="btn btn-primary btn-curated-extract" data-cmd="${escapeHtml(item.command)}" style="width: 100%;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      <div class="curated-actions">
+        <button class="btn btn-curated-extract" data-cmd="${escapeHtml(item.command)}">
+          ${icon('play', { size: 14, attrs: { 'data-icon': 'inline-start' } })}
           1-Click Extract
         </button>
       </div>
@@ -1430,7 +1381,7 @@ async function openPreviewModal(skill) {
       `;
     });
   } else {
-    modalMetaGrid.innerHTML = '<div style="grid-column: span 2; color: var(--text-dim);">No frontmatter properties defined.</div>';
+    modalMetaGrid.innerHTML = '<div class="meta-empty">No frontmatter properties defined.</div>';
   }
 
   // 3. Helper Scripts
@@ -1439,11 +1390,14 @@ async function openPreviewModal(skill) {
   if (parsed.scripts.length > 0) {
     parsed.scripts.forEach((script, idx) => {
       const chip = document.createElement('button');
-      chip.className = `script-tab-chip ${idx === 0 ? 'active' : ''}`;
+      chip.className = 'btn script-tab-chip';
+      chip.dataset.variant = 'outline';
+      chip.dataset.size = 'xs';
+      chip.setAttribute('aria-pressed', idx === 0 ? 'true' : 'false');
       chip.innerText = `scripts/${script.fileName}`;
       chip.addEventListener('click', () => {
-        modalScriptSelector.querySelectorAll('.script-tab-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
+        modalScriptSelector.querySelectorAll('.script-tab-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+        chip.setAttribute('aria-pressed', 'true');
         modalScriptCode.innerText = script.code;
       });
       modalScriptSelector.appendChild(chip);
@@ -1459,11 +1413,14 @@ async function openPreviewModal(skill) {
   if (parsed.references.length > 0) {
     parsed.references.forEach((ref, idx) => {
       const chip = document.createElement('button');
-      chip.className = `script-tab-chip ${idx === 0 ? 'active' : ''}`;
+      chip.className = 'btn script-tab-chip';
+      chip.dataset.variant = 'outline';
+      chip.dataset.size = 'xs';
+      chip.setAttribute('aria-pressed', idx === 0 ? 'true' : 'false');
       chip.innerText = `references/${ref.fileName}`;
       chip.addEventListener('click', async () => {
-        modalRefSelector.querySelectorAll('.script-tab-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
+        modalRefSelector.querySelectorAll('.script-tab-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+        chip.setAttribute('aria-pressed', 'true');
         modalRefContent.innerHTML = sanitizeRenderedHtml(await parseMarkdown(ref.content));
         highlightCodeUnder(modalRefContent);
       });
@@ -1472,44 +1429,21 @@ async function openPreviewModal(skill) {
     modalRefContent.innerHTML = sanitizeRenderedHtml(await parseMarkdown(parsed.references[0].content));
     highlightCodeUnder(modalRefContent);
   } else {
-    modalRefContent.innerHTML = '<p style="color: var(--text-dim);">No reference documentation attached.</p>';
+    modalRefContent.innerHTML = '<p class="meta-empty">No reference documentation attached.</p>';
   }
 
   // 5. Raw Source
   modalRawSource.innerText = skill.compiledMarkdown;
 
-  switchModalTab('modal-pane-rendered');
-  previewModal.classList.add('active');
+  const previewTabs = document.querySelector('.preview-tabs');
+  if (previewTabs) window.basecoat?.refresh(previewTabs);
+  if (!previewModal.open) previewModal.showModal();
   updateMultiPreviewNav();
 }
 
-function switchModalTab(targetPaneId) {
-  modalNavButtons.forEach(btn => {
-    if (btn.getAttribute('data-pane') === targetPaneId) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-
-  Object.values(modalPanes).forEach(pane => {
-    if (pane && pane.id === targetPaneId) {
-      pane.classList.add('active');
-    } else if (pane) {
-      pane.classList.remove('active');
-    }
-  });
-}
-
 function setupModal() {
-  modalNavButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      switchModalTab(btn.getAttribute('data-pane'));
-    });
-  });
-
   const closeModal = () => {
-    previewModal.classList.remove('active');
+    if (previewModal.open) previewModal.close();
     clearMultiPreviewNav();
   };
   modalBtnClose.addEventListener('click', closeModal);
@@ -1564,14 +1498,14 @@ async function updateWasmStats() {
   skills.forEach(s => {
     totalTokens += (s.tokenEstimate || wasmEngine.estimateTokens(s.compiledMarkdown || ''));
   });
-  statTotalTokens.innerText = totalTokens.toLocaleString();
-  statWasmMem.innerText = `${((wasmEngine.memory?.buffer.byteLength || 65536) / 1024).toFixed(0)} KB`;
+  if (statTotalTokens) statTotalTokens.innerText = totalTokens.toLocaleString();
+  if (statWasmMem) statWasmMem.innerText = `${((wasmEngine.memory?.buffer.byteLength || 65536) / 1024).toFixed(0)} KB`;
 }
 
 function setupWasmDiagnostics() {
   btnRunBenchmark.addEventListener('click', () => {
     btnRunBenchmark.disabled = true;
-    btnRunBenchmark.innerText = 'Benchmarking...';
+    btnRunBenchmark.innerHTML = `${icon('loader-circle', { className: 'animate-spin', attrs: { 'data-icon': 'inline-start' } })} Benchmarking...`;
 
     setTimeout(() => {
       const result = wasmEngine.runBenchmark(10000);
@@ -1587,7 +1521,7 @@ function setupWasmDiagnostics() {
       benchBarJs.style.width = `${Math.min(100, (jsNum / maxTime) * 100)}%`;
 
       btnRunBenchmark.disabled = false;
-      btnRunBenchmark.innerText = 'Run Benchmark (10k ops)';
+      btnRunBenchmark.innerHTML = `${icon('play', { attrs: { 'data-icon': 'inline-start' } })} Run Benchmark (10k ops)`;
       showToast(`Benchmark complete! WebAssembly is ${result.speedup} faster!`, 'success');
     }, 50);
   });
@@ -1677,6 +1611,8 @@ function setupSettings() {
 
 // Global Event Listeners & Boot
 document.addEventListener('DOMContentLoaded', async () => {
+  hydrateIcons();
+
   Object.keys(navButtons).forEach(viewName => {
     navButtons[viewName]?.addEventListener('click', () => switchView(viewName));
   });
@@ -1717,7 +1653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (cleanQuery) {
       switchView('extract');
       const tabBtn = document.getElementById('tab-btn-github');
-      if (tabBtn) tabBtn.click();
+      if (tabBtn) document.querySelector('.input-tabs')?.select?.(tabBtn);
       if (inputGithubCmd) {
         inputGithubCmd.value = cleanQuery;
         appendLog(`Received skill request: ${cleanQuery}`, 'info');

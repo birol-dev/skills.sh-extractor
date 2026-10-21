@@ -1,3 +1,4 @@
+import '../src/ui/basecoat.js';
 import { initShader } from './js/shader.js';
 import { initHeroWidget } from './js/hero-widget.js';
 import { initSkillsCatalog } from './js/skills-catalog.js';
