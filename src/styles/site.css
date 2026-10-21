@@ -1,0 +1,20 @@
+/* Landing + SEO pages. Page CSS sits in the `project` layer, after Basecoat components. */
+@layer theme, base, components, project, utilities;
+
+@import "tailwindcss" source(none);
+@import "basecoat-css/nova";
+@import "./theme.css";
+@import "../../landing/landing.css" layer(project);
+@import "../../credits/credits.css" layer(project);
+
+@source "../../index.html";
+@source "../../mission/index.html";
+@source "../../skills/index.html";
+@source "../../how-it-works/index.html";
+@source "../../faq/index.html";
+@source "../../credits/index.html";
+@source "../../site/partials";
+@source "../../landing";
+@source "../../credits/credits.js";
+@source "../../scripts/htmlIncludesPlugin.js";
+@source "../../node_modules/basecoat-css/dist/js/toast.js";

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" prefix="og: https://ogp.me/ns#">
+<html lang="en" class="dark" prefix="og: https://ogp.me/ns#">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,7 @@
   <meta name="description" content="Browse 55+ curated skills.sh playbooks for copywriting, marketing, design, SEO, sales, pricing, and engineering. Preview and copy prompts in the browser.">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta name="author" content="Birol (birol.tech)">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#000000">
   <link rel="canonical" href="https://skillextract.birol.tech/skills/">
 
   <meta property="og:type" content="website">
@@ -67,63 +67,71 @@
     <!-- include:site/partials/navbar.html -->
 
     <main>
-      <section class="section page-intro-section">
-        <div class="section-container">
+      <section class="page-intro">
+        <div class="wrap">
           <nav class="breadcrumb-nav" aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <span class="breadcrumb-sep" aria-hidden="true">/</span>
-            <span>Skills Library</span>
+            <span aria-hidden="true">/</span>
+            <span>Skills library</span>
           </nav>
-          <span class="editorial-kicker">CURATED LIBRARY</span>
-          <h1 class="section-title">
-            55+ AI skills for copywriting, <br>
-            <span class="serif-title">marketing, SEO, and coding.</span>
-          </h1>
-          <p class="section-description">
-            Each card is a packaged prompt playbook sourced from open GitHub skill repos. Filter by craft, preview the compiled prompt, and copy it into Claude, ChatGPT, Cursor, or Antigravity. Skill Extractor does not author these skills—it unpacks them.
-          </p>
+          <div class="index-line"><span class="index-label">Curated library</span></div>
+          <h1 class="display display-xl page-title"><!-- skills-count:all --> AI skills for copy, <span class="fade">marketing, SEO and</span> <em>code.</em></h1>
+          <p class="lede intro-lede">Each card is a packaged prompt playbook sourced from open GitHub skill repos. Filter by craft, preview the compiled prompt and copy it into Claude, ChatGPT, Cursor or Antigravity. Skill Extractor does not author these skills; it unpacks them.</p>
         </div>
       </section>
 
       <!-- include:site/partials/sections/skills.html -->
 
       <section class="section seo-extra-section">
-        <div class="section-container">
-          <div class="section-editorial-header">
-            <span class="editorial-kicker">WHAT'S IN THE CATALOG</span>
-            <h2 class="section-title">
-              Disciplines, not just <br>
-              <span class="serif-title">another dump of coding prompts.</span>
-            </h2>
+        <div class="wrap">
+          <div class="index-line"><span class="index-label">What&rsquo;s in the catalog</span></div>
+          <h2 class="display display-lg seo-head">Disciplines, not <span class="fade">another dump of coding</span> <em>prompts.</em></h2>
+          <div class="swiss-grid seo-cells cols-3">
+            <article class="cell cell-mid">
+              <span class="cell-num">01</span>
+              <div class="cell-bottom">
+                <h3 class="cell-title">Copywriting</h3>
+                <p class="cell-text">Direct-response pages, editing and offer language you can paste into any chat model.</p>
+              </div>
+            </article>
+            <article class="cell cell-mid">
+              <span class="cell-num">02</span>
+              <div class="cell-bottom">
+                <h3 class="cell-title">Marketing &amp; growth</h3>
+                <p class="cell-text">A/B tests, ads, launches and campaign systems pulled from public marketing skill repos.</p>
+              </div>
+            </article>
+            <article class="cell cell-mid">
+              <span class="cell-num">03</span>
+              <div class="cell-bottom">
+                <h3 class="cell-title">Design &amp; visuals</h3>
+                <p class="cell-text">SVG logos and visual playbooks that don&rsquo;t need a local design toolchain to inspect.</p>
+              </div>
+            </article>
+            <article class="cell cell-mid">
+              <span class="cell-num">04</span>
+              <div class="cell-bottom">
+                <h3 class="cell-title">Sales &amp; outbound</h3>
+                <p class="cell-text">Cold email and prospecting skills formatted as a single prompt instead of a nested repo.</p>
+              </div>
+            </article>
+            <article class="cell cell-mid">
+              <span class="cell-num">05</span>
+              <div class="cell-bottom">
+                <h3 class="cell-title">SEO &amp; GEO</h3>
+                <p class="cell-text">Classic search and AI-citation skills, including answer-engine oriented playbooks.</p>
+              </div>
+            </article>
+            <article class="cell cell-mid">
+              <span class="cell-num">06</span>
+              <div class="cell-bottom">
+                <h3 class="cell-title">Pricing, strategy &amp; engineering</h3>
+                <p class="cell-text">Offers, ops and TypeScript/testing skills for teams that still want the compiler GUI.</p>
+              </div>
+            </article>
           </div>
-          <div class="seo-card-grid">
-            <article class="seo-card">
-              <h3>Copywriting</h3>
-              <p>Direct-response pages, editing, and offer language you can paste into any chat model.</p>
-            </article>
-            <article class="seo-card">
-              <h3>Marketing &amp; growth</h3>
-              <p>A/B tests, ads, launches, and campaign systems pulled from public marketing skill repos.</p>
-            </article>
-            <article class="seo-card">
-              <h3>Design &amp; visuals</h3>
-              <p>SVG logos and visual playbooks that do not require a local design toolchain to inspect.</p>
-            </article>
-            <article class="seo-card">
-              <h3>Sales &amp; outbound</h3>
-              <p>Cold email and prospecting skills formatted as a single prompt instead of a nested repo.</p>
-            </article>
-            <article class="seo-card">
-              <h3>SEO &amp; GEO</h3>
-              <p>Classic search and AI-citation skills, including AI Overviews / answer-engine oriented playbooks.</p>
-            </article>
-            <article class="seo-card">
-              <h3>Pricing, strategy &amp; engineering</h3>
-              <p>Offers, ops, and TypeScript/testing skills for teams that still want the compiler GUI.</p>
-            </article>
-          </div>
-          <p class="seo-crosslinks">
-            Authors and source repositories are listed on <a href="/credits/">Credits &amp; Sources</a>.
+          <p class="crosslinks">
+            Authors and source repositories are listed on <a href="/credits/">Credits &amp; sources</a>.
             New to the tool? Read <a href="/how-it-works/">how extraction works</a> or
             <a href="/app/">open the compiler</a> for a custom GitHub repo.
           </p>

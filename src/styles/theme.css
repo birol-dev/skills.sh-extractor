@@ -1,0 +1,287 @@
+/* ==========================================================================
+   Skill Extractor — Black Gallery theme for Basecoat (shared by site + app).
+   A quiet monochrome frame: media and mockups carry all the colour.
+   Controls are pills, panels are 28px, small inner pieces 10px.
+   ========================================================================== */
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Chapter backgrounds */
+  --ink-0: #000000;
+  --ink-1: #0b0b0b;
+  --ink-2: #141414;
+  --ink-3: #1c1c1c;
+  --charcoal: #262626;
+  --paper: #ffffff;
+  --paper-2: #f4f4f4;
+
+  /* Text on black */
+  --tx: #ffffff;
+  --tx-2: #b6b6b6;
+  --tx-fade: #7c7c7c;
+  --tx-3: #5c5c5c;
+
+  /* Hairlines */
+  --line: rgb(255 255 255 / 0.1);
+  --line-2: rgb(255 255 255 / 0.18);
+
+  /* Geometry */
+  --r-pill: 999px;
+  --r-panel: 28px;
+  --r-card: 24px;
+  --r-inner: 10px;
+
+  /* Outer margin + section rhythm */
+  --gutter: clamp(20px, 4.5vw, 65px);
+  --section-gap: clamp(96px, 12vw, 184px);
+
+  --shadow-float: 0 24px 60px -18px rgb(0 0 0 / 0.65), 0 2px 8px rgb(0 0 0 / 0.35);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #141414;
+  --card-foreground: #ffffff;
+  --popover: #161616;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #ffffff;
+  --muted: #161616;
+  --muted-foreground: #9a9a9a;
+  --accent: #232323;
+  --accent-foreground: #ffffff;
+  --destructive: #ff6b5e;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.14);
+  --ring: #8a8a8a;
+}
+
+/* Light chapter: any element can flip to paper with .chapter-paper */
+.chapter-paper {
+  --background: #f4f4f4;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #e9e9e9;
+  --secondary-foreground: #0a0a0a;
+  --muted: #ececec;
+  --muted-foreground: #6b6b6b;
+  --accent: #e5e5e2;
+  --accent-foreground: #0a0a0a;
+  --border: #e5e5e2;
+  --input: #d9d9d6;
+  --ring: #8a8a8a;
+
+  --tx: #0a0a0a;
+  --tx-2: #555555;
+  --tx-fade: #b6b6b6;
+  --tx-3: #8a8a8a;
+  --line: #e5e5e2;
+  --line-2: #d4d4d0;
+  color-scheme: light;
+}
+
+/* Tailwind's --color-* tokens resolve where they are declared (:root), so any
+   subtree that re-themes the base tokens must re-point them locally. */
+.dark,
+.chapter-paper,
+.chapter-charcoal {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+.chapter-charcoal {
+  --background: #262626;
+  --secondary: #333333;
+  --accent: #333333;
+  --border: rgb(255 255 255 / 0.14);
+  --input: rgb(255 255 255 / 0.18);
+}
+
+/* Category hues: the only colour the frame allows, carried by icons/mockups. */
+[data-category='copywriting'] { --cat: #ff7a59; }
+[data-category='marketing'] { --cat: #3ddc97; }
+[data-category='design'] { --cat: #b57bff; }
+[data-category='sales'] { --cat: #4da3ff; }
+[data-category='seo'] { --cat: #ffc53d; }
+[data-category='monetization'] { --cat: #2fd4c4; }
+[data-category='strategy'] { --cat: #ff6fb1; }
+[data-category='dev'] { --cat: #8a9bff; }
+[data-category='other'] { --cat: #b6b6b6; }
+
+@layer project {
+  /* Brand mark: a white ring, shared by the site navbar and the app rail. */
+  .brand-mark {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #000 0 34%, transparent 35%),
+      #fff;
+  }
+
+  /* Pills for every control. */
+  .btn,
+  .badge,
+  .input[type='text'],
+  .input[type='search'],
+  .input[type='password'],
+  .input[type='email'],
+  .input[type='url'],
+  .input:not([type]),
+  select.select,
+  .tabs > [role='tablist'],
+  .tabs > [role='tablist'] > [role='tab'] {
+    border-radius: var(--r-pill);
+  }
+
+  .btn {
+    @apply font-normal;
+    transition: background-color 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease), transform 160ms var(--ease);
+  }
+
+  .btn:not([data-size]),
+  .btn[data-size='default'] {
+    @apply h-9 px-4;
+  }
+
+  .btn[data-size='sm'] {
+    @apply h-8 px-3.5;
+  }
+
+  .btn[data-size='lg'] {
+    @apply h-12 px-6 text-[15px];
+  }
+
+  .btn[data-size='xs'] {
+    @apply h-7 px-3;
+  }
+
+  .btn[data-variant='outline'] {
+    @apply bg-transparent;
+  }
+
+  .input[type='text'],
+  .input[type='search'],
+  .input[type='password'],
+  .input:not([type]),
+  select.select {
+    @apply h-10 px-4;
+  }
+
+  select.select {
+    @apply pe-9;
+  }
+
+  .textarea {
+    border-radius: var(--r-inner);
+  }
+
+  .btn,
+  .tabs > [role='tablist'] > [role='tab'],
+  .accordion > details > summary {
+    @apply cursor-pointer;
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  /* Toggle buttons used as filters (aria-pressed). */
+  .btn[aria-pressed='true'] {
+    @apply border-primary bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .badge {
+    @apply font-normal;
+  }
+
+  .badge > .lucide {
+    @apply size-3;
+  }
+
+  /* Floating surfaces get the only soft shadows in the system. */
+  .dialog > * {
+    border-radius: var(--r-panel);
+    box-shadow: var(--shadow-float);
+  }
+
+  .dialog > * > footer {
+    @apply flex-row flex-wrap items-center justify-end;
+    border-radius: 0 0 var(--r-panel) var(--r-panel);
+  }
+
+  .dialog::backdrop {
+    @apply bg-black/75 backdrop-blur-sm;
+  }
+
+  .toaster {
+    @apply bottom-auto top-20 sm:max-w-sm;
+  }
+
+  .toaster .toast .toast-content {
+    border-radius: 20px;
+    box-shadow: var(--shadow-float);
+  }
+
+  .toaster .toast {
+    animation-name: toast-down;
+  }
+
+  @keyframes toast-down {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+  }
+
+  .progress,
+  .progress > span {
+    border-radius: var(--r-pill);
+  }
+
+  .progress {
+    @apply h-2;
+  }
+
+  .brand-icon {
+    @apply shrink-0;
+  }
+
+  ::selection {
+    background: var(--foreground);
+    color: var(--background);
+  }
+}

@@ -11,6 +11,12 @@ import {
   findGalleryDuplicate,
   formatSelectedCount
 } from './services/skillChoiceHelpers.js';
+import './ui/basecoat.js';
+import { showToast } from './ui/toast.js';
+import { icon, hydrateIcons } from './ui/icons.js';
+import { getCategoryIcon, getCategoryKey, skillsForInterests } from './services/skillCategories.js';
+import { getPrefs, savePrefs, GALLERY_LAYOUTS, TOOL_FORMATS } from './ui/prefs.js';
+import { createOnboarding } from './ui/onboarding.js';
 
 // Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
 const CURATED_SEARCH_INDEX = CURATED_SKILLS.map(s => ({
@@ -78,8 +84,25 @@ const navButtons = {
   settings: document.getElementById('nav-settings')
 };
 
+const VIEW_TITLES = {
+  extract: 'Home',
+  gallery: 'Gallery',
+  curated: 'Curated skills',
+  wasm: 'Engine diagnostics',
+  settings: 'Settings'
+};
+
 // UI Elements
 const badgeSkillCount = document.getElementById('badge-skill-count');
+const topbarTitle = document.getElementById('topbar-title');
+const welcomeName = document.getElementById('welcome-name');
+const sidebarLibraryName = document.getElementById('sidebar-library-name');
+const recentsList = document.getElementById('recents-list');
+const setupTray = document.getElementById('setup-tray');
+const setupSteps = document.getElementById('setup-steps');
+const setupProgress = document.getElementById('setup-progress');
+const picksGrid = document.getElementById('picks-grid');
+const galleryLayoutToggle = document.getElementById('gallery-layout-toggle');
 const termLogs = document.getElementById('term-logs');
 const btnClearTerm = document.getElementById('btn-clear-term');
 
@@ -122,6 +145,8 @@ const wasmTestHash = document.getElementById('wasm-test-hash');
 const settingTags = document.getElementById('setting-tags');
 const settingExportFormat = document.getElementById('setting-export-format');
 const settingGhToken = document.getElementById('setting-gh-token');
+const settingGalleryLayout = document.getElementById('setting-gallery-layout');
+const settingLibraryName = document.getElementById('setting-library-name');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnExportBackup = document.getElementById('btn-export-backup');
 const btnImportBackup = document.getElementById('btn-import-backup');
@@ -138,15 +163,6 @@ const modalBtnCopy = document.getElementById('modal-btn-copy');
 const modalBtnDownload = document.getElementById('modal-btn-download');
 const modalFormatSelect = document.getElementById('modal-format-select');
 
-const modalNavButtons = document.querySelectorAll('.modal-nav-btn');
-const modalPanes = {
-  rendered: document.getElementById('modal-pane-rendered'),
-  meta: document.getElementById('modal-pane-meta'),
-  scripts: document.getElementById('modal-pane-scripts'),
-  refs: document.getElementById('modal-pane-refs'),
-  raw: document.getElementById('modal-pane-raw')
-};
-
 const modalRenderedContent = document.getElementById('modal-rendered-content');
 const modalMetaGrid = document.getElementById('modal-meta-grid');
 const modalScriptSelector = document.getElementById('modal-script-selector');
@@ -157,7 +173,6 @@ const modalRawSource = document.getElementById('modal-raw-source');
 const modalScriptsCount = document.getElementById('modal-scripts-count');
 const modalRefsCount = document.getElementById('modal-refs-count');
 
-const toastContainer = document.getElementById('toast-container');
 const skillChoiceModal = document.getElementById('skill-choice-modal');
 const skillChoiceList = document.getElementById('skill-choice-list');
 const skillChoiceSubtitle = document.getElementById('skill-choice-subtitle');
@@ -179,29 +194,6 @@ const previewMultiPrev = document.getElementById('preview-multi-prev');
 const previewMultiNext = document.getElementById('preview-multi-next');
 const previewMultiLabel = document.getElementById('preview-multi-label');
 
-// Toast Notification
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast-msg ${type}`;
-
-  let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
-  if (type === 'success') {
-    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-  } else if (type === 'error') {
-    iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-  }
-
-  toast.innerHTML = `<span class="toast-icon">${iconSvg}</span><span class="toast-text">${escapeHtml(message)}</span>`;
-  toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-10px)';
-    toast.style.transition = 'all 0.25s ease';
-    setTimeout(() => toast.remove(), 250);
-  }, 3200);
-}
-
 // Skill choice (multi-select + bulk QOL)
 function closeSkillChoiceModal() {
   pendingSkillChoice = null;
@@ -211,9 +203,7 @@ function closeSkillChoiceModal() {
   skillChoiceBusy = false;
   if (skillChoiceSearch) skillChoiceSearch.value = '';
   if (!skillChoiceModal) return;
-  skillChoiceModal.classList.remove('active');
-  skillChoiceModal.hidden = true;
-  skillChoiceModal.setAttribute('aria-hidden', 'true');
+  if (skillChoiceModal.open) skillChoiceModal.close();
 }
 
 function truncateSkillDesc(text, max = 160) {
@@ -261,7 +251,7 @@ function renderSkillChoiceList() {
   if (skillChoiceFocusIndex >= filtered.length) skillChoiceFocusIndex = filtered.length - 1;
   if (skillChoiceFocusIndex < 0) skillChoiceFocusIndex = 0;
 
-  const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  const checkSvg = icon('check', { size: 12, strokeWidth: 3 });
 
   filtered.forEach((skill, idx) => {
     const key = skillChoiceKey(skill);
@@ -281,7 +271,7 @@ function renderSkillChoiceList() {
       <span class="skill-choice-item-body">
         <span class="skill-choice-item-header">
           <span class="skill-choice-item-name">${escapeHtml(skill.name || skill.dir || 'unnamed')}</span>
-          ${tag ? `<span class="skill-choice-item-meta">${escapeHtml(tag)}</span>` : ''}
+          ${tag ? `<span class="badge skill-choice-item-meta" data-variant="outline">${escapeHtml(tag)}</span>` : ''}
         </span>
         ${desc ? `<span class="skill-choice-item-desc">${escapeHtml(desc)}</span>` : ''}
       </span>
@@ -328,10 +318,12 @@ function openSkillChoiceModal(payload) {
     skillChoiceStatus.hidden = false;
     if (requested) {
       skillChoiceStatus.textContent = 'Not found';
-      skillChoiceStatus.className = 'skill-choice-status is-miss';
+      skillChoiceStatus.className = 'badge skill-choice-status is-miss';
+      skillChoiceStatus.dataset.variant = 'destructive';
     } else {
       skillChoiceStatus.textContent = 'Multiple skills';
-      skillChoiceStatus.className = 'skill-choice-status is-multi';
+      skillChoiceStatus.className = 'badge skill-choice-status is-multi';
+      skillChoiceStatus.dataset.variant = 'outline';
     }
   }
   if (skillChoiceHint) {
@@ -349,9 +341,7 @@ function openSkillChoiceModal(payload) {
     renderSkillChoiceList();
   }
 
-  skillChoiceModal.hidden = false;
-  skillChoiceModal.classList.add('active');
-  skillChoiceModal.setAttribute('aria-hidden', 'false');
+  if (!skillChoiceModal.open) skillChoiceModal.showModal();
   showToast(
     available.length === 1
       ? 'One skill found — use Extract, or multi-select actions.'
@@ -655,7 +645,7 @@ async function bulkDownloadSelectedZip() {
 }
 
 function handleSkillChoiceKeydown(e) {
-  if (!skillChoiceModal?.classList.contains('active')) return;
+  if (!skillChoiceModal?.open) return;
   if (e.target === skillChoiceSearch && e.key !== 'Escape' && e.key !== 'ArrowDown' && e.key !== 'Enter') {
     return;
   }
@@ -779,6 +769,7 @@ function sanitizeRenderedHtml(html) {
 
 // Navigation Switcher
 function switchView(viewName) {
+  if (!views[viewName]) viewName = 'extract';
   Object.keys(views).forEach(k => {
     if (views[k]) views[k].classList.remove('active');
     if (navButtons[k]) navButtons[k].classList.remove('active');
@@ -786,6 +777,17 @@ function switchView(viewName) {
 
   if (views[viewName]) views[viewName].classList.add('active');
   if (navButtons[viewName]) navButtons[viewName].classList.add('active');
+  document.querySelectorAll('.rail-btn[data-view-link]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.viewLink === viewName);
+  });
+  if (topbarTitle) topbarTitle.textContent = VIEW_TITLES[viewName];
+  window.scrollTo({ top: 0 });
+
+  // Keep the view in the URL so /app/#gallery style links land in the right place.
+  const hash = viewName === 'extract' ? '' : `#${viewName}`;
+  if (window.location.hash !== hash) {
+    window.history.replaceState({}, '', window.location.pathname + window.location.search + hash);
+  }
 
   if (viewName === 'gallery') loadGallery();
   if (viewName === 'curated') renderCuratedHub();
@@ -795,23 +797,8 @@ function switchView(viewName) {
 
 // Tab Switcher for Extraction Input
 function setupInputTabs() {
-  const tabs = [
-    { btn: document.getElementById('tab-btn-github'), pane: document.getElementById('pane-input-github') },
-    { btn: document.getElementById('tab-btn-folder'), pane: document.getElementById('pane-input-folder') },
-    { btn: document.getElementById('tab-btn-zip'), pane: document.getElementById('pane-input-zip') }
-  ];
-
-  tabs.forEach(tab => {
-    if (!tab.btn) return;
-    tab.btn.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.btn.classList.remove('active');
-        t.pane.classList.remove('active');
-      });
-      tab.btn.classList.add('active');
-      tab.pane.classList.add('active');
-    });
-  });
+  const root = document.querySelector('.input-tabs');
+  if (root) window.basecoat?.refresh(root);
 }
 
 // Setup Extraction Logic
@@ -1004,7 +991,190 @@ async function loadGallery() {
   badgeSkillCount.innerText = currentSkills.length;
   renderTagFilterBar();
   renderGalleryCards();
+  renderRecents();
+  renderPicks();
+  renderSetupTray();
 }
+
+// Curated catalog entry for a stored skill, used to colour it by category.
+function curatedMatch(skill) {
+  return CURATED_SKILLS.find(c => c.slug === skill.slug || c.name === skill.name);
+}
+
+function renderRecents() {
+  if (!recentsList) return;
+  const recent = [...currentSkills]
+    .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
+    .slice(0, 8);
+
+  if (recent.length === 0) {
+    recentsList.innerHTML = '<p class="recents-empty">Skills you extract show up here.</p>';
+    return;
+  }
+
+  recentsList.innerHTML = recent.map(skill => {
+    const cat = getCategoryKey(curatedMatch(skill)?.category);
+    return `
+      <button type="button" class="recent-item" data-recent-id="${escapeHtml(skill.id)}" data-category="${cat}" title="${escapeHtml(skill.name)}">
+        <span class="recent-dot"></span>
+        <span class="recent-name">${escapeHtml(skill.name)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+// Home suggestions: curated skills from the interests picked during onboarding.
+function renderPicks() {
+  if (!picksGrid) return;
+  const { interests } = getPrefs();
+  let picks = skillsForInterests(CURATED_SKILLS, interests);
+  if (picks.length === 0) {
+    // No interests yet: one skill per craft gives a varied first look.
+    const seen = new Set();
+    picks = CURATED_SKILLS.filter(s => {
+      const key = getCategoryKey(s.category);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  const saved = new Set(currentSkills.map(s => s.slug));
+  picksGrid.innerHTML = picks.slice(0, 6).map(skill => {
+    const inGallery = saved.has(skill.slug);
+    return `
+      <article class="pick-card" data-category="${getCategoryKey(skill.category)}">
+        <div class="pick-top">
+          <span class="pick-icon">${icon(getCategoryIcon(skill.category), { size: 18 })}</span>
+          <span class="pick-cat">${escapeHtml(skill.badge || skill.category)}</span>
+        </div>
+        <h3 class="pick-title">${escapeHtml(skill.name)}</h3>
+        <p class="pick-desc">${escapeHtml(skill.description)}</p>
+        <div class="pick-foot">
+          <span class="pick-tokens">~${(skill.tokenEstimate || 0).toLocaleString()} tokens</span>
+          <button type="button" class="btn" data-size="sm" ${inGallery ? 'data-variant="outline"' : ''} data-pick-cmd="${escapeHtml(skill.command)}">
+            ${inGallery ? 'Extract again' : 'Extract'}
+          </button>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+const SETUP_STEPS = [
+  {
+    id: 'personalize',
+    icon: 'sparkles',
+    color: '#b57bff',
+    title: 'Personalize your workbench',
+    sub: () => 'Name, AI tool and interests',
+    done: (ctx) => ctx.prefs.personalized
+  },
+  {
+    id: 'first',
+    icon: 'download',
+    color: '#4da3ff',
+    title: 'Extract your first skill',
+    sub: () => 'Paste a repo or pick one below',
+    done: (ctx) => ctx.count >= 1
+  },
+  {
+    id: 'three',
+    icon: 'library',
+    color: '#3ddc97',
+    title: 'Save three skills',
+    sub: (ctx) => `${Math.min(ctx.count, 3)} of 3 in your gallery`,
+    done: (ctx) => ctx.count >= 3
+  },
+  {
+    id: 'token',
+    icon: 'key-round',
+    color: '#ffc53d',
+    title: 'Add a GitHub token',
+    sub: () => 'Optional. Lifts the API rate limit',
+    done: (ctx) => ctx.hasToken
+  }
+];
+
+async function renderSetupTray() {
+  if (!setupTray || !setupSteps) return;
+  const prefs = getPrefs();
+  const settings = await storage.getSettings();
+  const ctx = { prefs, count: currentSkills.length, hasToken: Boolean(settings.githubToken) };
+  const doneCount = SETUP_STEPS.filter(step => step.done(ctx)).length;
+
+  setupTray.hidden = prefs.setupHidden || doneCount === SETUP_STEPS.length;
+  if (setupTray.hidden) return;
+
+  setupProgress.textContent = `${doneCount}/${SETUP_STEPS.length}`;
+  setupSteps.innerHTML = SETUP_STEPS.map(step => {
+    const done = step.done(ctx);
+    return `
+      <button type="button" class="setup-step${done ? ' is-done' : ''}" data-setup-step="${step.id}" style="--step: ${step.color}" ${done ? 'aria-disabled="true"' : ''}>
+        <span class="setup-step-icon">${icon(done ? 'check' : step.icon, { size: 16 })}</span>
+        <span class="setup-step-title">${step.title}</span>
+        <span class="setup-step-sub">${done ? 'Done' : step.sub(ctx)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function runSetupStep(id) {
+  if (id === 'personalize') onboarding.open();
+  if (id === 'first') {
+    switchView('extract');
+    inputGithubCmd.focus();
+  }
+  if (id === 'three') switchView('curated');
+  if (id === 'token') {
+    switchView('settings');
+    openSettingsPanel('github');
+    settingGhToken.focus();
+  }
+}
+
+// Library name, gallery layout and suggestions follow the saved prefs.
+function applyPrefs() {
+  const prefs = getPrefs();
+  const name = prefs.libraryName.trim();
+  if (welcomeName) welcomeName.textContent = name || 'your workbench';
+  if (sidebarLibraryName) sidebarLibraryName.textContent = name || 'My skill library';
+  setGalleryLayout(prefs.galleryLayout, { save: false });
+  renderPicks();
+  renderSetupTray();
+}
+
+function setGalleryLayout(layout, { save = true } = {}) {
+  if (!GALLERY_LAYOUTS.includes(layout)) layout = 'cards';
+  if (save) savePrefs({ galleryLayout: layout });
+  galleryLayoutToggle?.querySelectorAll('[data-layout]').forEach(btn => {
+    btn.setAttribute('aria-pressed', String(btn.dataset.layout === layout));
+  });
+  if (settingGalleryLayout) settingGalleryLayout.value = layout;
+  galleryCardsGrid.dataset.layout = layout;
+  renderGalleryCards();
+}
+
+function openSettingsPanel(name) {
+  document.querySelectorAll('[data-settings-tab]').forEach(tab => {
+    const active = tab.dataset.settingsTab === name;
+    tab.classList.toggle('active', active);
+    if (active) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  document.querySelectorAll('[data-settings-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.settingsPanel !== name;
+  });
+}
+
+const onboarding = createOnboarding({
+  onFinish: async (prefs, { skipped }) => {
+    if (!skipped && TOOL_FORMATS[prefs.tool]) {
+      await storage.saveSettings({ defaultExportFormat: TOOL_FORMATS[prefs.tool] });
+    }
+    applyPrefs();
+    if (!skipped) showToast(`${prefs.libraryName.trim() || 'Your workbench'} is ready`, 'success');
+  }
+});
 
 function renderTagFilterBar() {
   const allTags = new Set();
@@ -1015,13 +1185,16 @@ function renderTagFilterBar() {
   });
 
   galleryTagBar.innerHTML = `
-    <button class="tag-pill ${activeFilterTag === 'all' ? 'active' : ''}" data-tag="all">All (${currentSkills.length})</button>
+    <button class="btn" data-variant="outline" data-size="sm" aria-pressed="${activeFilterTag === 'all'}" data-tag="all">All (${currentSkills.length})</button>
   `;
 
   Array.from(allTags).sort().forEach(tag => {
     const count = currentSkills.filter(s => s.tags?.includes(tag)).length;
     const pill = document.createElement('button');
-    pill.className = `tag-pill ${activeFilterTag === tag ? 'active' : ''}`;
+    pill.className = 'btn';
+    pill.dataset.variant = 'outline';
+    pill.dataset.size = 'sm';
+    pill.setAttribute('aria-pressed', String(activeFilterTag === tag));
     pill.setAttribute('data-tag', tag);
     pill.innerText = `${tag} (${count})`;
     galleryTagBar.appendChild(pill);
@@ -1034,16 +1207,24 @@ function setupGalleryDelegation() {
   galleryCardsGrid.dataset.delegated = 'true';
 
   galleryTagBar.addEventListener('click', (e) => {
-    const pill = e.target.closest('.tag-pill');
+    const pill = e.target.closest('[data-tag]');
     if (!pill) return;
     activeFilterTag = pill.getAttribute('data-tag') || 'all';
-    galleryTagBar.querySelectorAll('.tag-pill').forEach(p => {
-      p.classList.toggle('active', p.getAttribute('data-tag') === activeFilterTag);
+    galleryTagBar.querySelectorAll('[data-tag]').forEach(p => {
+      p.setAttribute('aria-pressed', String(p.getAttribute('data-tag') === activeFilterTag));
     });
     renderGalleryCards();
   });
 
   galleryCardsGrid.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-clear-gallery-filters]')) {
+      gallerySearchInput.value = '';
+      activeFilterTag = 'all';
+      renderTagFilterBar();
+      renderGalleryCards();
+      return;
+    }
+
     const card = e.target.closest('.skill-card');
     if (!card) return;
     const skillId = card.getAttribute('data-skill-id');
@@ -1111,16 +1292,43 @@ function renderGalleryCards() {
     });
   }
 
+  // Day 1: nothing saved yet. The toolbar stays; the empty state explains what goes here.
+  galleryEmptyState.hidden = currentSkills.length > 0;
+  if (currentSkills.length === 0) return;
+
   if (filtered.length === 0) {
-    galleryEmptyState.style.display = 'flex';
+    const what = query ? `“${escapeHtml(gallerySearchInput.value.trim())}”` : `the tag “${escapeHtml(activeFilterTag)}”`;
+    galleryCardsGrid.innerHTML = `
+      <div class="no-match">
+        <span class="no-match-icon">${icon('search-x', { size: 22 })}</span>
+        <h3>No skills match ${what}</h3>
+        <p>Try a shorter word or another tag. All ${currentSkills.length} skills are still in your gallery.</p>
+        <button type="button" class="btn" data-variant="outline" data-clear-gallery-filters>Clear filters</button>
+      </div>
+    `;
     return;
   }
 
-  galleryEmptyState.style.display = 'none';
+  const layout = galleryCardsGrid.dataset.layout || 'cards';
+  if (layout === 'timeline') {
+    filtered = [...filtered].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+  }
 
   const fragment = document.createDocumentFragment();
+  let lastDay = null;
 
   filtered.forEach(skill => {
+    if (layout === 'timeline') {
+      const day = new Date(skill.dateAdded).toDateString();
+      if (day !== lastDay) {
+        lastDay = day;
+        const header = document.createElement('div');
+        header.className = 'timeline-day';
+        header.innerHTML = `<strong>${escapeHtml(formatDayLabel(skill.dateAdded))}</strong>`;
+        fragment.appendChild(header);
+      }
+    }
+
     const card = document.createElement('div');
     card.className = 'skill-card';
     card.setAttribute('data-skill-id', skill.id);
@@ -1133,46 +1341,38 @@ function renderGalleryCards() {
     card.innerHTML = `
       <div class="card-head">
         <div class="card-title-group">
-          <div class="card-badge">${escapeHtml(skill.sourceType || 'skill')}</div>
+          <span class="badge card-badge" data-variant="outline">${escapeHtml(skill.sourceType || 'skill')}</span>
           <h3 class="card-title" title="${escapeHtml(skill.name)}">${escapeHtml(skill.name)}</h3>
         </div>
         <div class="drag-export-handle" title="Drag to export .skill.md directly to desktop / editor" draggable="true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+          ${icon('grip-vertical', { size: 14 })}
         </div>
       </div>
-      
+
       <p class="card-desc">${escapeHtml(skill.description)}</p>
 
       <div class="card-meta-row">
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-          ~${tokenEst} tokens
-        </span>
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-          ${sizeKb} KB
-        </span>
-        ${scriptsCount > 0 ? `
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-          ${scriptsCount} scripts
-        </span>` : ''}
-        ${refsCount > 0 ? `
-        <span class="meta-chip">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-          ${refsCount} refs
-        </span>` : ''}
-        <span class="meta-chip" style="margin-left: auto;">${dateStr}</span>
+        <span class="meta-chip">${icon('zap', { size: 12 })} ~${tokenEst} tokens</span>
+        <span class="meta-chip">${icon('package', { size: 12 })} ${sizeKb} KB</span>
+        ${scriptsCount > 0 ? `<span class="meta-chip">${icon('wrench', { size: 12 })} ${scriptsCount} scripts</span>` : ''}
+        ${refsCount > 0 ? `<span class="meta-chip">${icon('book-open', { size: 12 })} ${refsCount} refs</span>` : ''}
+        <span class="meta-chip meta-chip-date">${icon('calendar', { size: 12 })} ${dateStr}</span>
       </div>
 
       <div class="card-footer-actions">
-        <button class="btn btn-secondary btn-card-preview">Preview</button>
-        <button class="btn btn-outline btn-card-copy">Copy</button>
-        <button class="btn btn-outline btn-card-download" title="Download .skill.md">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <button class="btn btn-card-preview" data-variant="secondary" data-size="sm">
+          ${icon('eye', { size: 13, attrs: { 'data-icon': 'inline-start' } })}
+          <span>Preview</span>
         </button>
-        <button class="btn btn-danger btn-card-delete" title="Delete skill">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <button class="btn btn-card-copy" data-variant="outline" data-size="sm">
+          ${icon('copy', { size: 13, attrs: { 'data-icon': 'inline-start' } })}
+          <span>Copy</span>
+        </button>
+        <button class="btn btn-card-download" data-variant="outline" data-size="icon-sm" title="Download .skill.md">
+          ${icon('download', { size: 13 })}
+        </button>
+        <button class="btn btn-card-delete" data-variant="destructive" data-size="icon-sm" title="Delete skill">
+          ${icon('trash-2', { size: 13 })}
         </button>
       </div>
     `;
@@ -1181,6 +1381,16 @@ function renderGalleryCards() {
   });
 
   galleryCardsGrid.appendChild(fragment);
+}
+
+function formatDayLabel(date) {
+  const d = new Date(date);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
 }
 
 function downloadFile(filename, content) {
@@ -1228,7 +1438,7 @@ function setupAutosuggest() {
           <div class="autosuggest-name">${escapeHtml(item.name)}</div>
           <div class="autosuggest-sub">${escapeHtml(item.description)}</div>
         </div>
-        <span class="autosuggest-badge">${escapeHtml(item.badge)}</span>
+        <span class="badge autosuggest-badge" data-variant="outline">${escapeHtml(item.badge)}</span>
       `;
       fragment.appendChild(div);
     });
@@ -1283,8 +1493,8 @@ function setupQuickChips() {
   const chips = document.querySelectorAll('.quick-chip');
   chips.forEach(chip => {
     chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
+      chips.forEach(c => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
       const cmd = chip.dataset.skillCmd;
       if (cmd && inputGithubCmd) {
         inputGithubCmd.value = cmd;
@@ -1301,11 +1511,11 @@ let curatedSearchQuery = '';
 function renderCuratedHub() {
   if (!curatedCardsGrid) return;
 
-  const catButtons = document.querySelectorAll('#curated-category-bar .tag-filter');
+  const catButtons = document.querySelectorAll('#curated-category-bar [data-curated-cat]');
   catButtons.forEach(btn => {
     btn.onclick = () => {
-      catButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      catButtons.forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
       activeCuratedCat = btn.dataset.curatedCat || 'all';
       filterAndRenderCurated();
     };
@@ -1327,6 +1537,17 @@ function renderCuratedHub() {
   if (!curatedCardsGrid.dataset.delegated) {
     curatedCardsGrid.dataset.delegated = 'true';
     curatedCardsGrid.addEventListener('click', (e) => {
+      if (e.target.closest('[data-clear-curated]')) {
+        const searchInput = document.getElementById('curated-search-input');
+        if (searchInput) searchInput.value = '';
+        curatedSearchQuery = '';
+        activeCuratedCat = 'all';
+        document.querySelectorAll('#curated-category-bar [data-curated-cat]').forEach(b => {
+          b.setAttribute('aria-pressed', String(b.dataset.curatedCat === 'all'));
+        });
+        filterAndRenderCurated();
+        return;
+      }
       const btn = e.target.closest('.btn-curated-extract');
       if (!btn) return;
       const cmd = btn.getAttribute('data-cmd');
@@ -1355,8 +1576,11 @@ function filterAndRenderCurated() {
 
   if (filtered.length === 0) {
     curatedCardsGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--muted-foreground);">
-        <p>No curated skills matching your search criteria.</p>
+      <div class="no-match curated-empty">
+        <span class="no-match-icon">${icon('search-x', { size: 22 })}</span>
+        <h3>No curated skills match${curatedSearchQuery ? ` “${escapeHtml(curatedSearchQuery)}”` : ' this craft'}</h3>
+        <p>Try a broader word, or clear the search to see all ${CURATED_SKILLS.length} skills.</p>
+        <button type="button" class="btn" data-variant="outline" data-clear-curated>Clear search</button>
       </div>
     `;
     return;
@@ -1367,22 +1591,21 @@ function filterAndRenderCurated() {
   filtered.forEach(item => {
     const card = document.createElement('div');
     card.className = 'curated-card';
+    card.dataset.category = getCategoryKey(item.category);
     card.innerHTML = `
       <div class="curated-header">
-        <div class="curated-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <span class="card-badge">${escapeHtml(item.badge)}</span>
+        <div class="curated-icon">${icon(getCategoryIcon(item.category), { size: 18 })}</div>
+        <span class="badge card-badge" data-variant="outline">${escapeHtml(item.badge)}</span>
       </div>
       <h3 class="curated-title">${escapeHtml(item.name)}</h3>
       <p class="curated-desc">${escapeHtml(item.description)}</p>
       <div class="curated-tags">
         ${(item.tags || []).map(t => `<span class="curated-tag">${escapeHtml(t)}</span>`).join('')}
       </div>
-      <div style="margin-top: auto; display: flex; gap: 8px;">
-        <button class="btn btn-primary btn-curated-extract" data-cmd="${escapeHtml(item.command)}" style="width: 100%;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          1-Click Extract
+      <div class="curated-actions">
+        <button class="btn btn-curated-extract" data-cmd="${escapeHtml(item.command)}">
+          ${icon('play', { size: 14, attrs: { 'data-icon': 'inline-start' } })}
+          Extract
         </button>
       </div>
     `;
@@ -1430,7 +1653,7 @@ async function openPreviewModal(skill) {
       `;
     });
   } else {
-    modalMetaGrid.innerHTML = '<div style="grid-column: span 2; color: var(--text-dim);">No frontmatter properties defined.</div>';
+    modalMetaGrid.innerHTML = '<div class="meta-empty">No frontmatter properties defined.</div>';
   }
 
   // 3. Helper Scripts
@@ -1439,11 +1662,14 @@ async function openPreviewModal(skill) {
   if (parsed.scripts.length > 0) {
     parsed.scripts.forEach((script, idx) => {
       const chip = document.createElement('button');
-      chip.className = `script-tab-chip ${idx === 0 ? 'active' : ''}`;
+      chip.className = 'btn script-tab-chip';
+      chip.dataset.variant = 'outline';
+      chip.dataset.size = 'xs';
+      chip.setAttribute('aria-pressed', idx === 0 ? 'true' : 'false');
       chip.innerText = `scripts/${script.fileName}`;
       chip.addEventListener('click', () => {
-        modalScriptSelector.querySelectorAll('.script-tab-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
+        modalScriptSelector.querySelectorAll('.script-tab-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+        chip.setAttribute('aria-pressed', 'true');
         modalScriptCode.innerText = script.code;
       });
       modalScriptSelector.appendChild(chip);
@@ -1459,11 +1685,14 @@ async function openPreviewModal(skill) {
   if (parsed.references.length > 0) {
     parsed.references.forEach((ref, idx) => {
       const chip = document.createElement('button');
-      chip.className = `script-tab-chip ${idx === 0 ? 'active' : ''}`;
+      chip.className = 'btn script-tab-chip';
+      chip.dataset.variant = 'outline';
+      chip.dataset.size = 'xs';
+      chip.setAttribute('aria-pressed', idx === 0 ? 'true' : 'false');
       chip.innerText = `references/${ref.fileName}`;
       chip.addEventListener('click', async () => {
-        modalRefSelector.querySelectorAll('.script-tab-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
+        modalRefSelector.querySelectorAll('.script-tab-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+        chip.setAttribute('aria-pressed', 'true');
         modalRefContent.innerHTML = sanitizeRenderedHtml(await parseMarkdown(ref.content));
         highlightCodeUnder(modalRefContent);
       });
@@ -1472,44 +1701,21 @@ async function openPreviewModal(skill) {
     modalRefContent.innerHTML = sanitizeRenderedHtml(await parseMarkdown(parsed.references[0].content));
     highlightCodeUnder(modalRefContent);
   } else {
-    modalRefContent.innerHTML = '<p style="color: var(--text-dim);">No reference documentation attached.</p>';
+    modalRefContent.innerHTML = '<p class="meta-empty">No reference documentation attached.</p>';
   }
 
   // 5. Raw Source
   modalRawSource.innerText = skill.compiledMarkdown;
 
-  switchModalTab('modal-pane-rendered');
-  previewModal.classList.add('active');
+  const previewTabs = document.querySelector('.preview-tabs');
+  if (previewTabs) window.basecoat?.refresh(previewTabs);
+  if (!previewModal.open) previewModal.showModal();
   updateMultiPreviewNav();
 }
 
-function switchModalTab(targetPaneId) {
-  modalNavButtons.forEach(btn => {
-    if (btn.getAttribute('data-pane') === targetPaneId) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-
-  Object.values(modalPanes).forEach(pane => {
-    if (pane && pane.id === targetPaneId) {
-      pane.classList.add('active');
-    } else if (pane) {
-      pane.classList.remove('active');
-    }
-  });
-}
-
 function setupModal() {
-  modalNavButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      switchModalTab(btn.getAttribute('data-pane'));
-    });
-  });
-
   const closeModal = () => {
-    previewModal.classList.remove('active');
+    if (previewModal.open) previewModal.close();
     clearMultiPreviewNav();
   };
   modalBtnClose.addEventListener('click', closeModal);
@@ -1564,14 +1770,14 @@ async function updateWasmStats() {
   skills.forEach(s => {
     totalTokens += (s.tokenEstimate || wasmEngine.estimateTokens(s.compiledMarkdown || ''));
   });
-  statTotalTokens.innerText = totalTokens.toLocaleString();
-  statWasmMem.innerText = `${((wasmEngine.memory?.buffer.byteLength || 65536) / 1024).toFixed(0)} KB`;
+  if (statTotalTokens) statTotalTokens.innerText = totalTokens.toLocaleString();
+  if (statWasmMem) statWasmMem.innerText = `${((wasmEngine.memory?.buffer.byteLength || 65536) / 1024).toFixed(0)} KB`;
 }
 
 function setupWasmDiagnostics() {
   btnRunBenchmark.addEventListener('click', () => {
     btnRunBenchmark.disabled = true;
-    btnRunBenchmark.innerText = 'Benchmarking...';
+    btnRunBenchmark.innerHTML = `${icon('loader-circle', { className: 'animate-spin', attrs: { 'data-icon': 'inline-start' } })} Benchmarking...`;
 
     setTimeout(() => {
       const result = wasmEngine.runBenchmark(10000);
@@ -1587,7 +1793,7 @@ function setupWasmDiagnostics() {
       benchBarJs.style.width = `${Math.min(100, (jsNum / maxTime) * 100)}%`;
 
       btnRunBenchmark.disabled = false;
-      btnRunBenchmark.innerText = 'Run Benchmark (10k ops)';
+      btnRunBenchmark.innerHTML = `${icon('play', { attrs: { 'data-icon': 'inline-start' } })} Run benchmark (10k ops)`;
       showToast(`Benchmark complete! WebAssembly is ${result.speedup} faster!`, 'success');
     }, 50);
   });
@@ -1607,6 +1813,9 @@ async function loadSettingsForm() {
   settingTags.value = cfg.defaultTags || '';
   settingExportFormat.value = cfg.defaultExportFormat || 'skill.md';
   settingGhToken.value = cfg.githubToken || '';
+  const prefs = getPrefs();
+  settingGalleryLayout.value = prefs.galleryLayout;
+  settingLibraryName.value = prefs.libraryName;
 }
 
 function setupSettings() {
@@ -1616,8 +1825,24 @@ function setupSettings() {
       defaultExportFormat: settingExportFormat.value,
       githubToken: settingGhToken.value.trim()
     });
-    showToast('Settings saved successfully!', 'success');
+    savePrefs({
+      galleryLayout: settingGalleryLayout.value,
+      libraryName: settingLibraryName.value.trim()
+    });
+    applyPrefs();
+    showToast('Settings saved', 'success');
   });
+
+  // Every panel has its own Update pill; they all save the whole form.
+  document.querySelectorAll('[data-save-settings]').forEach(btn => {
+    btn.addEventListener('click', () => btnSaveSettings.click());
+  });
+
+  document.querySelectorAll('[data-settings-tab]').forEach(tab => {
+    tab.addEventListener('click', () => openSettingsPanel(tab.dataset.settingsTab));
+  });
+
+  document.getElementById('btn-rerun-onboarding')?.addEventListener('click', () => onboarding.open());
 
   btnExportBackup.addEventListener('click', async () => {
     const jsonStr = await storage.exportAllToJson();
@@ -1677,12 +1902,60 @@ function setupSettings() {
 
 // Global Event Listeners & Boot
 document.addEventListener('DOMContentLoaded', async () => {
+  hydrateIcons();
+
   Object.keys(navButtons).forEach(viewName => {
     navButtons[viewName]?.addEventListener('click', () => switchView(viewName));
   });
 
   btnGalleryNewExtract?.addEventListener('click', () => switchView('extract'));
-  btnEmptyExtract?.addEventListener('click', () => switchView('extract'));
+  btnEmptyExtract?.addEventListener('click', () => {
+    switchView('extract');
+    inputGithubCmd.focus();
+  });
+
+  // Rail buttons, empty-state links and anything else that names a view.
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-view-link]');
+    if (link) switchView(link.dataset.viewLink);
+  });
+  window.addEventListener('hashchange', () => switchView(window.location.hash.slice(1) || 'extract'));
+
+  galleryLayoutToggle?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-layout]');
+    if (btn) setGalleryLayout(btn.dataset.layout);
+  });
+
+  recentsList?.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-recent-id]');
+    const skill = item && currentSkills.find(s => s.id === item.dataset.recentId);
+    if (skill) openPreviewModal(skill);
+  });
+
+  picksGrid?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pick-cmd]');
+    if (!btn) return;
+    inputGithubCmd.value = btn.dataset.pickCmd;
+    document.querySelector('.extract-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    btnExtractGithub.click();
+  });
+
+  setupSteps?.addEventListener('click', (e) => {
+    const step = e.target.closest('[data-setup-step]');
+    if (step && step.getAttribute('aria-disabled') !== 'true') runSetupStep(step.dataset.setupStep);
+  });
+
+  document.getElementById('btn-hide-setup')?.addEventListener('click', () => {
+    savePrefs({ setupHidden: true });
+    setupTray.hidden = true;
+  });
+
+  document.getElementById('btn-open-onboarding')?.addEventListener('click', () => onboarding.open());
+  document.getElementById('btn-personalize-picks')?.addEventListener('click', () => onboarding.open(2));
+
+  document.querySelectorAll('#curated-nav-count, #stat-curated-count').forEach(el => {
+    el.textContent = CURATED_SKILLS.length;
+  });
 
   // Gallery live search debounced with requestAnimationFrame
   let searchDebounce = null;
@@ -1699,6 +1972,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupWasmDiagnostics();
   setupSettings();
 
+  applyPrefs();
+
   await wasmEngine.ready();
   await loadGallery();
 
@@ -1707,6 +1982,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const inputQuery = urlParams.get('extract') || urlParams.get('url') || urlParams.get('link') || urlParams.get('query') || urlParams.get('cmd') || urlParams.get('skill');
+
+  const initialView = window.location.hash.slice(1);
+  if (!inputQuery && views[initialView]) switchView(initialView);
+
+  // First visit: ask four quick questions, unless the visitor arrived to extract something.
+  if (!inputQuery && !getPrefs().onboarded) onboarding.open();
   if (inputQuery) {
     let cleanQuery = decodeURIComponent(inputQuery).trim();
     const foundSkill = CURATED_SKILLS.find(s => s.slug === cleanQuery || s.id === cleanQuery || s.name.toLowerCase() === cleanQuery.toLowerCase());
@@ -1717,7 +1998,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (cleanQuery) {
       switchView('extract');
       const tabBtn = document.getElementById('tab-btn-github');
-      if (tabBtn) tabBtn.click();
+      if (tabBtn) document.querySelector('.input-tabs')?.select?.(tabBtn);
       if (inputGithubCmd) {
         inputGithubCmd.value = cleanQuery;
         appendLog(`Received skill request: ${cleanQuery}`, 'info');

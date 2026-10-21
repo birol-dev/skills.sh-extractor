@@ -14,6 +14,33 @@ export function getCategoryKey(cat) {
   return 'other';
 }
 
+/** Lucide icon name for each category key. */
+export const CATEGORY_ICONS = {
+  copywriting: 'pen-line',
+  marketing: 'trending-up',
+  design: 'palette',
+  sales: 'send',
+  seo: 'search',
+  monetization: 'badge-dollar-sign',
+  strategy: 'compass',
+  dev: 'code-xml',
+  other: 'sparkles'
+};
+
+/** Curated skills for the given category keys, alternating between them so each one shows up early. */
+export function skillsForInterests(skills, interests) {
+  const buckets = interests.map((key) => skills.filter((s) => getCategoryKey(s.category) === key));
+  const mixed = [];
+  for (let i = 0; buckets.some((b) => i < b.length); i++) {
+    buckets.forEach((b) => { if (b[i]) mixed.push(b[i]); });
+  }
+  return mixed;
+}
+
+export function getCategoryIcon(cat) {
+  return CATEGORY_ICONS[getCategoryKey(cat)];
+}
+
 export function escapeHtml(str) {
   if (!str) return '';
   return String(str)

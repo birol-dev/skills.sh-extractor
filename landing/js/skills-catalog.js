@@ -5,7 +5,8 @@ import { loadPrompts } from './prompts.js';
 const SKILLS_BY_SLUG = new Map(CURATED_SKILLS.map(s => [s.slug, s]));
 
 export function initSkillsCatalog() {
-  const tabs = document.querySelectorAll('.catalog-tab');
+  const tabsRoot = document.querySelector('.catalog-tabs');
+  const tablist = document.getElementById('catalogFilters');
   const grid = document.getElementById('skillsGrid');
   const modal = document.getElementById('skillPreviewModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
@@ -33,15 +34,37 @@ export function initSkillsCatalog() {
       const match = filterCat === 'all' || card.dataset.category === filterCat;
       card.hidden = !match;
     });
+    grid.hidden = false;
+    grid.scrollTo({ left: 0 });
   }
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+  // Home renders the grid as a carousel row; the arrows page through it.
+  function scrollCarousel(direction) {
+    const card = grid.querySelector('.skill-card:not([hidden])');
+    const step = card ? card.getBoundingClientRect().width + 12 : grid.clientWidth * 0.8;
+    grid.scrollBy({ left: direction * step * 2, behavior: 'smooth' });
+  }
+
+  document.querySelector('[data-carousel-prev]')?.addEventListener('click', () => scrollCarousel(-1));
+  document.querySelector('[data-carousel-next]')?.addEventListener('click', () => scrollCarousel(1));
+
+  function selectedCategory() {
+    return tablist?.querySelector('[role="tab"][aria-selected="true"]')?.dataset.category || 'all';
+  }
+
+  if (tablist) {
+    tablist.addEventListener('click', (e) => {
+      const tab = e.target.closest('[role="tab"]');
+      if (!tab) return;
       filterGrid(tab.dataset.category || 'all');
     });
-  });
+    tablist.addEventListener('keydown', () => {
+      requestAnimationFrame(() => filterGrid(selectedCategory()));
+    });
+  }
+
+  if (tabsRoot) window.basecoat?.refresh(tabsRoot);
+  filterGrid(selectedCategory());
 
   async function openModal(slug) {
     const s = SKILLS_BY_SLUG.get(slug);
@@ -52,21 +75,17 @@ export function initSkillsCatalog() {
 
     currentModalSkill = { ...s, prompt, tok };
     modalTitle.textContent = s.name;
-    modalCategoryBadge.textContent = s.badge.toUpperCase();
+    modalCategoryBadge.textContent = s.badge;
     modalDescription.textContent = s.description;
     modalTokens.textContent = `~${tok.toLocaleString()} tokens`;
     modalPromptCode.textContent = prompt;
 
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    modal.showModal();
   }
 
   function closeModal() {
-    if (!modal) return;
-    modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    if (!modal?.open) return;
+    modal.close();
   }
 
   grid.addEventListener('click', async (e) => {
@@ -118,10 +137,4 @@ export function initSkillsCatalog() {
       }
     });
   }
-
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
-      closeModal();
-    }
-  });
 }
