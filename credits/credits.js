@@ -72,16 +72,16 @@ function renderCredits() {
     };
     const skillNames = skills.map((s) => s.name).join(', ');
     return `
-      <article class="credit-card">
-        <div class="credit-card-head">
-          <div>
-            <span class="credit-author">${info.author}</span>
-            <a class="credit-repo" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${info.repo} ${icon('arrow-up-right', { size: 12, className: 'footer-ext-icon' })}</a>
-          </div>
+      <article class="credit-row">
+        <div class="credit-who">
+          <span class="credit-author">${info.author}</span>
+          <a class="credit-repo" href="${sourceUrl}" target="_blank" rel="noopener noreferrer">${info.repo} ${icon('arrow-up-right', { size: 12, className: 'footer-ext-icon' })}</a>
           <span class="badge credit-count" data-variant="outline">${skills.length} skill${skills.length === 1 ? '' : 's'}</span>
         </div>
-        ${info.blurb ? `<p class="credit-blurb">${info.blurb}</p>` : ''}
-        <p class="credit-skill-names">${skillNames}</p>
+        <div class="credit-body">
+          ${info.blurb ? `<p class="credit-blurb">${info.blurb}</p>` : ''}
+          <p class="credit-skill-names">${skillNames}</p>
+        </div>
       </article>
     `;
   }).join('');

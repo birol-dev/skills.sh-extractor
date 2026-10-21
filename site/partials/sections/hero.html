@@ -1,32 +1,66 @@
-      <section class="hero-section" id="hero">
-        <div class="hero-container">
-          
-          <div class="hero-editorial-lead">
-            <span class="lead-number">01</span>
-            <span class="lead-text">THE OPEN SKILLS PROJECT</span>
+      <section class="hero" id="hero">
+        <div class="wrap hero-head">
+          <div class="index-line">
+            <span class="index-label">The open skills project</span>
+            <span class="index-meta">Free &middot; Open source &middot; Runs in your browser</span>
           </div>
 
-          <h1 class="hero-headline">
-            Every skill on <span class="serif-accent">skills.sh</span>,<br>
-            now without the <span class="serif-emphasis">terminal.</span>
+          <h1 class="display display-hero hero-title">
+            Every skill on skills.sh,<br>
+            <span class="fade">now without the</span> <em>terminal.</em>
           </h1>
 
-          <p class="hero-subtext">
-            skills.sh is packed with elite AI prompt systems for copywriting, marketing, design, SEO, and coding. But they were locked behind terminal commands. We unlocked them so <em>anyone</em> can unpack, copy, and use 55+ skills in 1-click.
-          </p>
+          <div class="hero-foot">
+            <p class="hero-promise">Browse, unpack and copy <!-- skills-count:all --> expert AI playbooks in one click. No installs, no command line.</p>
+            <div class="hero-actions">
+              <a href="/app/" class="btn" data-size="lg">
+                <span>Start extracting for free</span>
+                <i data-lucide="arrow-right" data-icon="inline-end"></i>
+              </a>
+              <a href="/skills/" class="btn" data-variant="outline" data-size="lg">
+                <span>Browse the library</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-stage">
+          <figure class="float-frame frame-portrait" aria-hidden="true">
+            <div class="frame-sun">
+              <div class="mock-card">
+                <div class="mock-card-top">
+                  <span class="mock-icon" data-category="sales"><i data-lucide="mail" data-size="15"></i></span>
+                  <span class="mock-chip">Sales</span>
+                </div>
+                <span class="mock-title">Cold Outreach Writer</span>
+                <span class="mock-line"></span>
+                <span class="mock-line"></span>
+                <span class="mock-line short"></span>
+                <div class="mock-card-foot">
+                  <span class="mock-meta">~2,140 tokens</span>
+                  <span class="mock-btn">Copy</span>
+                </div>
+              </div>
+            </div>
+          </figure>
+
+          <figure class="float-frame frame-landscape" aria-hidden="true">
+            <img src="https://media.birol.tech/skextract.gif" alt="" width="960" height="540" loading="lazy" decoding="async">
+          </figure>
+
+          <div class="float-pill" aria-hidden="true">
+            <span class="float-pill-check"><i data-lucide="check" data-size="13" data-stroke="2.5"></i></span>
+            Copied &middot; ready for Claude
+          </div>
 
           <div class="hero-widget-card" id="heroInteractiveWidget">
             <div class="widget-topbar">
-              <div class="widget-meta-left">
-                <span class="widget-dot"></span>
-                <span class="widget-title">Live Skill Unpacker</span>
-              </div>
-              <div class="widget-meta-right">
-                <span class="badge widget-ready-badge" data-variant="outline">
-                  <span class="status-dot" aria-hidden="true"></span>
-                  Ready to Extract
-                </span>
-              </div>
+              <div class="widget-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+              <span class="widget-title">Live skill unpacker</span>
+              <span class="badge widget-ready-badge" data-variant="outline">
+                <span class="status-dot" aria-hidden="true"></span>
+                Ready
+              </span>
             </div>
 
             <div class="widget-body">
@@ -38,19 +72,19 @@
                   </button>
                   <button type="button" role="tab" class="preset-tab" id="preset-tab-ab-testing" aria-controls="widgetOutputPanel" aria-selected="false" tabindex="-1" data-skill="ab-testing">
                     <i data-lucide="trending-up"></i>
-                    <span>Growth Marketing</span>
+                    <span>Growth</span>
                   </button>
                   <button type="button" role="tab" class="preset-tab" id="preset-tab-svg-logo-designer" aria-controls="widgetOutputPanel" aria-selected="false" tabindex="-1" data-skill="svg-logo-designer">
                     <i data-lucide="pen-tool"></i>
-                    <span>SVG Logo Design</span>
+                    <span>Logo design</span>
                   </button>
                   <button type="button" role="tab" class="preset-tab" id="preset-tab-cold-email" aria-controls="widgetOutputPanel" aria-selected="false" tabindex="-1" data-skill="cold-email">
                     <i data-lucide="mail"></i>
-                    <span>Cold Outreach</span>
+                    <span>Cold email</span>
                   </button>
                   <button type="button" role="tab" class="preset-tab" id="preset-tab-ai-seo" aria-controls="widgetOutputPanel" aria-selected="false" tabindex="-1" data-skill="ai-seo">
                     <i data-lucide="search"></i>
-                    <span>AI SEO & GEO</span>
+                    <span>AI SEO</span>
                   </button>
                   <button type="button" role="tab" class="preset-tab" id="preset-tab-typescript-strict" aria-controls="widgetOutputPanel" aria-selected="false" tabindex="-1" data-skill="typescript-strict">
                     <i data-lucide="code-xml"></i>
@@ -60,22 +94,20 @@
               </div>
 
               <div class="widget-input-bar">
-                <div class="input-prompt-glyph">
-                  <i data-lucide="chevron-right" data-size="15"></i>
-                </div>
-                <input 
-                  type="text" 
-                  id="widgetSkillInput" 
-                  class="widget-input" 
+                <span class="input-prompt-glyph" aria-hidden="true"><i data-lucide="chevron-right" data-size="15"></i></span>
+                <input
+                  type="text"
+                  id="widgetSkillInput"
+                  class="widget-input"
                   value="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'"
-                  placeholder="Enter skills.sh command or GitHub repo..."
+                  placeholder="Paste a skills.sh command or GitHub repo…"
                   aria-label="skills.sh command or GitHub repository"
                   spellcheck="false"
                   autocomplete="off"
                 >
                 <button type="button" class="btn widget-submit-btn" id="widgetExtractBtn">
                   <i data-lucide="loader-circle" class="btn-spinner animate-spin" data-icon="inline-start"></i>
-                  <span class="btn-text">Extract in App</span>
+                  <span class="btn-text">Extract</span>
                   <i data-lucide="arrow-right" class="btn-arrow" data-icon="inline-end"></i>
                 </button>
               </div>
@@ -91,7 +123,7 @@
                     <button type="button" class="btn btn-copy-compact" data-size="sm" id="widgetCopyPromptBtn">
                       <i data-lucide="copy" class="copy-idle" data-icon="inline-start"></i>
                       <i data-lucide="check" class="copy-done" data-icon="inline-start"></i>
-                      <span>Copy Prompt</span>
+                      <span>Copy prompt</span>
                     </button>
                   </div>
                 </div>
@@ -101,22 +133,6 @@
                 </div>
               </div>
             </div>
-
-            <div class="widget-bottom-bar">
-              <div class="widget-bottom-item">
-                <i data-lucide="check" data-size="14"></i>
-                <span>Zero Terminal Required</span>
-              </div>
-              <div class="widget-bottom-item">
-                <i data-lucide="shield-check" data-size="14"></i>
-                <span>100% In-Browser Privacy</span>
-              </div>
-              <div class="widget-bottom-item">
-                <i data-lucide="clipboard-paste" data-size="14"></i>
-                <span>Paste into Claude, ChatGPT & Cursor</span>
-              </div>
-            </div>
           </div>
-
         </div>
       </section>

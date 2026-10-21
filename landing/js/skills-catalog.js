@@ -35,7 +35,18 @@ export function initSkillsCatalog() {
       card.hidden = !match;
     });
     grid.hidden = false;
+    grid.scrollTo({ left: 0 });
   }
+
+  // Home renders the grid as a carousel row; the arrows page through it.
+  function scrollCarousel(direction) {
+    const card = grid.querySelector('.skill-card:not([hidden])');
+    const step = card ? card.getBoundingClientRect().width + 12 : grid.clientWidth * 0.8;
+    grid.scrollBy({ left: direction * step * 2, behavior: 'smooth' });
+  }
+
+  document.querySelector('[data-carousel-prev]')?.addEventListener('click', () => scrollCarousel(-1));
+  document.querySelector('[data-carousel-next]')?.addEventListener('click', () => scrollCarousel(1));
 
   function selectedCategory() {
     return tablist?.querySelector('[role="tab"][aria-selected="true"]')?.dataset.category || 'all';

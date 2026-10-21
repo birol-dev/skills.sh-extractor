@@ -77,25 +77,23 @@ function generateSkillsGrid() {
     const catKey = getCategoryKey(s.category);
     const slug = escapeHtml(s.slug);
     return `<article class="skill-card" data-category="${escapeHtml(catKey)}" data-skill-id="${slug}">
-        <div class="card-ambient-overlay"></div>
-        <div class="skill-card-header">
-          <div class="skill-icon-box">${renderLucide(getCategoryIcon(s.category), { size: 18 })}</div>
-          <div class="skill-meta-right">
-            <span class="badge skill-category-badge" data-variant="outline">${escapeHtml(s.badge)}</span>
-            <span class="skill-token-count">~${Number(tok).toLocaleString('en-US')} tok</span>
-          </div>
+        <div class="skill-card-top">
+          <span class="skill-icon-box">${renderLucide(getCategoryIcon(s.category), { size: 18 })}</span>
+          <span class="skill-badge">${escapeHtml(s.badge)}</span>
         </div>
         <h3 class="skill-card-title">${escapeHtml(s.name)}</h3>
         <p class="skill-card-desc">${escapeHtml(s.description)}</p>
-        <div class="skill-card-actions">
-          <button type="button" class="btn skill-btn-preview" data-variant="outline" data-size="sm" data-preview-id="${slug}">
-            ${renderLucide('eye', { attrs: { 'data-icon': 'inline-start' } })}
-            <span>View Prompt</span>
-          </button>
-          <button type="button" class="btn skill-btn-copy" data-size="sm" data-copy-id="${slug}">
-            ${renderLucide('copy', { attrs: { 'data-icon': 'inline-start' } })}
-            <span>Copy</span>
-          </button>
+        <div class="skill-card-foot">
+          <span class="skill-token-count">~${Number(tok).toLocaleString('en-US')} tokens</span>
+          <div class="skill-card-actions">
+            <button type="button" class="btn skill-btn-preview" data-variant="outline" data-size="sm" data-preview-id="${slug}">
+              <span>View</span>
+            </button>
+            <button type="button" class="btn skill-btn-copy" data-size="sm" data-copy-id="${slug}">
+              ${renderLucide('copy', { attrs: { 'data-icon': 'inline-start' } })}
+              <span>Copy</span>
+            </button>
+          </div>
         </div>
       </article>`;
   }).join('\n      ');

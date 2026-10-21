@@ -14,7 +14,9 @@ import {
 import './ui/basecoat.js';
 import { showToast } from './ui/toast.js';
 import { icon, hydrateIcons } from './ui/icons.js';
-import { getCategoryIcon } from './services/skillCategories.js';
+import { getCategoryIcon, getCategoryKey, skillsForInterests } from './services/skillCategories.js';
+import { getPrefs, savePrefs, GALLERY_LAYOUTS, TOOL_FORMATS } from './ui/prefs.js';
+import { createOnboarding } from './ui/onboarding.js';
 
 // Pre-compute normalized search indices for curated skills (instantaneous O(1) searches)
 const CURATED_SEARCH_INDEX = CURATED_SKILLS.map(s => ({
@@ -82,8 +84,25 @@ const navButtons = {
   settings: document.getElementById('nav-settings')
 };
 
+const VIEW_TITLES = {
+  extract: 'Home',
+  gallery: 'Gallery',
+  curated: 'Curated skills',
+  wasm: 'Engine diagnostics',
+  settings: 'Settings'
+};
+
 // UI Elements
 const badgeSkillCount = document.getElementById('badge-skill-count');
+const topbarTitle = document.getElementById('topbar-title');
+const welcomeName = document.getElementById('welcome-name');
+const sidebarLibraryName = document.getElementById('sidebar-library-name');
+const recentsList = document.getElementById('recents-list');
+const setupTray = document.getElementById('setup-tray');
+const setupSteps = document.getElementById('setup-steps');
+const setupProgress = document.getElementById('setup-progress');
+const picksGrid = document.getElementById('picks-grid');
+const galleryLayoutToggle = document.getElementById('gallery-layout-toggle');
 const termLogs = document.getElementById('term-logs');
 const btnClearTerm = document.getElementById('btn-clear-term');
 
@@ -126,6 +145,8 @@ const wasmTestHash = document.getElementById('wasm-test-hash');
 const settingTags = document.getElementById('setting-tags');
 const settingExportFormat = document.getElementById('setting-export-format');
 const settingGhToken = document.getElementById('setting-gh-token');
+const settingGalleryLayout = document.getElementById('setting-gallery-layout');
+const settingLibraryName = document.getElementById('setting-library-name');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const btnExportBackup = document.getElementById('btn-export-backup');
 const btnImportBackup = document.getElementById('btn-import-backup');
@@ -748,6 +769,7 @@ function sanitizeRenderedHtml(html) {
 
 // Navigation Switcher
 function switchView(viewName) {
+  if (!views[viewName]) viewName = 'extract';
   Object.keys(views).forEach(k => {
     if (views[k]) views[k].classList.remove('active');
     if (navButtons[k]) navButtons[k].classList.remove('active');
@@ -755,6 +777,17 @@ function switchView(viewName) {
 
   if (views[viewName]) views[viewName].classList.add('active');
   if (navButtons[viewName]) navButtons[viewName].classList.add('active');
+  document.querySelectorAll('.rail-btn[data-view-link]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.viewLink === viewName);
+  });
+  if (topbarTitle) topbarTitle.textContent = VIEW_TITLES[viewName];
+  window.scrollTo({ top: 0 });
+
+  // Keep the view in the URL so /app/#gallery style links land in the right place.
+  const hash = viewName === 'extract' ? '' : `#${viewName}`;
+  if (window.location.hash !== hash) {
+    window.history.replaceState({}, '', window.location.pathname + window.location.search + hash);
+  }
 
   if (viewName === 'gallery') loadGallery();
   if (viewName === 'curated') renderCuratedHub();
@@ -958,7 +991,190 @@ async function loadGallery() {
   badgeSkillCount.innerText = currentSkills.length;
   renderTagFilterBar();
   renderGalleryCards();
+  renderRecents();
+  renderPicks();
+  renderSetupTray();
 }
+
+// Curated catalog entry for a stored skill, used to colour it by category.
+function curatedMatch(skill) {
+  return CURATED_SKILLS.find(c => c.slug === skill.slug || c.name === skill.name);
+}
+
+function renderRecents() {
+  if (!recentsList) return;
+  const recent = [...currentSkills]
+    .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
+    .slice(0, 8);
+
+  if (recent.length === 0) {
+    recentsList.innerHTML = '<p class="recents-empty">Skills you extract show up here.</p>';
+    return;
+  }
+
+  recentsList.innerHTML = recent.map(skill => {
+    const cat = getCategoryKey(curatedMatch(skill)?.category);
+    return `
+      <button type="button" class="recent-item" data-recent-id="${escapeHtml(skill.id)}" data-category="${cat}" title="${escapeHtml(skill.name)}">
+        <span class="recent-dot"></span>
+        <span class="recent-name">${escapeHtml(skill.name)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+// Home suggestions: curated skills from the interests picked during onboarding.
+function renderPicks() {
+  if (!picksGrid) return;
+  const { interests } = getPrefs();
+  let picks = skillsForInterests(CURATED_SKILLS, interests);
+  if (picks.length === 0) {
+    // No interests yet: one skill per craft gives a varied first look.
+    const seen = new Set();
+    picks = CURATED_SKILLS.filter(s => {
+      const key = getCategoryKey(s.category);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  const saved = new Set(currentSkills.map(s => s.slug));
+  picksGrid.innerHTML = picks.slice(0, 6).map(skill => {
+    const inGallery = saved.has(skill.slug);
+    return `
+      <article class="pick-card" data-category="${getCategoryKey(skill.category)}">
+        <div class="pick-top">
+          <span class="pick-icon">${icon(getCategoryIcon(skill.category), { size: 18 })}</span>
+          <span class="pick-cat">${escapeHtml(skill.badge || skill.category)}</span>
+        </div>
+        <h3 class="pick-title">${escapeHtml(skill.name)}</h3>
+        <p class="pick-desc">${escapeHtml(skill.description)}</p>
+        <div class="pick-foot">
+          <span class="pick-tokens">~${(skill.tokenEstimate || 0).toLocaleString()} tokens</span>
+          <button type="button" class="btn" data-size="sm" ${inGallery ? 'data-variant="outline"' : ''} data-pick-cmd="${escapeHtml(skill.command)}">
+            ${inGallery ? 'Extract again' : 'Extract'}
+          </button>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+const SETUP_STEPS = [
+  {
+    id: 'personalize',
+    icon: 'sparkles',
+    color: '#b57bff',
+    title: 'Personalize your workbench',
+    sub: () => 'Name, AI tool and interests',
+    done: (ctx) => ctx.prefs.personalized
+  },
+  {
+    id: 'first',
+    icon: 'download',
+    color: '#4da3ff',
+    title: 'Extract your first skill',
+    sub: () => 'Paste a repo or pick one below',
+    done: (ctx) => ctx.count >= 1
+  },
+  {
+    id: 'three',
+    icon: 'library',
+    color: '#3ddc97',
+    title: 'Save three skills',
+    sub: (ctx) => `${Math.min(ctx.count, 3)} of 3 in your gallery`,
+    done: (ctx) => ctx.count >= 3
+  },
+  {
+    id: 'token',
+    icon: 'key-round',
+    color: '#ffc53d',
+    title: 'Add a GitHub token',
+    sub: () => 'Optional. Lifts the API rate limit',
+    done: (ctx) => ctx.hasToken
+  }
+];
+
+async function renderSetupTray() {
+  if (!setupTray || !setupSteps) return;
+  const prefs = getPrefs();
+  const settings = await storage.getSettings();
+  const ctx = { prefs, count: currentSkills.length, hasToken: Boolean(settings.githubToken) };
+  const doneCount = SETUP_STEPS.filter(step => step.done(ctx)).length;
+
+  setupTray.hidden = prefs.setupHidden || doneCount === SETUP_STEPS.length;
+  if (setupTray.hidden) return;
+
+  setupProgress.textContent = `${doneCount}/${SETUP_STEPS.length}`;
+  setupSteps.innerHTML = SETUP_STEPS.map(step => {
+    const done = step.done(ctx);
+    return `
+      <button type="button" class="setup-step${done ? ' is-done' : ''}" data-setup-step="${step.id}" style="--step: ${step.color}" ${done ? 'aria-disabled="true"' : ''}>
+        <span class="setup-step-icon">${icon(done ? 'check' : step.icon, { size: 16 })}</span>
+        <span class="setup-step-title">${step.title}</span>
+        <span class="setup-step-sub">${done ? 'Done' : step.sub(ctx)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function runSetupStep(id) {
+  if (id === 'personalize') onboarding.open();
+  if (id === 'first') {
+    switchView('extract');
+    inputGithubCmd.focus();
+  }
+  if (id === 'three') switchView('curated');
+  if (id === 'token') {
+    switchView('settings');
+    openSettingsPanel('github');
+    settingGhToken.focus();
+  }
+}
+
+// Library name, gallery layout and suggestions follow the saved prefs.
+function applyPrefs() {
+  const prefs = getPrefs();
+  const name = prefs.libraryName.trim();
+  if (welcomeName) welcomeName.textContent = name || 'your workbench';
+  if (sidebarLibraryName) sidebarLibraryName.textContent = name || 'My skill library';
+  setGalleryLayout(prefs.galleryLayout, { save: false });
+  renderPicks();
+  renderSetupTray();
+}
+
+function setGalleryLayout(layout, { save = true } = {}) {
+  if (!GALLERY_LAYOUTS.includes(layout)) layout = 'cards';
+  if (save) savePrefs({ galleryLayout: layout });
+  galleryLayoutToggle?.querySelectorAll('[data-layout]').forEach(btn => {
+    btn.setAttribute('aria-pressed', String(btn.dataset.layout === layout));
+  });
+  if (settingGalleryLayout) settingGalleryLayout.value = layout;
+  galleryCardsGrid.dataset.layout = layout;
+  renderGalleryCards();
+}
+
+function openSettingsPanel(name) {
+  document.querySelectorAll('[data-settings-tab]').forEach(tab => {
+    const active = tab.dataset.settingsTab === name;
+    tab.classList.toggle('active', active);
+    if (active) tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  document.querySelectorAll('[data-settings-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.settingsPanel !== name;
+  });
+}
+
+const onboarding = createOnboarding({
+  onFinish: async (prefs, { skipped }) => {
+    if (!skipped && TOOL_FORMATS[prefs.tool]) {
+      await storage.saveSettings({ defaultExportFormat: TOOL_FORMATS[prefs.tool] });
+    }
+    applyPrefs();
+    if (!skipped) showToast(`${prefs.libraryName.trim() || 'Your workbench'} is ready`, 'success');
+  }
+});
 
 function renderTagFilterBar() {
   const allTags = new Set();
@@ -1001,6 +1217,14 @@ function setupGalleryDelegation() {
   });
 
   galleryCardsGrid.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-clear-gallery-filters]')) {
+      gallerySearchInput.value = '';
+      activeFilterTag = 'all';
+      renderTagFilterBar();
+      renderGalleryCards();
+      return;
+    }
+
     const card = e.target.closest('.skill-card');
     if (!card) return;
     const skillId = card.getAttribute('data-skill-id');
@@ -1068,16 +1292,43 @@ function renderGalleryCards() {
     });
   }
 
+  // Day 1: nothing saved yet. The toolbar stays; the empty state explains what goes here.
+  galleryEmptyState.hidden = currentSkills.length > 0;
+  if (currentSkills.length === 0) return;
+
   if (filtered.length === 0) {
-    galleryEmptyState.hidden = false;
+    const what = query ? `“${escapeHtml(gallerySearchInput.value.trim())}”` : `the tag “${escapeHtml(activeFilterTag)}”`;
+    galleryCardsGrid.innerHTML = `
+      <div class="no-match">
+        <span class="no-match-icon">${icon('search-x', { size: 22 })}</span>
+        <h3>No skills match ${what}</h3>
+        <p>Try a shorter word or another tag. All ${currentSkills.length} skills are still in your gallery.</p>
+        <button type="button" class="btn" data-variant="outline" data-clear-gallery-filters>Clear filters</button>
+      </div>
+    `;
     return;
   }
 
-  galleryEmptyState.hidden = true;
+  const layout = galleryCardsGrid.dataset.layout || 'cards';
+  if (layout === 'timeline') {
+    filtered = [...filtered].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+  }
 
   const fragment = document.createDocumentFragment();
+  let lastDay = null;
 
   filtered.forEach(skill => {
+    if (layout === 'timeline') {
+      const day = new Date(skill.dateAdded).toDateString();
+      if (day !== lastDay) {
+        lastDay = day;
+        const header = document.createElement('div');
+        header.className = 'timeline-day';
+        header.innerHTML = `<strong>${escapeHtml(formatDayLabel(skill.dateAdded))}</strong>`;
+        fragment.appendChild(header);
+      }
+    }
+
     const card = document.createElement('div');
     card.className = 'skill-card';
     card.setAttribute('data-skill-id', skill.id);
@@ -1130,6 +1381,16 @@ function renderGalleryCards() {
   });
 
   galleryCardsGrid.appendChild(fragment);
+}
+
+function formatDayLabel(date) {
+  const d = new Date(date);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
 }
 
 function downloadFile(filename, content) {
@@ -1276,6 +1537,17 @@ function renderCuratedHub() {
   if (!curatedCardsGrid.dataset.delegated) {
     curatedCardsGrid.dataset.delegated = 'true';
     curatedCardsGrid.addEventListener('click', (e) => {
+      if (e.target.closest('[data-clear-curated]')) {
+        const searchInput = document.getElementById('curated-search-input');
+        if (searchInput) searchInput.value = '';
+        curatedSearchQuery = '';
+        activeCuratedCat = 'all';
+        document.querySelectorAll('#curated-category-bar [data-curated-cat]').forEach(b => {
+          b.setAttribute('aria-pressed', String(b.dataset.curatedCat === 'all'));
+        });
+        filterAndRenderCurated();
+        return;
+      }
       const btn = e.target.closest('.btn-curated-extract');
       if (!btn) return;
       const cmd = btn.getAttribute('data-cmd');
@@ -1304,12 +1576,11 @@ function filterAndRenderCurated() {
 
   if (filtered.length === 0) {
     curatedCardsGrid.innerHTML = `
-      <div class="empty curated-empty">
-        <header>
-          <figure>${icon('search-x', { size: 26 })}</figure>
-          <h3>No matches</h3>
-          <p>No curated skills match your search criteria.</p>
-        </header>
+      <div class="no-match curated-empty">
+        <span class="no-match-icon">${icon('search-x', { size: 22 })}</span>
+        <h3>No curated skills match${curatedSearchQuery ? ` “${escapeHtml(curatedSearchQuery)}”` : ' this craft'}</h3>
+        <p>Try a broader word, or clear the search to see all ${CURATED_SKILLS.length} skills.</p>
+        <button type="button" class="btn" data-variant="outline" data-clear-curated>Clear search</button>
       </div>
     `;
     return;
@@ -1320,6 +1591,7 @@ function filterAndRenderCurated() {
   filtered.forEach(item => {
     const card = document.createElement('div');
     card.className = 'curated-card';
+    card.dataset.category = getCategoryKey(item.category);
     card.innerHTML = `
       <div class="curated-header">
         <div class="curated-icon">${icon(getCategoryIcon(item.category), { size: 18 })}</div>
@@ -1328,12 +1600,12 @@ function filterAndRenderCurated() {
       <h3 class="curated-title">${escapeHtml(item.name)}</h3>
       <p class="curated-desc">${escapeHtml(item.description)}</p>
       <div class="curated-tags">
-        ${(item.tags || []).map(t => `<span class="badge curated-tag" data-variant="secondary">${escapeHtml(t)}</span>`).join('')}
+        ${(item.tags || []).map(t => `<span class="curated-tag">${escapeHtml(t)}</span>`).join('')}
       </div>
       <div class="curated-actions">
         <button class="btn btn-curated-extract" data-cmd="${escapeHtml(item.command)}">
           ${icon('play', { size: 14, attrs: { 'data-icon': 'inline-start' } })}
-          1-Click Extract
+          Extract
         </button>
       </div>
     `;
@@ -1521,7 +1793,7 @@ function setupWasmDiagnostics() {
       benchBarJs.style.width = `${Math.min(100, (jsNum / maxTime) * 100)}%`;
 
       btnRunBenchmark.disabled = false;
-      btnRunBenchmark.innerHTML = `${icon('play', { attrs: { 'data-icon': 'inline-start' } })} Run Benchmark (10k ops)`;
+      btnRunBenchmark.innerHTML = `${icon('play', { attrs: { 'data-icon': 'inline-start' } })} Run benchmark (10k ops)`;
       showToast(`Benchmark complete! WebAssembly is ${result.speedup} faster!`, 'success');
     }, 50);
   });
@@ -1541,6 +1813,9 @@ async function loadSettingsForm() {
   settingTags.value = cfg.defaultTags || '';
   settingExportFormat.value = cfg.defaultExportFormat || 'skill.md';
   settingGhToken.value = cfg.githubToken || '';
+  const prefs = getPrefs();
+  settingGalleryLayout.value = prefs.galleryLayout;
+  settingLibraryName.value = prefs.libraryName;
 }
 
 function setupSettings() {
@@ -1550,8 +1825,24 @@ function setupSettings() {
       defaultExportFormat: settingExportFormat.value,
       githubToken: settingGhToken.value.trim()
     });
-    showToast('Settings saved successfully!', 'success');
+    savePrefs({
+      galleryLayout: settingGalleryLayout.value,
+      libraryName: settingLibraryName.value.trim()
+    });
+    applyPrefs();
+    showToast('Settings saved', 'success');
   });
+
+  // Every panel has its own Update pill; they all save the whole form.
+  document.querySelectorAll('[data-save-settings]').forEach(btn => {
+    btn.addEventListener('click', () => btnSaveSettings.click());
+  });
+
+  document.querySelectorAll('[data-settings-tab]').forEach(tab => {
+    tab.addEventListener('click', () => openSettingsPanel(tab.dataset.settingsTab));
+  });
+
+  document.getElementById('btn-rerun-onboarding')?.addEventListener('click', () => onboarding.open());
 
   btnExportBackup.addEventListener('click', async () => {
     const jsonStr = await storage.exportAllToJson();
@@ -1618,7 +1909,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   btnGalleryNewExtract?.addEventListener('click', () => switchView('extract'));
-  btnEmptyExtract?.addEventListener('click', () => switchView('extract'));
+  btnEmptyExtract?.addEventListener('click', () => {
+    switchView('extract');
+    inputGithubCmd.focus();
+  });
+
+  // Rail buttons, empty-state links and anything else that names a view.
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-view-link]');
+    if (link) switchView(link.dataset.viewLink);
+  });
+  window.addEventListener('hashchange', () => switchView(window.location.hash.slice(1) || 'extract'));
+
+  galleryLayoutToggle?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-layout]');
+    if (btn) setGalleryLayout(btn.dataset.layout);
+  });
+
+  recentsList?.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-recent-id]');
+    const skill = item && currentSkills.find(s => s.id === item.dataset.recentId);
+    if (skill) openPreviewModal(skill);
+  });
+
+  picksGrid?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pick-cmd]');
+    if (!btn) return;
+    inputGithubCmd.value = btn.dataset.pickCmd;
+    document.querySelector('.extract-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    btnExtractGithub.click();
+  });
+
+  setupSteps?.addEventListener('click', (e) => {
+    const step = e.target.closest('[data-setup-step]');
+    if (step && step.getAttribute('aria-disabled') !== 'true') runSetupStep(step.dataset.setupStep);
+  });
+
+  document.getElementById('btn-hide-setup')?.addEventListener('click', () => {
+    savePrefs({ setupHidden: true });
+    setupTray.hidden = true;
+  });
+
+  document.getElementById('btn-open-onboarding')?.addEventListener('click', () => onboarding.open());
+  document.getElementById('btn-personalize-picks')?.addEventListener('click', () => onboarding.open(2));
+
+  document.querySelectorAll('#curated-nav-count, #stat-curated-count').forEach(el => {
+    el.textContent = CURATED_SKILLS.length;
+  });
 
   // Gallery live search debounced with requestAnimationFrame
   let searchDebounce = null;
@@ -1635,6 +1972,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupWasmDiagnostics();
   setupSettings();
 
+  applyPrefs();
+
   await wasmEngine.ready();
   await loadGallery();
 
@@ -1643,6 +1982,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const inputQuery = urlParams.get('extract') || urlParams.get('url') || urlParams.get('link') || urlParams.get('query') || urlParams.get('cmd') || urlParams.get('skill');
+
+  const initialView = window.location.hash.slice(1);
+  if (!inputQuery && views[initialView]) switchView(initialView);
+
+  // First visit: ask four quick questions, unless the visitor arrived to extract something.
+  if (!inputQuery && !getPrefs().onboarded) onboarding.open();
   if (inputQuery) {
     let cleanQuery = decodeURIComponent(inputQuery).trim();
     const foundSkill = CURATED_SKILLS.find(s => s.slug === cleanQuery || s.id === cleanQuery || s.name.toLowerCase() === cleanQuery.toLowerCase());

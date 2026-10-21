@@ -7,7 +7,7 @@
   <title>Skill Extractor Engine — WebAssembly AI Agent Playbook Compiler</title>
   <meta name="description" content="Pure Client-Side WebAssembly Compiler and Manager for AI Agent Skills. Unpack skills.sh, GitHub repos, and NPX commands into single-file playbooks for Claude Code, Cursor, Windsurf, Antigravity, and Copilot.">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#000000">
   
   <!-- Favicons for Browsers, Google Search & Mobile -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -39,9 +39,7 @@
   <!-- Fonts & Styles -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..500;1,6..72,200..500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/styles/app.css">
 
   <!-- Structured Data JSON-LD Schema -->
@@ -68,136 +66,179 @@
   }
   </script>
 </head>
-<body>
+<body class="app-body">
 
-  <div class="ambient-glow"></div>
+  <div class="app-shell" id="appShell">
+    <!-- Icon rail -->
+    <nav class="app-rail" aria-label="Primary">
+      <a href="/" class="rail-logo" aria-label="Skill Extractor home"><span class="brand-mark" aria-hidden="true"></span></a>
+      <button type="button" class="rail-btn active" data-view-link="extract">
+        <i data-lucide="house" data-size="19" data-stroke="1.75"></i>
+        <span>Home</span>
+      </button>
+      <button type="button" class="rail-btn" data-view-link="gallery">
+        <i data-lucide="layout-grid" data-size="19" data-stroke="1.75"></i>
+        <span>Gallery</span>
+      </button>
+      <button type="button" class="rail-btn" data-view-link="curated">
+        <i data-lucide="library" data-size="19" data-stroke="1.75"></i>
+        <span>Library</span>
+      </button>
+      <button type="button" class="rail-btn" data-view-link="wasm">
+        <i data-lucide="zap" data-size="19" data-stroke="1.75"></i>
+        <span>Engine</span>
+      </button>
+      <span class="rail-spacer" aria-hidden="true"></span>
+      <button type="button" class="rail-btn" data-view-link="settings">
+        <i data-lucide="settings" data-size="19" data-stroke="1.75"></i>
+        <span>Settings</span>
+      </button>
+      <a href="https://github.com/Birol-dev/skills.sh-extractor" class="rail-btn rail-btn-ext" target="_blank" rel="noopener noreferrer">
+        <i data-brand="github" data-size="18"></i>
+        <span>GitHub</span>
+      </a>
+    </nav>
 
-  <div class="app-shell">
-    <!-- Sidebar Navigation -->
-    <aside class="app-sidebar">
-      <div class="brand-header">
-        <div class="brand-title">Skill Extractor</div>
+    <!-- Side panel -->
+    <aside class="app-sidebar" id="appSidebar" aria-label="Workbench">
+      <div class="sidebar-head">
+        <span class="sidebar-title" id="sidebar-library-name">My skill library</span>
+        <a href="/" class="btn" data-variant="ghost" data-size="icon-sm" title="Back to the site" aria-label="Back to the site">
+          <i data-lucide="arrow-up-right"></i>
+        </a>
       </div>
 
       <div class="nav-section">
-        <div class="nav-label">Compiler & Management</div>
-        <button class="nav-btn active" id="nav-extract" data-target="view-extract">
-          <i data-lucide="download" data-size="18"></i>
-          Extract Skill
+        <button type="button" class="nav-btn active" id="nav-extract" data-target="view-extract">
+          <i data-lucide="download" data-size="16"></i>
+          <span>Extract skill</span>
         </button>
-        <button class="nav-btn" id="nav-gallery" data-target="view-gallery">
-          <i data-lucide="layout-grid" data-size="18"></i>
-          Skill Gallery
-          <span class="badge nav-badge" data-variant="outline" id="badge-skill-count">0</span>
+        <button type="button" class="nav-btn" id="nav-gallery" data-target="view-gallery">
+          <i data-lucide="layout-grid" data-size="16"></i>
+          <span>Gallery</span>
+          <span class="nav-badge" id="badge-skill-count">0</span>
         </button>
-        <button class="nav-btn" id="nav-curated" data-target="view-curated">
-          <i data-lucide="library" data-size="18"></i>
-          Curated Skills (<span id="curated-nav-count">55</span>)
+        <button type="button" class="nav-btn" id="nav-curated" data-target="view-curated">
+          <i data-lucide="library" data-size="16"></i>
+          <span>Curated skills</span>
+          <span class="nav-badge nav-badge-quiet" id="curated-nav-count"><!-- skills-count:all --></span>
+        </button>
+        <button type="button" class="nav-btn" id="nav-wasm" data-target="view-wasm">
+          <i data-lucide="zap" data-size="16"></i>
+          <span>Engine diagnostics</span>
+        </button>
+        <button type="button" class="nav-btn" id="nav-settings" data-target="view-settings">
+          <i data-lucide="settings" data-size="16"></i>
+          <span>Settings</span>
         </button>
       </div>
 
-      <div class="nav-section">
-        <div class="nav-label">System & Tools</div>
-        <button class="nav-btn" id="nav-wasm" data-target="view-wasm">
-          <i data-lucide="zap" data-size="18"></i>
-          WASM Diagnostics
-        </button>
-        <button class="nav-btn" id="nav-settings" data-target="view-settings">
-          <i data-lucide="settings" data-size="18"></i>
-          Settings & Data
-        </button>
-        <a href="/" class="nav-btn">
-          <i data-lucide="house" data-size="18"></i>
-          Landing Page & Showcase
-        </a>
-        <a href="https://github.com/Birol-dev/skills.sh-extractor" class="nav-btn" target="_blank" rel="noopener noreferrer">
-          <i data-brand="github" data-size="18"></i>
-          GitHub Repository
-        </a>
+      <div class="nav-section nav-section-recents">
+        <div class="nav-label">Recents</div>
+        <div class="recents-list" id="recents-list">
+          <p class="recents-empty">Skills you extract show up here.</p>
+        </div>
       </div>
 
       <div class="sidebar-footer">
         <div class="stat-pill">
-          <span>Storage:</span>
+          <span>Storage</span>
           <strong id="sidebar-storage-stat">Local</strong>
         </div>
-        <div class="sidebar-footnote">Pure WebAssembly SPA &bull; Zero Backend</div>
+        <div class="sidebar-footnote">WebAssembly &middot; No backend</div>
       </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main canvas -->
     <main class="content-wrapper">
-      
-      <!-- ================= 1. EXTRACT VIEW ================= -->
-      <section class="view-pane active" id="view-extract">
-        <div class="view-header">
-          <div class="header-text">
-            <h1>Extract & Compile Agent Skill</h1>
-            <p>Paste an NPX command, GitHub repository URL, pick from 55+ curated prompt systems, drop a ZIP package, or select a local folder.</p>
-          </div>
+      <header class="app-topbar">
+        <span class="topbar-title" id="topbar-title">Home</span>
+        <div class="topbar-actions">
+          <button type="button" class="btn" data-variant="outline" data-size="sm" id="btn-open-onboarding">
+            <i data-lucide="sparkles" data-icon="inline-start"></i>
+            <span>Personalize</span>
+          </button>
+          <a href="/" class="btn topbar-site-btn" data-variant="outline" data-size="sm">
+            <span>Site</span>
+            <i data-lucide="arrow-up-right" data-icon="inline-end"></i>
+          </a>
+        </div>
+      </header>
+
+      <!-- ================= 1. HOME / EXTRACT ================= -->
+      <section class="view-pane active" id="view-extract" aria-labelledby="welcome-title">
+        <div class="welcome">
+          <h1 class="app-display" id="welcome-title">Welcome to <em id="welcome-name">your workbench</em></h1>
+          <p class="app-sub">Paste a repo, pick a curated skill or drop a ZIP. Everything compiles in your browser.</p>
         </div>
 
-        <div class="card-box">
+        <section class="setup-tray" id="setup-tray" aria-labelledby="setup-title" hidden>
+          <div class="setup-head">
+            <h2 id="setup-title">Finish your setup <span class="setup-progress" id="setup-progress">0/4</span></h2>
+            <button type="button" class="btn" data-variant="ghost" data-size="xs" id="btn-hide-setup">Hide</button>
+          </div>
+          <div class="setup-steps" id="setup-steps"></div>
+        </section>
+
+        <div class="card-box extract-card">
           <div class="tabs input-tabs">
-            <nav class="tab-switcher" role="tablist" aria-orientation="horizontal" data-variant="line" aria-label="Extraction source">
+            <nav class="tab-switcher" role="tablist" aria-orientation="horizontal" aria-label="Extraction source">
               <button type="button" role="tab" class="tab-switch-btn" id="tab-btn-github" aria-controls="pane-input-github" aria-selected="true" tabindex="0">
-                <i data-brand="github" data-size="15"></i>
-                GitHub / NPX Command & Quick Pick
+                <i data-brand="github" data-size="14"></i>
+                GitHub or npx
               </button>
               <button type="button" role="tab" class="tab-switch-btn" id="tab-btn-folder" aria-controls="pane-input-folder" aria-selected="false" tabindex="-1">
                 <i data-lucide="folder-open"></i>
-                Local Folder
+                Local folder
               </button>
               <button type="button" role="tab" class="tab-switch-btn" id="tab-btn-zip" aria-controls="pane-input-zip" aria-selected="false" tabindex="-1">
                 <i data-lucide="file-archive"></i>
-                ZIP Package Dropzone
+                ZIP package
               </button>
             </nav>
           </div>
 
           <!-- GitHub Input Pane -->
           <div class="input-tab-pane active" id="pane-input-github" role="tabpanel">
-            <div class="form-field" style="position: relative;">
+            <div class="form-field form-field-anchor">
               <label class="form-label" for="input-github-cmd">
-                <span>Repository URL, NPX Command, or Skill Name</span>
-                <span class="form-helper">WASM Real-Time Auto-Suggest Enabled</span>
+                <span>Repository URL, npx command or skill name</span>
+                <span class="form-helper">Live suggestions</span>
               </label>
-              
+
               <div class="extract-row">
-                <input 
-                  type="text" 
-                  id="input-github-cmd" 
-                  class="input" 
-                  placeholder="Type a skill name (e.g. Copywriting, SEO, Cold Email) or paste URL..." 
+                <input
+                  type="text"
+                  id="input-github-cmd"
+                  class="input"
+                  placeholder="Type a skill name (Copywriting, SEO, Cold email) or paste a URL…"
                   value="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'"
                   autocomplete="off"
                 />
                 <button class="btn" id="btn-extract-github">
                   <i data-lucide="play" data-icon="inline-start"></i>
-                  <span>Extract Skill</span>
+                  <span>Extract skill</span>
                 </button>
               </div>
 
-              <!-- Quick Search / Auto-Suggest Dropdown (Populated via JS) -->
               <div class="autosuggest-dropdown" id="autosuggest-dropdown" style="display: none;"></div>
 
-              <!-- Quick Popular Preset Filter Chips -->
               <div class="quick-preset-bar">
-                <span class="quick-preset-label">Quick Pick:</span>
+                <span class="quick-preset-label">Quick pick</span>
                 <div class="quick-chips-wrapper" id="quick-chips-wrapper">
                   <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="true" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'copywriting'">Copywriting</button>
-                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ab-testing'">A/B Testing</button>
-                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'svg-logo-designer'">SVG Logo</button>
-                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cold-email'">Cold Email</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ab-testing'">A/B testing</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'svg-logo-designer'">SVG logo</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cold-email'">Cold email</button>
                   <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'ai-seo'">AI SEO</button>
-                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'pricing'">Pricing & Packaging</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'pricing'">Pricing</button>
                   <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'cro'">CRO</button>
                   <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/vercel/ai --skill typescript-strict">TypeScript</button>
-                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'launch'">Product Launch</button>
+                  <button type="button" class="btn quick-chip" data-variant="outline" data-size="xs" aria-pressed="false" data-skill-cmd="npx skills add https://github.com/rknall/claude-skills --skill 'launch'">Launch</button>
                 </div>
               </div>
 
-              <p class="form-helper" style="margin-top: 10px;">Supports direct GitHub URLs, shorthand (<code>owner/repo</code>), branch subpaths, or CLI command templates.</p>
+              <p class="form-helper form-helper-foot">Supports GitHub URLs, <code>owner/repo</code> shorthand, branch subpaths and CLI commands.</p>
             </div>
           </div>
 
@@ -205,15 +246,15 @@
           <div class="input-tab-pane" id="pane-input-folder" role="tabpanel" hidden>
             <div class="form-field">
               <label class="form-label">
-                <span>Select Local Directory</span>
+                <span>Select a local directory</span>
                 <span class="form-helper">Scans SKILL.md, scripts/, references/</span>
               </label>
               <div class="extract-row">
-                <input type="text" id="input-folder-display" class="input" placeholder="No folder chosen..." readonly />
+                <input type="text" id="input-folder-display" class="input" placeholder="No folder chosen…" readonly />
                 <input type="file" id="input-folder-file" webkitdirectory directory multiple hidden />
                 <button class="btn" data-variant="secondary" id="btn-select-folder">
                   <i data-lucide="folder-open" data-icon="inline-start"></i>
-                  Browse Folder...
+                  Browse…
                 </button>
                 <button class="btn" id="btn-extract-folder" disabled>Extract</button>
               </div>
@@ -225,10 +266,10 @@
             <div class="dropzone" id="zip-dropzone">
               <input type="file" id="input-zip-file" accept=".zip" hidden />
               <div class="dropzone-icon">
-                <i data-lucide="upload" data-size="22"></i>
+                <i data-lucide="upload" data-size="20"></i>
               </div>
-              <div class="dropzone-title">Drop your skill .zip package here or click to browse</div>
-              <div class="dropzone-sub">WebAssembly will decompress and compile directives client-side with 0 network transfer.</div>
+              <div class="dropzone-title">Drop a skill .zip here, or click to browse</div>
+              <div class="dropzone-sub">Decompressed and compiled in your browser. Nothing is uploaded.</div>
             </div>
           </div>
         </div>
@@ -242,34 +283,42 @@
                 <span class="terminal-dot dot-yellow"></span>
                 <span class="terminal-dot dot-green"></span>
               </div>
-              <span>client-compiler-stream</span>
+              <span>compiler log</span>
             </div>
-            <button class="btn" data-variant="outline" data-size="xs" id="btn-clear-term">Clear Logs</button>
+            <button class="btn" data-variant="ghost" data-size="xs" id="btn-clear-term">Clear</button>
           </div>
           <div class="terminal-body" id="term-logs">
             <div class="term-line">
               <span class="term-time">[00:00:00]</span>
-              <span class="term-msg info">WebAssembly compiler runtime initialized. 55+ Curated skills loaded. Ready for extraction.</span>
+              <span class="term-msg info">WebAssembly compiler runtime initialized. Curated skills loaded. Ready for extraction.</span>
             </div>
           </div>
         </div>
+
+        <section class="picks" aria-labelledby="picks-title">
+          <div class="picks-head">
+            <h2 id="picks-title">Picked for you</h2>
+            <button type="button" class="text-btn" id="btn-personalize-picks">Personalize</button>
+          </div>
+          <div class="picks-grid" id="picks-grid"></div>
+        </section>
       </section>
 
       <!-- ================= 2. GALLERY VIEW ================= -->
       <section class="view-pane" id="view-gallery">
         <div class="view-header">
           <div class="header-text">
-            <h1>Skill Playbook Gallery</h1>
-            <p>Manage, inspect, and export your compiled playbooks. Drag cards or export directly in your target IDE agent format.</p>
+            <h1>Gallery</h1>
+            <p>Copy, export or drag your compiled playbooks straight into an editor.</p>
           </div>
-          <div style="display: flex; gap: 10px;">
+          <div class="view-actions">
             <button class="btn" data-variant="outline" id="btn-export-all-zip">
               <i data-lucide="download" data-icon="inline-start"></i>
-              Export All ZIP
+              Export all
             </button>
             <button class="btn" id="btn-gallery-new-extract">
               <i data-lucide="plus" data-icon="inline-start"></i>
-              Extract New
+              Extract new
             </button>
           </div>
         </div>
@@ -277,26 +326,41 @@
         <div class="gallery-toolbar">
           <div class="search-wrapper">
             <i data-lucide="search" class="search-icon"></i>
-            <input type="text" id="gallery-search-input" class="input search-input" placeholder="Search saved skills by name, description, tags..." />
+            <input type="search" id="gallery-search-input" class="input search-input" placeholder="Search skills…" />
           </div>
-          <div class="tag-filter-bar" id="gallery-tag-bar">
-            <!-- Populated via JS -->
+          <div class="layout-toggle" role="group" aria-label="Gallery layout" id="gallery-layout-toggle">
+            <button type="button" class="layout-btn" data-layout="cards" aria-pressed="true" title="Cards"><i data-lucide="layout-grid" data-size="15"></i><span>Cards</span></button>
+            <button type="button" class="layout-btn" data-layout="list" aria-pressed="false" title="List"><i data-lucide="list" data-size="15"></i><span>List</span></button>
+            <button type="button" class="layout-btn" data-layout="compact" aria-pressed="false" title="Compact"><i data-lucide="rows-3" data-size="15"></i><span>Compact</span></button>
+            <button type="button" class="layout-btn" data-layout="timeline" aria-pressed="false" title="Timeline"><i data-lucide="chart-gantt" data-size="15"></i><span>Timeline</span></button>
           </div>
         </div>
+        <div class="tag-filter-bar" id="gallery-tag-bar"></div>
 
-        <div class="gallery-grid" id="gallery-cards-grid">
-          <!-- Populated dynamically via JS -->
-        </div>
+        <div class="gallery-grid" id="gallery-cards-grid" data-layout="cards"></div>
 
-        <div class="empty" id="gallery-empty-state" hidden>
-          <header>
-            <figure><i data-lucide="folder-open" data-size="26"></i></figure>
-            <h3>No Skills Extracted Yet</h3>
-            <p>Extract a skill from GitHub, browse our 55+ curated skills, or drop a ZIP archive to populate your gallery.</p>
-          </header>
-          <footer>
-            <button class="btn" id="btn-empty-extract">Extract Your First Skill</button>
-          </footer>
+        <div class="empty-state" id="gallery-empty-state" hidden>
+          <div class="empty-main">
+            <figure class="empty-art" aria-hidden="true">
+              <span class="empty-art-card"><span></span><span></span><span></span></span>
+              <span class="empty-art-card"><span></span><span></span><span></span></span>
+              <span class="empty-art-card"><span></span><span></span><span></span></span>
+            </figure>
+            <h3>Your gallery is empty</h3>
+            <p>Extracted skills land here, ready to copy, export or drag into your editor.</p>
+            <div class="empty-actions">
+              <button class="btn" id="btn-empty-extract">Extract your first skill</button>
+              <button type="button" class="text-btn" data-view-link="curated">Browse curated skills</button>
+            </div>
+          </div>
+          <aside class="empty-side" aria-label="Ways to add skills">
+            <span class="empty-side-title">Three ways in</span>
+            <ol>
+              <li><strong>Paste a repo</strong><span>GitHub URL, owner/repo or an npx command</span></li>
+              <li><strong>Drop a ZIP</strong><span>Any skills.sh package, unpacked locally</span></li>
+              <li><strong>Pick a curated skill</strong><span>One click from the library</span></li>
+            </ol>
+          </aside>
         </div>
       </section>
 
@@ -304,85 +368,85 @@
       <section class="view-pane" id="view-curated">
         <div class="view-header">
           <div class="header-text">
-            <h1>Curated Agent Skills Hub</h1>
-            <p>55+ Pre-compiled, instant-extract skill playbooks across Copywriting, Growth Marketing, Design, SEO, Sales, Engineering, and Monetization.</p>
+            <h1>Curated skills</h1>
+            <p>Pre-compiled, one-click playbooks across copywriting, growth, design, SEO, sales, engineering and pricing.</p>
           </div>
         </div>
 
-        <div class="gallery-toolbar" style="margin-bottom: 20px;">
+        <div class="gallery-toolbar">
           <div class="search-wrapper">
             <i data-lucide="search" class="search-icon"></i>
-            <input type="text" id="curated-search-input" class="input search-input" placeholder="Search 55+ curated skills by keyword, discipline, or tags..." />
+            <input type="search" id="curated-search-input" class="input search-input" placeholder="Search the library…" />
           </div>
-          <div class="tag-filter-bar" id="curated-category-bar">
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="true" data-curated-cat="all">All Disciplines</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Copywriting"><i data-lucide="pen-line" data-icon="inline-start"></i>Copywriting</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Marketing & Growth"><i data-lucide="trending-up" data-icon="inline-start"></i>Marketing & Growth</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Design & Visuals"><i data-lucide="palette" data-icon="inline-start"></i>Design</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Sales & Outbound"><i data-lucide="send" data-icon="inline-start"></i>Sales</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="AI Search & SEO"><i data-lucide="search" data-icon="inline-start"></i>SEO & GEO</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Monetization & Offers"><i data-lucide="badge-dollar-sign" data-icon="inline-start"></i>Monetization</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Engineering & Code"><i data-lucide="code-xml" data-icon="inline-start"></i>Engineering</button>
-            <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Strategy & Operations"><i data-lucide="compass" data-icon="inline-start"></i>Strategy</button>
-          </div>
+        </div>
+        <div class="tag-filter-bar" id="curated-category-bar">
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="true" data-curated-cat="all">All</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Copywriting">Copywriting</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Marketing & Growth">Marketing</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Design & Visuals">Design</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Sales & Outbound">Sales</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="AI Search & SEO">SEO &amp; GEO</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Monetization & Offers">Pricing</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Engineering & Code">Engineering</button>
+          <button class="btn" data-variant="outline" data-size="sm" aria-pressed="false" data-curated-cat="Strategy & Operations">Strategy</button>
         </div>
 
-        <div class="curated-grid" id="curated-cards-grid">
-          <!-- Populated dynamically via JS -->
-        </div>
+        <div class="curated-grid" id="curated-cards-grid"></div>
       </section>
 
       <!-- ================= 4. WASM BENCHMARK VIEW ================= -->
       <section class="view-pane" id="view-wasm">
         <div class="view-header">
           <div class="header-text">
-            <h1>WebAssembly Acceleration Diagnostics</h1>
-            <p>Real-time performance diagnostics and benchmarks comparing pure JavaScript versus WebAssembly execution.</p>
+            <h1>Engine diagnostics</h1>
+            <p>WebAssembly versus plain JavaScript, measured live in this tab.</p>
           </div>
-          <button class="btn" id="btn-run-benchmark">
-            <i data-lucide="play" data-icon="inline-start"></i>
-            Run Benchmark (10k ops)
-          </button>
+          <div class="view-actions">
+            <button class="btn" id="btn-run-benchmark">
+              <i data-lucide="play" data-icon="inline-start"></i>
+              Run benchmark (10k ops)
+            </button>
+          </div>
         </div>
 
         <div class="wasm-stat-grid">
           <div class="stat-card">
-            <span class="stat-card-title">WASM Engine Status</span>
+            <span class="stat-card-title">Engine status</span>
             <span class="stat-card-value" id="stat-wasm-status">Active</span>
-            <span class="stat-card-sub" id="stat-wasm-size">Embedded Bytecode</span>
+            <span class="stat-card-sub" id="stat-wasm-size">Embedded bytecode</span>
           </div>
           <div class="stat-card">
-            <span class="stat-card-title">Execution Speedup</span>
+            <span class="stat-card-title">Speedup</span>
             <span class="stat-card-value" id="stat-wasm-speedup">--</span>
-            <span class="stat-card-sub">Levenshtein & Fuzzy Match</span>
+            <span class="stat-card-sub">Levenshtein &amp; fuzzy match</span>
           </div>
           <div class="stat-card">
-            <span class="stat-card-title">Linear Memory</span>
+            <span class="stat-card-title">Linear memory</span>
             <span class="stat-card-value" id="stat-wasm-mem">64 KB</span>
-            <span class="stat-card-sub">Dynamic Heap Buffer</span>
+            <span class="stat-card-sub">Dynamic heap buffer</span>
           </div>
           <div class="stat-card">
-            <span class="stat-card-title">Curated Skills</span>
-            <span class="stat-card-value">55</span>
-            <span class="stat-card-sub">Pre-Loaded Playbooks</span>
+            <span class="stat-card-title">Curated skills</span>
+            <span class="stat-card-value" id="stat-curated-count"><!-- skills-count:all --></span>
+            <span class="stat-card-sub">Pre-loaded playbooks</span>
           </div>
         </div>
 
-        <div class="benchmark-runner">
-          <h3 style="font-size: 15px; font-weight: 700;">Levenshtein String Distance Benchmark</h3>
+        <div class="card-box benchmark-runner">
+          <h3 class="card-box-title">Levenshtein distance benchmark</h3>
           <div class="bench-bar-container">
             <div class="bench-row">
               <div class="bench-row-label">
-                <span>WebAssembly (Linear Memory Engine)</span>
+                <span>WebAssembly (linear memory)</span>
                 <span id="bench-val-wasm">Ready to benchmark</span>
               </div>
-                <div class="progress bench-progress" id="bench-track-wasm">
+              <div class="progress bench-progress" id="bench-track-wasm">
                 <span id="bench-bar-wasm" style="width: 0%;"></span>
               </div>
             </div>
             <div class="bench-row">
               <div class="bench-row-label">
-                <span>Pure JavaScript Engine</span>
+                <span>Plain JavaScript</span>
                 <span id="bench-val-js">Ready to benchmark</span>
               </div>
               <div class="progress bench-progress bench-progress-js" id="bench-track-js">
@@ -392,20 +456,19 @@
           </div>
         </div>
 
-        <!-- Token Estimator Playground -->
         <div class="card-box">
-          <h3 style="font-size: 15px; font-weight: 700;">WebAssembly Token Estimator Playground</h3>
+          <h3 class="card-box-title">Token estimator</h3>
           <div class="form-field">
-            <label class="form-label" for="wasm-test-input">Enter sample system directives or code</label>
-            <textarea id="wasm-test-input" class="textarea" placeholder="Type or paste prompt text here to calculate tokens in WASM..."></textarea>
+            <label class="form-label" for="wasm-test-input">Paste system directives or code</label>
+            <textarea id="wasm-test-input" class="textarea" placeholder="Type or paste prompt text to count tokens in WebAssembly…"></textarea>
           </div>
-          <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div class="stat-pill-row">
             <div class="stat-pill">
-              <span>Estimated LLM Tokens:</span>
+              <span>Estimated tokens</span>
               <strong id="wasm-test-tokens" class="stat-value">0</strong>
             </div>
             <div class="stat-pill">
-              <span>FNV-1a 32-bit Hash:</span>
+              <span>FNV-1a hash</span>
               <strong id="wasm-test-hash" class="stat-value stat-value-mono">00000000</strong>
             </div>
           </div>
@@ -414,70 +477,260 @@
 
       <!-- ================= 5. SETTINGS VIEW ================= -->
       <section class="view-pane" id="view-settings">
-        <div class="view-header">
-          <div class="header-text">
-            <h1>Settings & Storage Configurations</h1>
-            <p>Customize metadata tag defaults, default agent export formats, optional GitHub access tokens, and backup your data.</p>
+        <h1 class="settings-title">Settings</h1>
+
+        <div class="settings-layout">
+          <nav class="settings-menu" aria-label="Settings sections">
+            <button type="button" class="settings-tab active" data-settings-tab="defaults">Export defaults</button>
+            <button type="button" class="settings-tab" data-settings-tab="github">GitHub access</button>
+            <button type="button" class="settings-tab" data-settings-tab="personal">Personalization</button>
+            <button type="button" class="settings-tab" data-settings-tab="data">Data &amp; backups</button>
+          </nav>
+
+          <div class="settings-panels">
+            <section class="settings-panel active" data-settings-panel="defaults" aria-labelledby="settings-defaults-title">
+              <header class="settings-panel-head">
+                <h2 id="settings-defaults-title">Export defaults</h2>
+                <p>Applied to every playbook you compile, copy or download.</p>
+              </header>
+              <div class="settings-field">
+                <div class="settings-label-row">
+                  <label class="form-label" for="setting-tags">Extra tags</label>
+                  <span class="optional-tag">Optional</span>
+                </div>
+                <input type="text" id="setting-tags" class="input" placeholder="verified, agent-skill, local-copy" />
+                <span class="form-helper">Comma-separated. Appended to the compiled frontmatter.</span>
+              </div>
+              <div class="settings-field-pair">
+                <div class="settings-field">
+                  <label class="form-label" for="setting-export-format">Export format</label>
+                  <select id="setting-export-format" class="select">
+                    <option value="skill.md">Standard skill (.skill.md)</option>
+                    <option value="claude.md">Claude Code (CLAUDE.md)</option>
+                    <option value="cursorrules">Cursor rules (.cursorrules)</option>
+                    <option value="windsurfrules">Windsurf rules (.windsurfrules)</option>
+                  </select>
+                </div>
+                <div class="settings-field">
+                  <label class="form-label" for="setting-gallery-layout">Gallery layout</label>
+                  <select id="setting-gallery-layout" class="select">
+                    <option value="cards">Cards</option>
+                    <option value="list">List</option>
+                    <option value="compact">Compact</option>
+                    <option value="timeline">Timeline</option>
+                  </select>
+                </div>
+              </div>
+              <footer class="settings-panel-foot">
+                <button class="btn" id="btn-save-settings">
+                  <span>Update</span>
+                  <span class="btn-dot" aria-hidden="true"></span>
+                </button>
+              </footer>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="github" aria-labelledby="settings-github-title" hidden>
+              <header class="settings-panel-head">
+                <h2 id="settings-github-title">GitHub access</h2>
+                <p>Raise the public API limit from 60 to 5,000 requests an hour.</p>
+              </header>
+              <div class="settings-field">
+                <div class="settings-label-row">
+                  <label class="form-label" for="setting-gh-token">Personal access token</label>
+                  <span class="optional-tag">Optional</span>
+                </div>
+                <input type="password" id="setting-gh-token" class="input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+                <span class="form-helper">Used only in this browser to read public repository trees. Stored in local IndexedDB.</span>
+              </div>
+              <footer class="settings-panel-foot">
+                <button class="btn" data-save-settings>
+                  <span>Update</span>
+                  <span class="btn-dot" aria-hidden="true"></span>
+                </button>
+              </footer>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="personal" aria-labelledby="settings-personal-title" hidden>
+              <header class="settings-panel-head">
+                <h2 id="settings-personal-title">Personalization</h2>
+                <p>How your workbench greets you and what it suggests.</p>
+              </header>
+              <div class="settings-field">
+                <label class="form-label" for="setting-library-name">Library name</label>
+                <input type="text" id="setting-library-name" class="input" placeholder="My skill library" maxlength="40" />
+                <span class="form-helper">Shown in the side panel and on the home screen.</span>
+              </div>
+              <div class="settings-field">
+                <span class="form-label">Setup guide</span>
+                <div class="settings-inline">
+                  <button type="button" class="btn" data-variant="outline" id="btn-rerun-onboarding">
+                    <i data-lucide="sparkles" data-icon="inline-start"></i>
+                    Run setup again
+                  </button>
+                  <span class="form-helper">Pick your AI tool, interests and gallery layout.</span>
+                </div>
+              </div>
+              <footer class="settings-panel-foot">
+                <button class="btn" data-save-settings>
+                  <span>Update</span>
+                  <span class="btn-dot" aria-hidden="true"></span>
+                </button>
+              </footer>
+            </section>
+
+            <section class="settings-panel" data-settings-panel="data" aria-labelledby="settings-data-title" hidden>
+              <header class="settings-panel-head">
+                <h2 id="settings-data-title">Data &amp; backups</h2>
+                <p>Everything lives in this browser. Back it up or move it to another one.</p>
+              </header>
+              <div class="settings-row">
+                <div>
+                  <span class="settings-row-title">Export backup</span>
+                  <span class="form-helper">Skills and settings as a single JSON file.</span>
+                </div>
+                <button class="btn" data-variant="outline" id="btn-export-backup">
+                  <i data-lucide="download" data-icon="inline-start"></i>
+                  Export JSON
+                </button>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <span class="settings-row-title">Import backup</span>
+                  <span class="form-helper">Merge skills from a previous export.</span>
+                </div>
+                <input type="file" id="input-import-backup" accept=".json" hidden />
+                <button class="btn" data-variant="outline" id="btn-import-backup">
+                  <i data-lucide="upload" data-icon="inline-start"></i>
+                  Import JSON
+                </button>
+              </div>
+              <div class="settings-row settings-row-danger">
+                <div>
+                  <span class="settings-row-title">Clear storage</span>
+                  <span class="form-helper">Deletes every extracted skill and setting in this browser.</span>
+                </div>
+                <button class="btn" data-variant="destructive" id="btn-clear-db">
+                  <i data-lucide="trash-2" data-icon="inline-start"></i>
+                  Clear
+                </button>
+              </div>
+            </section>
           </div>
         </div>
 
-        <div class="card-box">
-          <h3 style="font-size: 15px; font-weight: 700;">Metadata & Export Defaults</h3>
-          <div class="form-field">
-            <label class="form-label" for="setting-tags">Prefill Extra Tags</label>
-            <input type="text" id="setting-tags" class="input" placeholder="verified, agent-skill, local-copy" />
-            <span class="form-helper">Comma-separated tags to automatically append to compiled frontmatter.</span>
-          </div>
-
-          <div class="form-field">
-            <label class="form-label" for="setting-export-format">Default Playbook Export Format</label>
-            <select id="setting-export-format" class="select">
-              <option value="skill.md">Standard Skill (.skill.md)</option>
-              <option value="claude.md">Claude Code (CLAUDE.md)</option>
-              <option value="cursorrules">Cursor Rules (.cursorrules)</option>
-              <option value="windsurfrules">Windsurf Rules (.windsurfrules)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="card-box">
-          <h3 style="font-size: 15px; font-weight: 700;">GitHub API Rate Limit Bypass (Optional)</h3>
-          <div class="form-field">
-            <label class="form-label" for="setting-gh-token">Personal Access Token (PAT)</label>
-            <input type="password" id="setting-gh-token" class="input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
-            <span class="form-helper">Used strictly in your browser for public repository trees (raises rate limit from 60 to 5,000 requests/hour). Stored only in local IndexedDB.</span>
-          </div>
-        </div>
-
-        <div class="card-box">
-          <h3 style="font-size: 15px; font-weight: 700;">Database & Backups</h3>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button class="btn" data-variant="secondary" id="btn-export-backup">
-              <i data-lucide="download" data-icon="inline-start"></i>
-              Export JSON Backup
-            </button>
-            <input type="file" id="input-import-backup" accept=".json" hidden />
-            <button class="btn" data-variant="secondary" id="btn-import-backup">
-              <i data-lucide="upload" data-icon="inline-start"></i>
-              Import JSON Backup
-            </button>
-            <button class="btn" data-variant="destructive" id="btn-clear-db">
-              <i data-lucide="trash-2" data-icon="inline-start"></i>
-              Clear Storage
-            </button>
-          </div>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end;">
-          <button class="btn" id="btn-save-settings">Save Settings</button>
-        </div>
+        <a href="/faq/" class="help-pill">
+          <i data-lucide="circle-help" data-size="16"></i>
+          <span>Need help?</span>
+        </a>
       </section>
 
     </main>
   </div>
 
+  <!-- ================= FIRST-RUN ONBOARDING ================= -->
+  <div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="ob-title" hidden>
+    <a href="/" class="ob-logo"><span class="brand-mark" aria-hidden="true"></span><span>Skill Extractor</span></a>
+
+    <div class="ob-layout">
+      <form class="ob-form" id="ob-form" novalidate>
+        <div class="ob-progress-row">
+          <button type="button" class="ob-back" id="ob-back" aria-label="Previous question">
+            <i data-lucide="arrow-left" data-size="18"></i>
+          </button>
+          <div class="ob-progress" role="progressbar" aria-label="Setup progress" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" id="ob-progress">
+            <span id="ob-progress-bar"></span>
+          </div>
+          <span class="ob-count" id="ob-step-count">1 of 4</span>
+        </div>
+
+        <div class="ob-step" data-step="0">
+          <div class="ob-group">
+            <h1 class="ob-question" id="ob-title">What should we call your library?</h1>
+            <p class="ob-help">It greets you on the workbench. You can change it later in Settings.</p>
+            <label class="ob-label" for="ob-name">Library name</label>
+            <input type="text" class="input ob-input" id="ob-name" placeholder="e.g. Growth team playbooks" maxlength="40" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="ob-step" data-step="1" hidden>
+          <div class="ob-group">
+            <h2 class="ob-question">Where do you paste your prompts?</h2>
+            <p class="ob-help">We&rsquo;ll set the export format that fits it best.</p>
+            <div class="ob-tiles" role="radiogroup" aria-label="AI tool" data-ob-field="tool">
+              <button type="button" class="ob-tile" role="radio" aria-checked="false" data-value="claude" style="--tile: #D97757"><span class="ob-tile-icon"><i data-brand="claude" data-size="20"></i></span><span>Claude</span></button>
+              <button type="button" class="ob-tile" role="radio" aria-checked="false" data-value="chatgpt" style="--tile: #10A37F"><span class="ob-tile-icon"><i data-lucide="message-square" data-size="19"></i></span><span>ChatGPT</span></button>
+              <button type="button" class="ob-tile" role="radio" aria-checked="false" data-value="cursor" style="--tile: #ffffff"><span class="ob-tile-icon"><i data-brand="cursor" data-size="19"></i></span><span>Cursor</span></button>
+              <button type="button" class="ob-tile" role="radio" aria-checked="false" data-value="windsurf" style="--tile: #58e5bb"><span class="ob-tile-icon"><i data-brand="windsurf" data-size="19"></i></span><span>Windsurf</span></button>
+              <button type="button" class="ob-tile" role="radio" aria-checked="false" data-value="copilot" style="--tile: #9aa7ff"><span class="ob-tile-icon"><i data-brand="githubcopilot" data-size="19"></i></span><span>Copilot</span></button>
+              <button type="button" class="ob-tile" role="radio" aria-checked="false" data-value="antigravity" style="--tile: #7aa7ff"><span class="ob-tile-icon"><i data-lucide="orbit" data-size="19"></i></span><span>Antigravity</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-step" data-step="2" hidden>
+          <div class="ob-group">
+            <h2 class="ob-question">What do you want skills for?</h2>
+            <p class="ob-help">Pick as many as you like. We&rsquo;ll suggest skills on your home screen.</p>
+            <div class="ob-chips" role="group" aria-label="Interests" data-ob-field="interests">
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="copywriting" data-category="copywriting">Copywriting</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="marketing" data-category="marketing">Marketing</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="design" data-category="design">Design</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="sales" data-category="sales">Sales</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="seo" data-category="seo">SEO &amp; GEO</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="monetization" data-category="monetization">Pricing</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="strategy" data-category="strategy">Strategy</button>
+              <button type="button" class="ob-chip" aria-pressed="false" data-value="dev" data-category="dev">Engineering</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-step" data-step="3" hidden>
+          <div class="ob-group">
+            <h2 class="ob-question">How should your gallery look?</h2>
+            <p class="ob-help">Switch any time from the gallery toolbar.</p>
+            <div class="ob-tiles ob-tiles-layout" role="radiogroup" aria-label="Gallery layout" data-ob-field="layout">
+              <button type="button" class="ob-tile ob-layout-tile" role="radio" aria-checked="false" data-value="cards" style="--tile: #4da3ff">
+                <span class="layout-pic layout-pic-cards" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span>Cards</span>
+              </button>
+              <button type="button" class="ob-tile ob-layout-tile" role="radio" aria-checked="false" data-value="list" style="--tile: #3ddc97">
+                <span class="layout-pic layout-pic-list" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>List</span>
+              </button>
+              <button type="button" class="ob-tile ob-layout-tile" role="radio" aria-checked="false" data-value="compact" style="--tile: #ffc53d">
+                <span class="layout-pic layout-pic-compact" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+                <span>Compact</span>
+              </button>
+              <button type="button" class="ob-tile ob-layout-tile" role="radio" aria-checked="false" data-value="timeline" style="--tile: #ff7a59">
+                <span class="layout-pic layout-pic-timeline" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>Timeline</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-actions">
+          <button type="submit" class="btn" data-size="lg" id="ob-continue">Continue</button>
+          <button type="button" class="ob-skip" id="ob-skip">Skip for now</button>
+        </div>
+      </form>
+
+      <div class="ob-preview" aria-hidden="true">
+        <div class="ob-window">
+          <div class="ob-window-bar"><span></span><span></span><span></span></div>
+          <div class="ob-window-head">
+            <span class="ob-window-icon"><i data-lucide="library" data-size="16"></i></span>
+            <span class="ob-window-name" id="ob-preview-name">My skill library</span>
+            <span class="ob-window-format" id="ob-preview-format">.skill.md</span>
+          </div>
+          <div class="ob-window-body" id="ob-preview-body" data-layout="list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= PREVIEW DIALOG ================= -->
-  <dialog class="dialog preview-dialog" id="preview-modal" aria-labelledby="modal-skill-title" aria-describedby="modal-skill-subtitle">
+  <dialog class="dialog preview-dialog preview-drawer" id="preview-modal" aria-labelledby="modal-skill-title" aria-describedby="modal-skill-subtitle">
     <div>
       <header>
         <h2 id="modal-skill-title">Skill Title</h2>
@@ -488,23 +741,23 @@
           <nav class="preview-tablist" role="tablist" aria-orientation="vertical" data-variant="line" aria-label="Skill contents">
             <button type="button" role="tab" class="preview-tab" id="preview-tab-rendered" aria-controls="modal-pane-rendered" aria-selected="true" tabindex="0">
               <i data-lucide="file-text" data-icon="inline-start"></i>
-              Directives (Rendered)
+              Rendered
             </button>
             <button type="button" role="tab" class="preview-tab" id="preview-tab-meta" aria-controls="modal-pane-meta" aria-selected="false" tabindex="-1">
               <i data-lucide="settings" data-icon="inline-start"></i>
-              Frontmatter Meta
+              Frontmatter
             </button>
             <button type="button" role="tab" class="preview-tab" id="modal-tab-scripts" aria-controls="modal-pane-scripts" aria-selected="false" tabindex="-1">
               <i data-lucide="code-xml" data-icon="inline-start"></i>
-              Helper Scripts (<span id="modal-scripts-count">0</span>)
+              <span>Scripts (<span id="modal-scripts-count">0</span>)</span>
             </button>
             <button type="button" role="tab" class="preview-tab" id="modal-tab-refs" aria-controls="modal-pane-refs" aria-selected="false" tabindex="-1">
               <i data-lucide="book-open" data-icon="inline-start"></i>
-              References (<span id="modal-refs-count">0</span>)
+              <span>References (<span id="modal-refs-count">0</span>)</span>
             </button>
             <button type="button" role="tab" class="preview-tab" id="preview-tab-raw" aria-controls="modal-pane-raw" aria-selected="false" tabindex="-1">
               <i data-lucide="file-code" data-icon="inline-start"></i>
-              Raw Markdown Source
+              Raw source
             </button>
           </nav>
           <div class="preview-tab-pane" id="modal-pane-rendered" role="tabpanel">
@@ -530,10 +783,10 @@
         <div class="preview-format">
           <label class="label" for="modal-format-select">Format</label>
           <select id="modal-format-select" class="select">
-            <option value="skill.md">Standard .skill.md</option>
+            <option value="skill.md">Standard (.skill.md)</option>
             <option value="claude.md">Claude Code (CLAUDE.md)</option>
-            <option value="cursorrules">Cursor Rules (.cursorrules)</option>
-            <option value="windsurfrules">Windsurf Rules (.windsurfrules)</option>
+            <option value="cursorrules">Cursor rules (.cursorrules)</option>
+            <option value="windsurfrules">Windsurf rules (.windsurfrules)</option>
           </select>
         </div>
         <div class="preview-foot-actions">
@@ -548,7 +801,7 @@
           </button>
           <button class="btn" data-variant="secondary" id="modal-btn-copy">
             <i data-lucide="copy" data-icon="inline-start"></i>
-            Copy Playbook
+            Copy playbook
           </button>
           <button class="btn" id="modal-btn-done">Done</button>
         </div>
