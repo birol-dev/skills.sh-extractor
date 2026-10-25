@@ -15,6 +15,7 @@ agent/skills
 .vercel/
 .venv/
 .opencode/
+.commandcode/
 coverage/
 .env
 
@@ -23,3 +24,6 @@ marketing/
 
 # design recordings (before/after videos)
 recordings/
+
+# promo video (local only)
+promo-video/

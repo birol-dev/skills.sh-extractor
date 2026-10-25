@@ -9,6 +9,8 @@
     "test": "node scripts/test-all.js",
     "favicons": "node scripts/generateFavicons.js",
     "preview": "vite preview",
+    "video": "node promo-video/audio.mjs && node promo-video/render.mjs --sub 4 --audio promo-video/out/soundtrack.wav",
+    "video:vertical": "node promo-video/audio.mjs && node promo-video/render.mjs --format vertical --sub 4 --audio promo-video/out/soundtrack.wav",
     "deploy": "vite build && wrangler pages deploy dist --project-name=skill-extractor --commit-dirty=true"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "playwright-core": "^1.60.0",
     "tailwindcss": "^4.3.3",
     "vite": "^6.2.0",
     "wrangler": "^4.134.0"
