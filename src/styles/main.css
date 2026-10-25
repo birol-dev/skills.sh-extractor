@@ -41,15 +41,16 @@ body.app-body {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 76px 256px minmax(0, 1fr);
+  grid-template-columns: 266px minmax(0, 1fr);
   min-height: 100vh;
 }
 
+/* The rail stands in for the side panel on narrower screens, so the two never show together. */
 .app-rail {
+  display: none;
   position: sticky;
   top: 0;
   height: 100vh;
-  display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
@@ -122,7 +123,7 @@ body.app-body {
   position: sticky;
   top: 0;
   height: 100vh;
-  padding: 10px 0;
+  padding: 10px 0 10px 10px;
   z-index: 20;
 }
 
@@ -138,7 +139,7 @@ body.app-body {
 .app-sidebar::before {
   content: '';
   position: absolute;
-  inset: 10px 0;
+  inset: 10px 0 10px 10px;
   border-radius: var(--r-card);
   background: var(--ink-1);
   z-index: -1;
@@ -150,6 +151,13 @@ body.app-body {
   justify-content: space-between;
   gap: 8px;
   padding: 18px 14px 18px 22px;
+}
+
+.sidebar-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -2998,6 +3006,10 @@ body.app-body {
 @media (max-width: 1240px) {
   .app-shell {
     grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .app-rail {
+    display: flex;
   }
 
   .app-sidebar {
